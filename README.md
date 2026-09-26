@@ -14,6 +14,65 @@ The first version should prioritize a smooth dictation workflow over advanced fe
 
 ---
 
+## Getting Started
+
+### Prerequisites
+
+- [Rust](https://rustup.rs/) (stable, 1.77+)
+- Node.js 20+ and npm
+- Tauri system dependencies for your OS — see <https://v2.tauri.app/start/prerequisites/>
+  (on Debian/Ubuntu: `libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev`)
+- A Microsoft Azure Speech resource (key + region)
+
+### Run
+
+```bash
+npm install
+cp .env.example .env        # then put your Azure key/region in .env
+npm run tauri dev
+```
+
+Azure credentials are resolved in this order:
+
+1. `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` environment variables
+   (a `.env` file in the working directory or in the app data directory is loaded at startup);
+2. key/region entered in the app's **Settings** screen (stored unencrypted in the local app data folder).
+
+### Build an installer
+
+```bash
+npm run tauri build
+```
+
+### Tests and checks
+
+```bash
+cd src-tauri && cargo test     # parsing, cache keys, TTS/SSML, answer comparison, database, IPC commands
+npm run build                  # TypeScript type check + frontend build
+```
+
+### Using the app
+
+1. **Lessons → Import .txt lesson**: pick a UTF-8 text file with passages separated by blank lines.
+2. Audio for every passage is generated with Azure (one MP3 per passage) and cached;
+   reopening a lesson never calls Azure again for audio that already exists.
+3. **Practice**: listen, type what you hear, press **Enter** to check, **Enter** again for the next passage.
+
+Keyboard shortcuts on the practice screen:
+
+| Key (outside the answer box) | While typing in the answer box | Action |
+|---|---|---|
+| Space | Ctrl/⌘ + Space | Play / Pause |
+| R | Ctrl/⌘ + R | Replay from the beginning |
+| ← / → | Ctrl/⌘ + ← / → | Previous / next item |
+| L | Ctrl/⌘ + L | Toggle loop |
+| ↑ / ↓ | Ctrl/⌘ + ↑ / ↓ | Faster / slower |
+| Enter | Enter | Check answer, then next item |
+| — | Shift + Enter | Line break |
+| — | Esc | Leave the answer box |
+
+---
+
 ## 1. Product Goal
 
 DictationApp is a personal desktop tool for improving English listening accuracy through repeated short dictation exercises.
@@ -451,10 +510,12 @@ Suggested modules:
 ```text
 src-tauri/src/
 ├── main.rs
+├── lib.rs        (app setup, command registration)
 ├── commands.rs
 ├── lesson.rs
 ├── tts.rs
 ├── cache.rs
+├── compare.rs    (answer normalization and word diff)
 ├── database.rs
 ├── models.rs
 ├── settings.rs
@@ -668,6 +729,31 @@ Possible later features:
 - cloud sync.
 
 These are future ideas, not MVP requirements.
+
+---
+
+## Implementation Notes
+
+Decisions made while implementing V1, where the specification left room:
+
+- **Wrapped lines**: lines inside one passage (no blank line between them) are joined with a single space.
+- **Audio delivery**: Rust returns an item's MP3 bytes over IPC (`get_item_audio`); the frontend plays them
+  through a `Blob` URL with a regular `HTMLAudioElement`. No asset-protocol scope is needed, and all
+  playback state (pause, seek, loop, speed) stays in the WebView.
+- **Cache key**: `SHA-256("v1", text, voice, rate, pitch, output_format)`, fields separated by `0x1F`.
+  Audio is stored as `lessons/<lesson-id>/audio/NNN.mp3` and the key is saved with the item. If voice
+  settings change, the item shows "Voice changed" and is regenerated on the next generation or practice.
+- **Azure**: REST endpoint `https://<region>.tts.speech.microsoft.com/cognitiveservices/v1`, output
+  `audio-24khz-48kbitrate-mono-mp3`, with retries and backoff on 429/5xx. Lesson generation runs one
+  item at a time to stay within free-tier rate limits.
+- **Answer comparison** is implemented in Rust (`compare.rs`): case and surrounding punctuation are
+  ignored, curly apostrophes are normalized, and every word counts. The diff is an LCS over words;
+  missing and extra words between two matches are paired as "changed". Accuracy is
+  `correct words / max(source words, answer words)`.
+- **Settings** (voice, TTS rate/pitch, player speed/loop, optional credentials) are stored as JSON in the
+  SQLite `settings` table.
+- `metadata.json` in each lesson folder is written for readability; SQLite (`dictation.db` in the app
+  data directory) is the source of truth.
 
 ---
 
