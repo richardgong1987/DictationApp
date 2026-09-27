@@ -1,5 +1,5 @@
 # DictationApp
-
+![](docs/layout-design.png)
 A desktop English dictation application for focused listening practice.
 
 The application is intentionally simple:
