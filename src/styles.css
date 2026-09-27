@@ -94,10 +94,6 @@ kbd {
   align-items: center;
 }
 
-.actions.center {
-  justify-content: center;
-}
-
 .muted {
   color: var(--muted);
 }
@@ -296,62 +292,7 @@ button.toggle.on {
   min-width: 160px;
 }
 
-/* Practice */
-
-.practice .counter {
-  font-size: 1.3rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.practice .session {
-  margin: -6px 0 14px;
-}
-
-.player {
-  display: grid;
-  gap: 14px;
-  padding: 20px;
-}
-
-.timeline {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-}
-
-.timeline input[type="range"] {
-  width: 100%;
-  accent-color: var(--accent);
-}
-
-.time {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.controls .play {
-  min-width: 120px;
-}
-
-.controls.secondary {
-  align-items: center;
-}
-
-.speed {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
+/* Form controls */
 
 select,
 input,
@@ -364,83 +305,183 @@ textarea {
   padding: 6px 8px;
 }
 
-.answer {
-  margin-top: 22px;
-  display: grid;
-  gap: 8px;
-}
-
-.answer label {
-  font-weight: 600;
-}
-
-.answer textarea {
-  width: 100%;
-  resize: vertical;
-  font-size: 1.15rem;
-  line-height: 1.5;
-  padding: 10px 12px;
-}
-
-.answer textarea:focus,
+textarea:focus,
 input:focus,
 select:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
 
-.answer textarea[readonly] {
-  opacity: 0.8;
+/* Practice: one exercise block, a slim player bar on top of the script,
+   answer and result rows. */
+
+.practice-status {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
 }
 
-.result {
-  margin-top: 16px;
+.practice .counter {
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.result.correct {
-  border-color: var(--ok);
+.exercise {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-.result .score {
-  margin-bottom: 8px;
+.player-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
 }
 
-.result.correct .score {
-  color: var(--ok);
+.player-bar button,
+.player-bar select {
+  padding: 3px 10px;
 }
 
-.result dl {
+.player-bar .banner {
+  flex-basis: 100%;
   margin: 0;
 }
 
-.result dt {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.transport {
+  display: flex;
+  gap: 6px;
+}
+
+.transport .play {
+  min-width: 92px;
+}
+
+.timeline {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeline input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  accent-color: var(--accent);
+}
+
+.time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
-  margin-top: 10px;
 }
 
-.result dd {
-  margin: 2px 0 0;
-  font-size: 1.1rem;
+.exercise-row {
+  padding: 12px 20px;
 }
 
-.result dd.source {
+.exercise-row + .exercise-row {
+  border-top: 1px dashed var(--border);
+}
+
+/* Inset everything but the answer box by the box's own padding + border, so
+   the script, the typed answer and the text being typed all line up. */
+.exercise-row > :not(textarea) {
+  padding-inline: 13px;
+}
+
+.row-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
+
+.practice-text,
+.typing-input {
+  font-size: 24px;
+  line-height: 1.6;
+}
+
+.practice-text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.script-hidden {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.typing-input {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  padding: 8px 12px;
+  background: var(--bg);
+}
+
+/* A word the diff reports as wrong, in the script or the typed answer. */
+.word.error {
+  padding: 0 2px;
+  border-radius: 4px;
+  color: var(--bad);
+  background: var(--bad-bg);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.feedback .score {
+  margin-bottom: 4px;
+}
+
+.feedback.correct .score {
+  color: var(--ok);
+}
+
+.exercise-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 20px 16px;
+}
+
+/* Word-level diff in the result row */
 
 .diff {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 4px 6px;
-  line-height: 1.9;
+  font-size: 18px;
+  line-height: 1.8;
 }
 
 .tok {
   border-radius: 4px;
   padding: 0 3px;
+}
+
+/* Correct words stay quiet so the errors stand out. */
+.tok.equal {
+  color: var(--muted);
 }
 
 .tok.missing {
@@ -451,8 +492,8 @@ select:focus {
 }
 
 .tok.extra {
-  background: var(--warn-bg);
-  color: var(--warn);
+  background: var(--bad-bg);
+  color: var(--bad);
 }
 
 .tok.changed {

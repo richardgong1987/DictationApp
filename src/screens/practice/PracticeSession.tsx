@@ -95,10 +95,10 @@ export default function PracticeSession({
     }
   };
 
+  // The answer box mounts again and focuses itself (autoFocus).
   const tryAgain = () => {
     setResult(null);
     setAnswer("");
-    answerRef.current?.focus();
   };
 
   const finish = () => navigate({ name: "lesson", lessonId: lesson.id });
@@ -137,42 +137,66 @@ export default function PracticeSession({
         <button className="link" onClick={finish}>
           ← {lesson.title}
         </button>
-        <div className="counter">
-          {index + 1} / {items.length}
+        <div className="practice-status">
+          <span className="muted small">
+            Checked {scores.length} this session
+            {averageScore !== null && ` · average ${formatPercent(averageScore)}`}
+            {item.attemptCount > 0 && ` · this item best ${formatPercent(item.bestAccuracy)}`}
+          </span>
+          <span className="counter">
+            {index + 1} / {items.length}
+          </span>
         </div>
       </header>
-      <div className="muted small session">
-        Checked {scores.length} this session
-        {averageScore !== null && ` · average ${formatPercent(averageScore)}`}
-        {item.attemptCount > 0 && ` · this item best ${formatPercent(item.bestAccuracy)}`}
-      </div>
 
-      <PlayerPanel
-        player={player}
-        itemAudio={itemAudio}
-        commands={commands}
-        hasPrevious={index > 0}
-        hasNext={!isLast}
-      />
-
-      <section className="answer">
-        <label htmlFor="answer">Type what you hear:</label>
-        <textarea
-          id="answer"
-          ref={answerRef}
-          rows={3}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          readOnly={result !== null}
-          spellCheck={false}
-          autoCorrect="off"
-          autoCapitalize="off"
-          autoComplete="off"
-          placeholder="Listen, then type the passage here…"
+      <section className="exercise" aria-label="Dictation exercise">
+        <PlayerPanel
+          player={player}
+          itemAudio={itemAudio}
+          commands={commands}
+          hasPrevious={index > 0}
+          hasNext={!isLast}
         />
-        <div className="actions center">
+
+        {result ? (
+          <AnswerResult result={result} replayCount={replayCount} />
+        ) : (
+          <>
+            <div className="exercise-row">
+              <span className="row-label">Script</span>
+              <p className="script-hidden">Hidden until you check your answer</p>
+            </div>
+            <div className="exercise-row">
+              <label className="row-label" htmlFor="answer">
+                Answer
+              </label>
+              {/* Mounts again after checking; focus it each time. */}
+              <textarea
+                id="answer"
+                className="typing-input"
+                ref={answerRef}
+                rows={3}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                autoFocus
+                spellCheck={false}
+                autoCorrect="off"
+                autoCapitalize="off"
+                autoComplete="off"
+                placeholder="Listen, then type the passage here…"
+              />
+            </div>
+          </>
+        )}
+
+        <div className="exercise-actions">
           {!result ? (
-            <button className="primary" onClick={checkAnswer} disabled={isChecking}>
+            <button
+              className="primary"
+              onClick={checkAnswer}
+              disabled={isChecking}
+              title="Check Answer (Enter)"
+            >
               Check Answer
             </button>
           ) : (
@@ -183,7 +207,7 @@ export default function PracticeSession({
                   Finish lesson
                 </button>
               ) : (
-                <button className="primary" onClick={commands.next}>
+                <button className="primary" onClick={commands.next} title="Next item (Enter)">
                   Next item →
                 </button>
               )}
@@ -193,7 +217,6 @@ export default function PracticeSession({
       </section>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
-      {result && <AnswerResult result={result} replayCount={replayCount} />}
       <ShortcutHelp />
     </main>
   );

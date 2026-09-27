@@ -18,7 +18,42 @@ export default function PlayerPanel({ player, itemAudio, commands, hasPrevious, 
   const duration = state.duration || 0;
 
   return (
-    <section className="card player" aria-label="Audio player">
+    <div className="player-bar" role="group" aria-label="Audio player">
+      <div className="transport">
+        <ControlButton
+          onClick={commands.previous}
+          disabled={!hasPrevious}
+          title="Previous item (←)"
+          aria-label="Previous item"
+        >
+          ⏮
+        </ControlButton>
+        <ControlButton
+          className="primary play"
+          onClick={commands.togglePlay}
+          disabled={!state.isReady}
+          title="Play / Pause (Space)"
+        >
+          {itemAudio.isLoading ? "Loading…" : state.isPlaying ? "❚❚ Pause" : "▶ Play"}
+        </ControlButton>
+        <ControlButton
+          onClick={commands.replay}
+          disabled={!state.isReady}
+          title="Replay (R)"
+          aria-label="Replay"
+        >
+          ↺
+        </ControlButton>
+        <ControlButton
+          onClick={commands.next}
+          disabled={!hasNext}
+          title="Next item (→)"
+          aria-label="Next item"
+        >
+          ⏭
+        </ControlButton>
+      </div>
+
       <div className="timeline">
         <span className="time">{formatTime(state.currentTime)}</span>
         <input
@@ -34,46 +69,26 @@ export default function PlayerPanel({ player, itemAudio, commands, hasPrevious, 
         <span className="time">{formatTime(duration)}</span>
       </div>
 
-      <div className="controls">
-        <ControlButton onClick={commands.previous} disabled={!hasPrevious} title="Previous (←)">
-          ⏮ Prev
-        </ControlButton>
-        <ControlButton onClick={commands.replay} disabled={!state.isReady} title="Replay (R)">
-          ↺ Replay
-        </ControlButton>
-        <ControlButton
-          className="primary play"
-          onClick={commands.togglePlay}
-          disabled={!state.isReady}
-          title="Play / Pause (Space)"
-        >
-          {itemAudio.isLoading ? "Loading…" : state.isPlaying ? "❚❚ Pause" : "▶ Play"}
-        </ControlButton>
-        <ControlButton onClick={commands.next} disabled={!hasNext} title="Next (→)">
-          Next ⏭
-        </ControlButton>
-      </div>
-
-      <div className="controls secondary">
-        <ControlButton
-          className={state.isLooping ? "toggle on" : "toggle"}
-          onClick={commands.toggleLoop}
-          aria-pressed={state.isLooping}
-          title="Loop current item (L)"
-        >
-          ⟳ Loop {state.isLooping ? "on" : "off"}
-        </ControlButton>
-        <label className="speed" title="Playback speed (↑ / ↓)">
-          Speed
-          <select value={state.speed} onChange={(e) => player.setSpeed(Number(e.target.value))}>
-            {PLAYBACK_SPEEDS.map((speed) => (
-              <option key={speed} value={speed}>
-                {formatSpeed(speed)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <ControlButton
+        className={state.isLooping ? "toggle on" : "toggle"}
+        onClick={commands.toggleLoop}
+        aria-pressed={state.isLooping}
+        title="Loop current item (L)"
+      >
+        ⟳ Loop
+      </ControlButton>
+      <select
+        value={state.speed}
+        onChange={(e) => player.setSpeed(Number(e.target.value))}
+        title="Playback speed (↑ / ↓)"
+        aria-label="Playback speed"
+      >
+        {PLAYBACK_SPEEDS.map((speed) => (
+          <option key={speed} value={speed}>
+            {formatSpeed(speed)}
+          </option>
+        ))}
+      </select>
 
       {itemAudio.error && (
         <div className="banner error">
@@ -81,7 +96,7 @@ export default function PlayerPanel({ player, itemAudio, commands, hasPrevious, 
           <button onClick={itemAudio.retry}>Retry</button>
         </div>
       )}
-    </section>
+    </div>
   );
 }
 

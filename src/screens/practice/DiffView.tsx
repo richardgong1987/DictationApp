@@ -1,4 +1,5 @@
-import type { DiffToken } from "../../api/types";
+import { Fragment } from "react";
+import type { DiffKind, DiffToken } from "../../api/types";
 
 /** Word-level diff between the source passage and the typed answer. */
 export default function DiffView({ diff }: { diff: DiffToken[] }) {
@@ -50,4 +51,46 @@ function DiffTokenView({ token }: { token: DiffToken }) {
         </span>
       );
   }
+}
+
+/** The script is the diff's `expected` side, the typed answer its `actual` side. */
+type DiffSide = "expected" | "actual";
+
+/** Missed or misheard words in the script; wrong or extra words in the answer. */
+const ERROR_KINDS: Record<DiffSide, ReadonlySet<DiffKind>> = {
+  expected: new Set<DiffKind>(["missing", "changed"]),
+  actual: new Set<DiffKind>(["changed", "extra"]),
+};
+
+/** Shows `text` as it was written, marking the words the diff reports as wrong. */
+export function MarkedText({ text, diff, side }: { text: string; diff: DiffToken[]; side: DiffSide }) {
+  return (
+    <>
+      {markWords(text, diff, side).map(({ word, isError }, i) => (
+        <Fragment key={i}>
+          {i > 0 && " "}
+          <span className={isError ? "word error" : "word"}>{word}</span>
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+/**
+ * Pairs each word of `text` with its diff token. The diff lists this side's
+ * words in the same order, minus punctuation-only ones such as "—", which the
+ * comparison ignores; those stay unmarked.
+ */
+function markWords(text: string, diff: DiffToken[], side: DiffSide) {
+  const sideTokens = diff.filter((token) => token[side] !== null);
+  let next = 0;
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => {
+      const token = sideTokens[next];
+      if (!token || token[side] !== word) return { word, isError: false };
+      next += 1;
+      return { word, isError: ERROR_KINDS[side].has(token.kind) };
+    });
 }
