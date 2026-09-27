@@ -1,8 +1,8 @@
 import { PLAYBACK_SPEEDS } from "../../api/constants";
 import { formatSpeed, formatTime } from "../../format";
 import ControlButton from "./ControlButton";
+import type { CurrentItemAudio } from "./itemAudio";
 import type { AudioPlayer } from "./useAudioPlayer";
-import type { ItemAudio } from "./useItemAudio";
 import type { PracticeCommands } from "./usePracticeShortcuts";
 
 export type PlayerCommands = Pick<
@@ -17,7 +17,8 @@ interface Props {
   isActive: boolean;
   /** Length of this card's audio, once known. */
   duration: number | undefined;
-  itemAudio: ItemAudio;
+  /** Loading state of the current item's audio, shown on the active card. */
+  currentAudio: CurrentItemAudio;
   commands: PlayerCommands;
   hasPrevious: boolean;
   hasNext: boolean;
@@ -32,13 +33,13 @@ export default function PlayerPanel({
   player,
   isActive,
   duration,
-  itemAudio,
+  currentAudio,
   commands,
   hasPrevious,
   hasNext,
 }: Props) {
   const { state } = player;
-  const isLoadingAudio = isActive && itemAudio.isLoading;
+  const isLoadingAudio = isActive && currentAudio.isLoading;
   const canPlay = !isActive || state.isReady;
   const currentTime = isActive ? state.currentTime : 0;
   const length = isActive && state.duration > 0 ? state.duration : (duration ?? 0);
@@ -116,10 +117,10 @@ export default function PlayerPanel({
         ))}
       </select>
 
-      {isActive && itemAudio.error && (
+      {isActive && currentAudio.error && (
         <div className="banner error">
-          <span>{itemAudio.error}</span>
-          <button onClick={itemAudio.retry}>Retry</button>
+          <span>{currentAudio.error}</span>
+          <button onClick={currentAudio.retry}>Retry</button>
         </div>
       )}
     </div>

@@ -9,7 +9,7 @@ use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
 use crate::lesson::parser::{parse_lesson, title_from_path};
 use crate::lesson::repository::{LessonRepository, NewItem, NewLesson};
-use crate::lesson::{is_too_long, DictationItem, ItemDetail, LessonDetail, LessonSummary};
+use crate::lesson::{is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::repository::AttemptRepository;
 use crate::practice::ItemStats;
 use crate::settings::service::SettingsService;
@@ -45,18 +45,7 @@ impl LessonService {
         self.lessons
             .list()?
             .into_iter()
-            .map(|lesson| {
-                let items = self.lessons.items(&lesson.id)?;
-                let is_ready = |item: &&DictationItem| {
-                    self.audio_cache.status(item, &settings) == AudioStatus::Ready
-                };
-                Ok(LessonSummary {
-                    item_count: items.len(),
-                    audio_ready_count: items.iter().filter(is_ready).count(),
-                    long_item_count: items.iter().filter(|item| is_too_long(&item.text)).count(),
-                    lesson,
-                })
-            })
+            .map(|lesson| self.summarize(lesson, &settings))
             .collect()
     }
 
@@ -127,6 +116,21 @@ impl LessonService {
     pub fn delete(&self, lesson_id: &str) -> AppResult<()> {
         self.lessons.delete(lesson_id)?;
         Ok(self.files.delete_lesson_folder(lesson_id)?)
+    }
+
+    fn summarize(&self, lesson: Lesson, settings: &Settings) -> AppResult<LessonSummary> {
+        let items = self.lessons.items(&lesson.id)?;
+        let audio_ready_count = items
+            .iter()
+            .filter(|item| self.audio_cache.status(item, settings) == AudioStatus::Ready)
+            .count();
+        let long_item_count = items.iter().filter(|item| is_too_long(&item.text)).count();
+        Ok(LessonSummary {
+            item_count: items.len(),
+            audio_ready_count,
+            long_item_count,
+            lesson,
+        })
     }
 
     fn item_detail_of(

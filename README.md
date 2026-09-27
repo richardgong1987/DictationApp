@@ -805,9 +805,22 @@ src/
     ├── LibraryScreen.tsx
     ├── SettingsScreen.tsx
     ├── lesson/       LessonScreen, item row, audio generation hook and status
-    └── practice/     PracticeScreen → PracticeSession, player hook, item audio loading,
-                      keyboard shortcuts (key → command table), player panel, result, diff
+    └── practice/
+        ├── PracticeScreen.tsx        loads the lesson and player preferences
+        ├── PracticeSession.tsx       all items as cards; wires player, answers and shortcuts
+        ├── PracticeItemCard.tsx      one item: player row, original text, answer, feedback
+        ├── PlayerPanel.tsx           audio controls of one card
+        ├── AnswerResult.tsx          score and word chips (DiffView.tsx) of a checked answer
+        ├── useAudioPlayer.ts         the one HTMLAudioElement: play, seek, loop, speed
+        ├── itemAudio.ts              item MP3s as Blob URLs, the current item, clip lengths
+        ├── usePracticeProgress.ts    each item's answer: typed, checked, revealed, hidden
+        └── usePracticeShortcuts.ts   key → command table
 ```
+
+The practice screen shows every item as a card, but there is one audio player: the current card
+(blue border) is the one loaded in it and the one the keyboard shortcuts act on. "Show original
+text" checks the answer before revealing it; hiding it again makes the answer editable, and showing
+it again re-checks only if the answer changed.
 
 ---
 

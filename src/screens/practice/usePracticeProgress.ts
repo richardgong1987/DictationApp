@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { api, errorMessage } from "../../api/client";
 import type { CheckResult } from "../../api/types";
 
 /** What the learner has done with one item during this session. */
@@ -21,9 +22,15 @@ const NOT_STARTED: ItemProgress = {
   replayCount: 0,
 };
 
-/** Per-item answers, results and reveal state for the practice session. */
-export function usePracticeProgress() {
+/**
+ * Each item's answer through the session: typed, checked when its original
+ * text is shown, and editable again once the text is hidden.
+ * `onChecked` is told about every recorded attempt.
+ */
+export function usePracticeProgress(onChecked: (itemId: number, accuracy: number) => void) {
   const [progressById, setProgressById] = useState<ReadonlyMap<number, ItemProgress>>(new Map());
+  const [checkingItemId, setCheckingItemId] = useState<number | null>(null);
+  const [checkError, setCheckError] = useState<{ itemId: number; message: string } | null>(null);
 
   const update = useCallback(
     (itemId: number, change: (progress: ItemProgress) => Partial<ItemProgress>) => {
@@ -35,19 +42,45 @@ export function usePracticeProgress() {
     [],
   );
 
+  const progressOf = (itemId: number) => progressById.get(itemId) ?? NOT_STARTED;
+
+  /** Shows the original text; the answer is checked first unless unchanged since the last check. */
+  const reveal = async (itemId: number) => {
+    const progress = progressOf(itemId);
+    const isAlreadyChecked = progress.result !== null && progress.checkedAnswer === progress.answer;
+    if (isAlreadyChecked) {
+      update(itemId, () => ({ isRevealed: true }));
+      return;
+    }
+    if (checkingItemId !== null) return;
+    setCheckingItemId(itemId);
+    setCheckError(null);
+    try {
+      const result = await api.checkAnswer(itemId, progress.answer, progress.replayCount);
+      update(itemId, () => ({ result, checkedAnswer: progress.answer, isRevealed: true }));
+      onChecked(itemId, result.accuracy);
+    } catch (e) {
+      setCheckError({ itemId, message: errorMessage(e) });
+    } finally {
+      setCheckingItemId(null);
+    }
+  };
+
+  const accuracies = [...progressById.values()].flatMap((p) => p.result?.accuracy ?? []);
+
   return {
-    progressOf: (itemId: number) => progressById.get(itemId) ?? NOT_STARTED,
-    results: [...progressById.values()].flatMap((progress) => progress.result ?? []),
+    progressOf,
+    checkedCount: accuracies.length,
+    averageAccuracy: accuracies.length
+      ? accuracies.reduce((a, b) => a + b, 0) / accuracies.length
+      : null,
+    isChecking: (itemId: number) => checkingItemId === itemId,
+    checkErrorOf: (itemId: number) => (checkError?.itemId === itemId ? checkError.message : null),
+    dismissCheckError: () => setCheckError(null),
     setAnswer: (itemId: number, answer: string) => update(itemId, () => ({ answer })),
     countReplay: (itemId: number) =>
       update(itemId, (progress) => ({ replayCount: progress.replayCount + 1 })),
-    recordCheck: (itemId: number, answer: string, result: CheckResult) =>
-      update(itemId, () => ({ result, checkedAnswer: answer, isRevealed: true })),
-    setRevealed: (itemId: number, isRevealed: boolean) => update(itemId, () => ({ isRevealed })),
+    reveal,
+    hide: (itemId: number) => update(itemId, () => ({ isRevealed: false })),
   };
-}
-
-/** Revealing needs a new check unless the answer is unchanged since the last one. */
-export function needsCheck(progress: ItemProgress): boolean {
-  return progress.result === null || progress.checkedAnswer !== progress.answer;
 }
