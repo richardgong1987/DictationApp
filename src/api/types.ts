@@ -68,6 +68,20 @@ export interface CheckResult {
   diff: DiffToken[];
 }
 
+export interface SavedAnswer {
+  itemId: number;
+  /** Exactly as typed. */
+  text: string;
+  /** Present when the answer has been checked. */
+  result: CheckResult | null;
+}
+
+export interface PracticeProgress {
+  answers: SavedAnswer[];
+  /** The item to continue with; null until the lesson has been practised. */
+  resumeItemId: number | null;
+}
+
 export interface Settings {
   voice: string;
   speakingRate: number;

@@ -8,7 +8,7 @@ use crate::database::Database;
 use crate::lesson::files::LessonFiles;
 use crate::lesson::repository::LessonRepository;
 use crate::lesson::service::LessonService;
-use crate::practice::repository::AttemptRepository;
+use crate::practice::repository::PracticeRepository;
 use crate::practice::service::PracticeService;
 use crate::settings::repository::SettingsRepository;
 use crate::settings::service::SettingsService;
@@ -25,7 +25,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(database: Database, data_dir: PathBuf, env_credentials: EnvCredentials) -> Self {
         let lesson_repository = LessonRepository::new(database.clone());
-        let attempt_repository = AttemptRepository::new(database.clone());
+        let practice_repository = PracticeRepository::new(database.clone());
         let settings = SettingsService::new(SettingsRepository::new(database), env_credentials);
         let files = LessonFiles::new(data_dir);
         let audio_cache = AudioCache::new(files.clone());
@@ -33,7 +33,7 @@ impl AppState {
         Self {
             lessons: LessonService::new(
                 lesson_repository.clone(),
-                attempt_repository.clone(),
+                practice_repository.clone(),
                 settings.clone(),
                 files.clone(),
                 audio_cache.clone(),
@@ -44,7 +44,7 @@ impl AppState {
                 files,
                 audio_cache,
             ),
-            practice: PracticeService::new(lesson_repository, attempt_repository),
+            practice: PracticeService::new(lesson_repository, practice_repository),
             settings,
         }
     }

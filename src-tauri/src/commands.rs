@@ -10,7 +10,7 @@ use crate::app_state::AppState;
 use crate::audio::{AudioGenerationProgress, AudioGenerationSummary, GENERATION_PROGRESS_EVENT};
 use crate::error::AppResult;
 use crate::lesson::{ItemDetail, LessonDetail, LessonSummary};
-use crate::practice::CheckResult;
+use crate::practice::{CheckResult, PracticeProgress};
 use crate::settings::{Settings, SettingsDetail};
 
 // ---------------------------------------------------------------------------
@@ -83,6 +83,20 @@ pub fn check_answer(
     replay_count: i64,
 ) -> AppResult<CheckResult> {
     state.practice.check_answer(item_id, &answer, replay_count)
+}
+
+/// Keeps an answer that is being typed; a blank answer deletes the saved one.
+#[tauri::command]
+pub fn save_answer(state: State<'_, AppState>, item_id: i64, answer: String) -> AppResult<()> {
+    state.practice.save_answer(item_id, &answer)
+}
+
+#[tauri::command]
+pub fn get_practice_progress(
+    state: State<'_, AppState>,
+    lesson_id: String,
+) -> AppResult<PracticeProgress> {
+    state.practice.progress(&lesson_id)
 }
 
 // ---------------------------------------------------------------------------

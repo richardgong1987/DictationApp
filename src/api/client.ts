@@ -7,6 +7,7 @@ import type {
   ItemDetail,
   LessonDetail,
   LessonSummary,
+  PracticeProgress,
   Settings,
   SettingsDetail,
 } from "./types";
@@ -27,6 +28,10 @@ export const api = {
 
   checkAnswer: (itemId: number, answer: string, replayCount: number) =>
     invoke<CheckResult>("check_answer", { itemId, answer, replayCount }),
+  /** Keeps an answer being typed; a blank answer deletes the saved one. */
+  saveAnswer: (itemId: number, answer: string) => invoke<void>("save_answer", { itemId, answer }),
+  getPracticeProgress: (lessonId: string) =>
+    invoke<PracticeProgress>("get_practice_progress", { lessonId }),
 
   getSettings: () => invoke<SettingsDetail>("get_settings"),
   saveSettings: (settings: Settings) => invoke<SettingsDetail>("save_settings", { settings }),

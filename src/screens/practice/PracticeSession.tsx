@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
-import type { ItemDetail, Lesson } from "../../api/types";
+import type { ItemDetail, Lesson, SavedAnswer } from "../../api/types";
 import type { Navigate } from "../../navigation";
 import { formatPercent } from "../../format";
 import { useAudioDurations, useAudioUrls, useCurrentItemAudio } from "./itemAudio";
@@ -14,6 +14,7 @@ import { usePracticeShortcuts, type PracticeCommands } from "./usePracticeShortc
 interface Props {
   lesson: Lesson;
   initialItems: ItemDetail[];
+  savedAnswers: SavedAnswer[];
   startIndex: number;
   preferences: PlayerPreferences;
   navigate: Navigate;
@@ -26,6 +27,7 @@ interface Props {
 export default function PracticeSession({
   lesson,
   initialItems,
+  savedAnswers,
   startIndex,
   preferences,
   navigate,
@@ -57,7 +59,7 @@ export default function PracticeSession({
   const audioUrlFor = useAudioUrls(updateItem);
   const currentAudio = useCurrentItemAudio(activeItem, player, audioUrlFor);
   const durations = useAudioDurations(items, audioUrlFor);
-  const progress = usePracticeProgress(recordAttempt);
+  const progress = usePracticeProgress({ savedAnswers, onChecked: recordAttempt });
   useSavedPlayerPreferences(player.state);
 
   const answerBoxes = useRef(new Map<number, HTMLTextAreaElement>());
@@ -158,7 +160,7 @@ export default function PracticeSession({
               progress={progress.progressOf(item.id)}
               isActive={isActive}
               isChecking={progress.isChecking(item.id)}
-              error={progress.checkErrorOf(item.id)}
+              error={progress.errorOf(item.id)}
               answerRef={registerAnswerBox(item.id)}
               playerPanel={
                 <PlayerPanel
@@ -176,7 +178,7 @@ export default function PracticeSession({
                 reveal: () => progress.reveal(item.id),
                 hide: () => hide(item.id),
                 activate: () => goTo(rowIndex),
-                dismissError: progress.dismissCheckError,
+                dismissError: progress.dismissError,
               }}
             />
           );

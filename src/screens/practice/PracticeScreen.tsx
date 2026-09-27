@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../../api/client";
-import type { LessonDetail } from "../../api/types";
+import type { LessonDetail, PracticeProgress } from "../../api/types";
 import type { Navigate } from "../../navigation";
 import LoadingPage from "../../components/LoadingPage";
 import PracticeSession from "./PracticeSession";
@@ -8,27 +8,32 @@ import type { PlayerPreferences } from "./useAudioPlayer";
 
 interface Props {
   lessonId: string;
-  startIndex: number;
+  /** Omitted: continue where practice stopped last time. */
+  startIndex: number | undefined;
   navigate: Navigate;
 }
 
-/** Loads the lesson and the saved player preferences, then starts a session. */
+interface LoadedPractice {
+  detail: LessonDetail;
+  preferences: PlayerPreferences;
+  progress: PracticeProgress;
+}
+
+/** Loads the lesson, the saved answers and the player preferences, then starts a session. */
 export default function PracticeScreen({ lessonId, startIndex, navigate }: Props) {
-  const [detail, setDetail] = useState<LessonDetail | null>(null);
-  const [preferences, setPreferences] = useState<PlayerPreferences | null>(null);
+  const [loaded, setLoaded] = useState<LoadedPractice | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([api.getLesson(lessonId), api.getSettings()])
-      .then(([lessonDetail, settingsDetail]) => {
+    Promise.all([api.getLesson(lessonId), api.getSettings(), api.getPracticeProgress(lessonId)])
+      .then(([detail, settingsDetail, progress]) => {
         const { playbackSpeed, loopEnabled } = settingsDetail.settings;
-        setDetail(lessonDetail);
-        setPreferences({ speed: playbackSpeed, isLooping: loopEnabled });
+        setLoaded({ detail, progress, preferences: { speed: playbackSpeed, isLooping: loopEnabled } });
       })
       .catch((e) => setError(errorMessage(e)));
   }, [lessonId]);
 
-  if (!detail || !preferences) {
+  if (!loaded) {
     return (
       <LoadingPage
         backLabel="Lesson"
@@ -37,6 +42,7 @@ export default function PracticeScreen({ lessonId, startIndex, navigate }: Props
       />
     );
   }
+  const { detail, progress, preferences } = loaded;
   if (detail.items.length === 0) {
     return (
       <main className="page">
@@ -44,12 +50,15 @@ export default function PracticeScreen({ lessonId, startIndex, navigate }: Props
       </main>
     );
   }
+  const resumeIndex = detail.items.findIndex((item) => item.id === progress.resumeItemId);
+  const firstIndex = startIndex ?? Math.max(resumeIndex, 0);
   const lastIndex = detail.items.length - 1;
   return (
     <PracticeSession
       lesson={detail.lesson}
       initialItems={detail.items}
-      startIndex={Math.min(Math.max(startIndex, 0), lastIndex)}
+      savedAnswers={progress.answers}
+      startIndex={Math.min(Math.max(firstIndex, 0), lastIndex)}
       preferences={preferences}
       navigate={navigate}
     />

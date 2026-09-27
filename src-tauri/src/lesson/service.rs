@@ -10,14 +10,14 @@ use crate::lesson::files::LessonFiles;
 use crate::lesson::parser::{parse_lesson, title_from_path};
 use crate::lesson::repository::{LessonRepository, NewItem, NewLesson};
 use crate::lesson::{is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonSummary};
-use crate::practice::repository::AttemptRepository;
+use crate::practice::repository::PracticeRepository;
 use crate::practice::ItemStats;
 use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 
 pub struct LessonService {
     lessons: LessonRepository,
-    attempts: AttemptRepository,
+    practice: PracticeRepository,
     settings: SettingsService,
     files: LessonFiles,
     audio_cache: AudioCache,
@@ -26,14 +26,14 @@ pub struct LessonService {
 impl LessonService {
     pub fn new(
         lessons: LessonRepository,
-        attempts: AttemptRepository,
+        practice: PracticeRepository,
         settings: SettingsService,
         files: LessonFiles,
         audio_cache: AudioCache,
     ) -> Self {
         Self {
             lessons,
-            attempts,
+            practice,
             settings,
             files,
             audio_cache,
@@ -87,7 +87,7 @@ impl LessonService {
     pub fn detail(&self, lesson_id: &str) -> AppResult<LessonDetail> {
         let lesson = self.lessons.get(lesson_id)?;
         let settings = self.settings.load()?;
-        let mut stats = self.attempts.stats_by_item(lesson_id)?;
+        let mut stats = self.practice.stats_by_item(lesson_id)?;
         let items = self
             .lessons
             .items(lesson_id)?
@@ -104,7 +104,7 @@ impl LessonService {
         let item = self.lessons.get_item(item_id)?;
         let settings = self.settings.load()?;
         let stats = self
-            .attempts
+            .practice
             .stats_by_item(&item.lesson_id)?
             .remove(&item.id)
             .unwrap_or_default();

@@ -129,8 +129,12 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
           <button onClick={regenerateAll} disabled={generation.isGenerating}>
             Regenerate all
           </button>
-          <button className="primary" onClick={() => practiceFrom(0)}>
-            Start practice
+          <button
+            className="primary"
+            onClick={() => navigate({ name: "practice", lessonId })}
+            title="Continue where you stopped last time"
+          >
+            Practice
           </button>
         </div>
       </header>

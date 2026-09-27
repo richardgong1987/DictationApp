@@ -23,7 +23,7 @@ export default function App() {
     case "practice":
       return (
         <PracticeScreen
-          key={`${route.lessonId}:${route.startIndex}`}
+          key={`${route.lessonId}:${route.startIndex ?? "resume"}`}
           lessonId={route.lessonId}
           startIndex={route.startIndex}
           navigate={setRoute}

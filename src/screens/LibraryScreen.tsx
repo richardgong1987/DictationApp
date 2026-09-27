@@ -129,7 +129,8 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                   <button onClick={() => deleteLesson(lesson)}>Delete</button>
                   <button
                     className="primary"
-                    onClick={() => navigate({ name: "practice", lessonId: lesson.id, startIndex: 0 })}
+                    onClick={() => navigate({ name: "practice", lessonId: lesson.id })}
+                    title="Continue where you stopped last time"
                   >
                     Practice
                   </button>

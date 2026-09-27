@@ -26,7 +26,16 @@ struct Harness {
 impl Harness {
     /// An app with an empty data directory and no Azure credentials.
     fn new() -> Self {
-        let dir = tempfile::tempdir().unwrap();
+        Self::open(tempfile::tempdir().unwrap())
+    }
+
+    /// Closes the app and starts it again on the same data directory.
+    fn restart(self) -> Self {
+        let Self { dir, .. } = self;
+        Self::open(dir)
+    }
+
+    fn open(dir: tempfile::TempDir) -> Self {
         let database = Database::open(&dir.path().join("dictation.db")).unwrap();
         let state = AppState::new(
             database.clone(),
@@ -239,4 +248,51 @@ fn missing_audio_without_credentials_is_a_clear_error() {
         .call("get_item_audio", json!({ "itemId": item_id }))
         .unwrap_err();
     assert!(err.as_str().unwrap().contains("not found"));
+}
+
+#[test]
+fn answers_are_kept_and_practice_resumes_where_it_stopped() {
+    let h = Harness::new();
+    let path = h.write_lesson_file("lesson01.txt", LESSON);
+    let detail = h.call("import_lesson", json!({ "path": path })).unwrap();
+    let lesson_id = detail["lesson"]["id"].clone();
+    let ids: Vec<i64> = detail["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["id"].as_i64().unwrap())
+        .collect();
+    let progress = |h: &Harness| {
+        h.call("get_practice_progress", json!({ "lessonId": lesson_id }))
+            .unwrap()
+    };
+    let nothing_saved = json!({ "answers": [], "resumeItemId": null });
+    assert_eq!(progress(&h), nothing_saved);
+
+    // A typed answer is kept exactly as typed, and practice resumes on it.
+    h.call(
+        "save_answer",
+        json!({ "itemId": ids[0], "answer": "I haven't  seen him" }),
+    )
+    .unwrap();
+    let saved = progress(&h);
+    assert_eq!(saved["answers"][0]["text"], "I haven't  seen him");
+    assert_eq!(saved["answers"][0]["result"], Value::Null);
+    assert_eq!(saved["resumeItemId"], ids[0]);
+
+    // A checked answer comes back with its result, and practice moves on.
+    h.call(
+        "check_answer",
+        json!({ "itemId": ids[0], "answer": "I haven't seen him since last Monday.", "replayCount": 1 }),
+    )
+    .unwrap();
+    let h = h.restart();
+    let saved = progress(&h);
+    assert_eq!(saved["answers"][0]["result"]["isCorrect"], true);
+    assert_eq!(saved["resumeItemId"], ids[1]);
+
+    // Clearing an answer deletes it.
+    h.call("save_answer", json!({ "itemId": ids[0], "answer": "  " }))
+        .unwrap();
+    assert_eq!(progress(&h), nothing_saved);
 }

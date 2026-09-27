@@ -756,6 +756,15 @@ Decisions made while implementing V1, where the specification left room:
   SQLite `settings` table.
 - `metadata.json` in each lesson folder is written for readability; SQLite (`dictation.db` in the app
   data directory) is the source of truth.
+- **Saved answers**: the latest answer to each item is kept in the `answers` table (schema v2), exactly
+  as typed, with a status: `draft` (typed or edited since its last check) or `checked`. Typing saves a
+  draft once it pauses for half a second; "Show original text" saves it as checked, in the same
+  transaction as the attempt. Clearing the text deletes the saved answer. The result of a checked answer
+  is recomputed when the lesson is opened rather than stored. `attempts` stays the full history of
+  checks behind the statistics.
+- **Resuming**: opening practice without choosing an item continues with the item answered last, or the
+  next one if that answer is already checked (`practice::resume_item_id`).
+- **Schema upgrades** run at startup, in order, recorded in `PRAGMA user_version` (`database.rs`).
 - **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` are read once at startup and passed
   to the settings service; no business code reads environment variables.
 
@@ -813,14 +822,15 @@ src/
         ├── AnswerResult.tsx          score and word chips (DiffView.tsx) of a checked answer
         ├── useAudioPlayer.ts         the one HTMLAudioElement: play, seek, loop, speed
         ├── itemAudio.ts              item MP3s as Blob URLs, the current item, clip lengths
-        ├── usePracticeProgress.ts    each item's answer: typed, checked, revealed, hidden
+        ├── usePracticeProgress.ts    each item's answer: saved as typed, checked, revealed, hidden
         └── usePracticeShortcuts.ts   key → command table
 ```
 
 The practice screen shows every item as a card, but there is one audio player: the current card
 (blue border) is the one loaded in it and the one the keyboard shortcuts act on. "Show original
 text" checks the answer before revealing it; hiding it again makes the answer editable, and showing
-it again re-checks only if the answer changed.
+it again re-checks only if the answer changed. Answers are kept between sessions, and "Practice"
+continues where you stopped; the ▶ on an item in the lesson screen starts from that item instead.
 
 ---
 

@@ -2,7 +2,8 @@
 export type Route =
   | { name: "library" }
   | { name: "lesson"; lessonId: string; autoGenerate?: boolean }
-  | { name: "practice"; lessonId: string; startIndex: number }
+  /** Without `startIndex`, practice continues where it stopped last time. */
+  | { name: "practice"; lessonId: string; startIndex?: number }
   | { name: "settings"; back: Route };
 
 export type Navigate = (route: Route) => void;
