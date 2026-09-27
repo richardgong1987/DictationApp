@@ -1,0 +1,213 @@
+The Java Memory Model defines the rules that determine when writes performed by one thread become visible to reads performed by another thread.
+
+A happens-before relationship provides a formal guarantee that one action's effects are visible to another action in a concurrent Java program.
+
+Unlocking a monitor happens-before every subsequent lock of the same monitor, which is why synchronized blocks provide both mutual exclusion and visibility.
+
+A write to a volatile field happens-before every subsequent read of that same field, establishing visibility and ordering guarantees between threads.
+
+Volatile does not make compound operations atomic, so an expression like count++ can still lose updates when multiple threads modify it concurrently.
+
+Final fields receive special publication guarantees when an object is constructed correctly and does not leak this before the constructor completes.
+
+Instruction reordering is allowed when it preserves single-threaded semantics, but the Java Memory Model restricts reorderings that would violate happens-before guarantees.
+
+Data races occur when multiple threads access the same variable concurrently, at least one access is a write, and the accesses are not properly synchronized.
+
+AtomicInteger uses low-level atomic operations such as compare-and-set to implement lock-free updates without requiring a traditional synchronized block.
+
+Compare-and-set succeeds only when the current value matches an expected value, allowing threads to detect interference and retry an update safely.
+
+The ABA problem occurs when a value changes from A to B and back to A, causing a compare-and-set operation to miss the intermediate modification.
+
+StampedLock supports optimistic reads, read locks, and write locks, but it is not reentrant and requires careful validation of optimistic reads.
+
+ReentrantLock provides features unavailable with synchronized, including interruptible lock acquisition, timed attempts, fairness policies, and multiple condition queues.
+
+A Condition object allows threads to wait for specific state transitions while still using the explicit locking model provided by ReentrantLock.
+
+ThreadLocal gives each thread an independent value, but values can leak in thread pools if they are not removed after request processing.
+
+Virtual threads dramatically reduce the cost of blocking operations by decoupling Java threads from one-to-one ownership of operating system threads.
+
+Virtual threads are most useful for high-concurrency workloads dominated by blocking I/O rather than CPU-bound computation.
+
+Pinning can reduce virtual-thread scalability when a virtual thread blocks while holding certain monitors or executing native code that prevents unmounting.
+
+ForkJoinPool is designed for divide-and-conquer workloads and uses work stealing so idle worker threads can take tasks from other workers.
+
+CompletableFuture represents an asynchronous computation pipeline and supports composition, transformation, exception handling, and combining independent stages.
+
+Using CompletableFuture without an explicit executor may place work on the common ForkJoinPool, which can cause interference between unrelated workloads.
+
+The JVM stack stores per-thread frames containing local variables, operand stacks, return information, and intermediate results for method execution.
+
+The heap stores objects and arrays and is shared among threads, while the garbage collector reclaims objects that are no longer strongly reachable.
+
+Metaspace stores class metadata in native memory and replaced the fixed-size PermGen area used by older JVM implementations.
+
+A class is initialized when certain active uses occur, such as creating an instance, invoking a static method, or accessing a non-constant static field.
+
+Class loading follows loading, linking, and initialization phases, while linking itself includes verification, preparation, and optional symbolic reference resolution.
+
+The parent delegation model reduces class duplication and improves type safety by asking parent class loaders to load classes before child loaders try.
+
+Two classes with the same fully qualified name are considered different types if they are loaded by different class loaders.
+
+The bytecode verifier checks structural correctness and type safety before execution, preventing many illegal memory operations at the JVM level.
+
+Just-In-Time compilation identifies hot methods and compiles frequently executed bytecode into optimized native machine code during program execution.
+
+Tiered compilation combines fast profiling-oriented compilation with more aggressive optimization so startup time and peak performance can both improve.
+
+Method inlining eliminates call overhead and exposes larger optimization opportunities, but excessive inlining can increase generated code size.
+
+Escape analysis can determine whether an object is confined to a method or thread, enabling optimizations such as scalar replacement and lock elimination.
+
+Scalar replacement can eliminate an actual object allocation by replacing object fields with independent scalar values in optimized machine code.
+
+Safepoints are locations where application threads can be paused so the JVM can perform operations requiring a consistent global view.
+
+Stop-the-world pauses occur when application threads are suspended for JVM activities such as certain garbage collection phases or deoptimization work.
+
+Generational garbage collectors are based on the observation that most newly allocated objects become unreachable relatively quickly.
+
+Young-generation collections focus on short-lived objects, while surviving objects may eventually be promoted into an older generation.
+
+G1 divides the heap into regions and attempts to meet pause-time targets by collecting regions with the greatest reclaimable space first.
+
+ZGC is a low-latency garbage collector designed to keep pause times small even when managing very large Java heaps.
+
+Shenandoah reduces pause times by performing more garbage collection work concurrently with application threads.
+
+Garbage collection roots include thread stacks, static references, JNI references, and other JVM-managed references from which reachability is traced.
+
+A strong reference keeps an object alive, while soft, weak, and phantom references provide progressively weaker reachability semantics.
+
+WeakHashMap uses weak references for keys, allowing entries to disappear when a key is no longer strongly referenced elsewhere.
+
+PhantomReference is commonly used with ReferenceQueue for post-mortem cleanup patterns after an object becomes phantom reachable.
+
+Object finalization is deprecated because it is unpredictable, expensive, and difficult to use safely for resource management.
+
+Try-with-resources relies on AutoCloseable and provides deterministic cleanup for resources such as streams, sockets, files, and database connections.
+
+Java generics use type erasure, meaning generic type parameters usually do not exist as distinct runtime types after compilation.
+
+Type erasure preserves backward compatibility but explains why new T(), generic arrays, and instanceof checks with parameterized types are restricted.
+
+Bridge methods are compiler-generated methods that preserve polymorphism after type erasure changes method signatures.
+
+PECS means producer extends, consumer super, and helps determine wildcard bounds when designing generic APIs.
+
+A List<? extends Number> can safely produce Number values, but arbitrary Number instances cannot be added because the concrete element type is unknown.
+
+A List<? super Integer> can accept Integer values, but values read from it are only guaranteed to be Object.
+
+Java arrays are covariant, so String[] is a subtype of Object[], while generic collections are invariant by default.
+
+Array covariance is checked at runtime and can throw ArrayStoreException, whereas generics move many type errors to compile time.
+
+The equals contract requires reflexivity, symmetry, transitivity, consistency, and false when comparing against null.
+
+Whenever equals is overridden, hashCode must be consistent so equal objects always produce the same hash code.
+
+HashMap spreads hash bits and uses buckets, converting heavily collided buckets into balanced trees under specific conditions.
+
+Poor hashCode implementations increase collisions and can degrade expected constant-time HashMap operations toward worse performance.
+
+ConcurrentHashMap allows highly concurrent access by avoiding one global lock and coordinating updates with finer-grained mechanisms and atomic operations.
+
+ConcurrentHashMap does not permit null keys or null values because null would make absence and explicit null mappings ambiguous in concurrent code.
+
+CopyOnWriteArrayList is efficient for read-heavy workloads but expensive for frequent writes because every mutation copies the backing array.
+
+Immutable objects are naturally thread-safe when their state cannot change after construction and their internal mutable data is not exposed.
+
+Records provide concise syntax for transparent data carriers and automatically generate accessors, equals, hashCode, and toString.
+
+Sealed classes restrict which classes may extend or implement a type, allowing the compiler to reason about a closed set of permitted subtypes.
+
+Pattern matching reduces explicit casting and can make type-based control flow more concise and less error-prone.
+
+Checked exceptions must be declared or handled, while unchecked exceptions derive from RuntimeException and generally represent programming or state errors.
+
+Suppressed exceptions preserve secondary failures that occur while closing resources during try-with-resources exception handling.
+
+Streams are lazy pipelines, so intermediate operations do not execute until a terminal operation requests elements from the pipeline.
+
+Parallel streams use the common ForkJoinPool by default and may perform poorly when tasks block, share mutable state, or have insufficient workload.
+
+Stream operations should ideally be stateless and non-interfering because mutating shared state can break correctness, especially under parallel execution.
+
+Spliterator supports partitioning data sources for traversal and parallel processing and reports characteristics that guide stream execution strategies.
+
+The Java module system introduces explicit module boundaries, readable dependencies, and exported packages to improve encapsulation at deployment scale.
+
+Reflection can inspect and invoke program elements dynamically, but it weakens static guarantees and may impose performance and encapsulation costs.
+
+MethodHandle provides a strongly typed, JVM-supported mechanism for dynamic method invocation and is heavily used by modern language features.
+
+invokedynamic allows the JVM to link call sites dynamically and underpins features such as lambdas and implementations of dynamic languages.
+
+Lambda expressions are generally implemented using invokedynamic rather than by generating a traditional anonymous inner class at each source location.
+
+Serialization with ObjectOutputStream is fragile for long-term persistence because class evolution, security concerns, and hidden object graphs create risks.
+
+The transient keyword prevents a field from participating in default Java serialization, but it does not provide security by itself.
+
+NIO channels and buffers support more explicit control over I/O operations and are fundamental to scalable non-blocking network programming.
+
+A Selector can monitor many channels for readiness events, allowing one thread to coordinate large numbers of non-blocking connections.
+
+DirectByteBuffer allocates memory outside the Java heap and can reduce copying during native I/O, but native memory still requires careful management.
+
+False sharing occurs when independent variables used by different threads occupy the same cache line and repeatedly invalidate each other's cache state.
+
+Mechanical sympathy means designing software with awareness of hardware behavior such as caches, memory hierarchy, branch prediction, and contention.
+
+Lock contention can destroy scalability because additional threads spend more time waiting, context switching, and invalidating shared cache lines.
+
+Amdahl's Law limits parallel speedup because the serial portion of a workload eventually dominates as more processing resources are added.
+
+Throughput measures completed work per unit time, while latency measures how long individual operations take from start to completion.
+
+Benchmarking Java code requires warmup because JIT compilation, class loading, profiling, and adaptive optimization can distort early measurements.
+
+JMH is the standard tool for Java microbenchmarking because it handles warmup, dead-code elimination, constant folding, and other common benchmarking traps.
+
+Dead-code elimination can remove benchmarked work entirely when the computed result is never observed, making naive timing measurements meaningless.
+
+Allocation rate is often as important as heap size because excessive temporary object creation can increase garbage collection pressure and CPU consumption.
+
+Object pooling is not automatically beneficial in modern JVMs because short-lived allocations are cheap and pools can introduce contention and retention.
+
+Profilers should distinguish CPU time, wall-clock time, allocation pressure, lock contention, and blocking because each reveals different performance problems.
+
+A thread dump captures thread states and stack traces and is invaluable for diagnosing deadlocks, contention, blocking calls, and stalled applications.
+
+A heap dump records objects and references in the heap and helps identify memory leaks, unexpected retention paths, and oversized object graphs.
+
+A memory leak in Java means objects remain reachable longer than intended, even though garbage collection itself is functioning correctly.
+
+Common leak sources include static collections, unbounded caches, listeners, ThreadLocal values, class-loader retention, and forgotten executor tasks.
+
+Deadlock occurs when threads form a cycle of dependencies in which each thread waits indefinitely for a lock held by another thread.
+
+Consistent lock ordering is one of the simplest ways to prevent deadlocks when multiple locks must be acquired together.
+
+Livelock differs from deadlock because threads remain active and keep changing state, but still fail to make useful progress.
+
+Starvation occurs when a thread is repeatedly denied access to CPU time or shared resources because other threads continuously take priority.
+
+Backpressure protects systems from overload by slowing or rejecting producers when consumers cannot process work fast enough.
+
+Bounded queues are often safer than unbounded queues because they make overload visible instead of hiding it until memory is exhausted.
+
+Thread pools should be sized according to workload characteristics, because CPU-bound and I/O-bound tasks have very different optimal concurrency levels.
+
+A fixed thread pool with an unbounded queue can hide saturation and eventually create enormous latency even before memory becomes a problem.
+
+Structured concurrency treats related concurrent tasks as a unit so cancellation, failure propagation, and lifecycle management become easier to reason about.
+
+Java performance engineering is ultimately about understanding interactions between source code, the JVM, garbage collection, operating systems, and hardware behavior.
