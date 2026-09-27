@@ -152,3 +152,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .idea
+pnpm-lock.yaml
+package-lock.json
