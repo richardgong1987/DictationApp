@@ -12,26 +12,34 @@ interface Options {
 }
 
 export interface ItemAudio {
+  /** The current item's audio is being fetched or generated. */
   isLoading: boolean;
   error: string | null;
   retry: () => void;
+  /** Length in seconds, by item id, for audio fetched so far. */
+  durations: ReadonlyMap<number, number>;
 }
 
 /**
- * Loads the current item's audio into the player, then prefetches the next
- * item's. Missing or outdated audio is generated first; cached audio never
- * calls Azure.
+ * Loads the current item's audio into the player. Missing or outdated audio
+ * is generated first; cached audio never calls Azure. Audio that is already
+ * generated is fetched for every item, so each one shows its length and starts
+ * without a wait.
  */
 export function useItemAudio({ items, index, player, onItemUpdated }: Options): ItemAudio {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [durations, setDurations] = useState<ReadonlyMap<number, number>>(new Map());
   const audioUrlFor = useAudioUrlCache(onItemUpdated);
   const latestLoadId = useRef(0);
   const { load } = player;
 
-  // Reads the latest items without restarting playback whenever one changes.
+  // Read the latest items without restarting playback whenever one changes.
   const itemAt = useEffectEvent((position: number): ItemDetail | undefined => items[position]);
+  const readyItemsWithoutDuration = useEffectEvent(() =>
+    items.filter((item) => item.audioStatus === "ready" && !durations.has(item.id)),
+  );
 
   useEffect(() => {
     const loadId = ++latestLoadId.current;
@@ -45,8 +53,6 @@ export function useItemAudio({ items, index, player, onItemUpdated }: Options): 
         if (isSuperseded()) return;
         load(url, true);
         setIsLoading(false);
-        const next = itemAt(index + 1);
-        if (next?.audioStatus === "ready") audioUrlFor(next).catch(() => undefined);
       })
       .catch((e) => {
         if (isSuperseded()) return;
@@ -55,8 +61,46 @@ export function useItemAudio({ items, index, player, onItemUpdated }: Options): 
       });
   }, [index, retryCount, audioUrlFor, load]);
 
+  // One at a time, and never for items whose audio still has to be generated.
+  const readyItemIds = items
+    .filter((item) => item.audioStatus === "ready")
+    .map((item) => item.id)
+    .join();
+  useEffect(() => {
+    let isCancelled = false;
+    (async () => {
+      for (const item of readyItemsWithoutDuration()) {
+        if (isCancelled) return;
+        try {
+          const seconds = await readDuration(await audioUrlFor(item));
+          if (isCancelled) return;
+          setDurations((known) => new Map(known).set(item.id, seconds));
+        } catch {
+          // The item simply shows no length.
+        }
+      }
+    })();
+    return () => {
+      isCancelled = true;
+    };
+  }, [readyItemIds, audioUrlFor]);
+
   const retry = useCallback(() => setRetryCount((count) => count + 1), []);
-  return { isLoading, error, retry };
+  return { isLoading, error, retry, durations };
+}
+
+/** Reads an MP3's length from its metadata, without playing it. */
+function readDuration(url: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = new Audio();
+    probe.preload = "metadata";
+    probe.onloadedmetadata = () =>
+      Number.isFinite(probe.duration)
+        ? resolve(probe.duration)
+        : reject(new Error("Unknown duration"));
+    probe.onerror = () => reject(probe.error);
+    probe.src = url;
+  });
 }
 
 /** Blob URLs per item id, kept for the session and revoked on unmount. */
