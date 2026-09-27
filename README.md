@@ -861,21 +861,3 @@ it again re-checks only if the answer changed. Answers are kept between sessions
 continues where you stopped; the ▶ on an item in the lesson screen starts from that item instead.
 
 ---
-
-## 19. Instructions for Claude Code
-
-When implementing this project:
-
-- read this README before making architectural decisions;
-- treat the MVP requirements above as the source of truth;
-- implement in small, reviewable steps;
-- avoid speculative features;
-- do not change the lesson format unless there is a strong technical reason;
-- keep TTS provider code isolated;
-- keep player controls fast and local;
-- write tests for non-UI business logic;
-- update this README if an implementation decision materially changes the documented architecture.
-
-A good first task is:
-
-> Initialize a Tauri + React + TypeScript desktop application with a Rust backend. Implement importing a UTF-8 text file, splitting it into dictation items using blank lines as separators, validating the 30-word recommendation, and displaying the parsed items in the UI. Do not implement Azure TTS yet.
