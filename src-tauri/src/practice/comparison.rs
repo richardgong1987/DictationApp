@@ -31,6 +31,16 @@ pub struct DiffToken {
     pub actual: Option<String>,
 }
 
+impl DiffToken {
+    fn new(kind: DiffKind, expected: Option<&str>, actual: Option<&str>) -> Self {
+        Self {
+            kind,
+            expected: expected.map(str::to_string),
+            actual: actual.map(str::to_string),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Comparison {
@@ -52,7 +62,7 @@ pub fn normalize_whitespace(text: &str) -> String {
 /// Normalizes one word for comparison: lowercase, typographic apostrophes and
 /// dashes unified, leading/trailing punctuation removed. Inner apostrophes and
 /// hyphens stay (`doesn't`, `well-known`).
-pub fn normalize_word(word: &str) -> String {
+fn normalize_word(word: &str) -> String {
     let unified: String = word
         .chars()
         .map(|c| match c {
@@ -66,68 +76,15 @@ pub fn normalize_word(word: &str) -> String {
         .to_lowercase()
 }
 
-struct Word<'a> {
-    raw: &'a str,
-    norm: String,
-}
-
-fn words(text: &str) -> Vec<Word<'_>> {
-    text.split_whitespace()
-        .map(|raw| Word {
-            raw,
-            norm: normalize_word(raw),
-        })
-        .filter(|w| !w.norm.is_empty())
-        .collect()
-}
-
 pub fn compare_answer(source: &str, answer: &str) -> Comparison {
-    let src = words(source);
-    let ans = words(answer);
-    let (n, m) = (src.len(), ans.len());
-
-    // lcs[i][j] = LCS length of src[i..] and ans[j..].
-    let mut lcs = vec![vec![0usize; m + 1]; n + 1];
-    for i in (0..n).rev() {
-        for j in (0..m).rev() {
-            lcs[i][j] = if src[i].norm == ans[j].norm {
-                lcs[i + 1][j + 1] + 1
-            } else {
-                lcs[i + 1][j].max(lcs[i][j + 1])
-            };
-        }
-    }
-
-    let mut diff = Vec::with_capacity(n.max(m));
-    let mut missing: Vec<&str> = Vec::new();
-    let mut extra: Vec<&str> = Vec::new();
-    let (mut i, mut j) = (0, 0);
-    while i < n || j < m {
-        if i < n && j < m && src[i].norm == ans[j].norm {
-            flush_gap(&mut diff, &mut missing, &mut extra);
-            diff.push(DiffToken {
-                kind: DiffKind::Equal,
-                expected: Some(src[i].raw.to_string()),
-                actual: Some(ans[j].raw.to_string()),
-            });
-            i += 1;
-            j += 1;
-        } else if j == m || (i < n && lcs[i + 1][j] >= lcs[i][j + 1]) {
-            missing.push(src[i].raw);
-            i += 1;
-        } else {
-            extra.push(ans[j].raw);
-            j += 1;
-        }
-    }
-    flush_gap(&mut diff, &mut missing, &mut extra);
-
+    let source_words = words(source);
+    let answer_words = words(answer);
+    let lcs = lcs_table(&source_words, &answer_words);
     let correct = lcs[0][0];
-    let denom = n.max(m);
-    let accuracy = if denom == 0 {
-        1.0
-    } else {
-        correct as f64 / denom as f64
+    let (n, m) = (source_words.len(), answer_words.len());
+    let accuracy = match n.max(m) {
+        0 => 1.0,
+        longest => correct as f64 / longest as f64,
     };
     Comparison {
         is_correct: n == m && correct == n,
@@ -135,46 +92,107 @@ pub fn compare_answer(source: &str, answer: &str) -> Comparison {
         correct_words: correct,
         source_words: n,
         answer_words: m,
-        diff,
+        diff: word_diff(&source_words, &answer_words, &lcs),
     }
 }
 
-/// Emits a run of differences between two matching words. Missing and extra
-/// words in the same gap are paired up as changes; leftovers stay
-/// missing/extra.
-fn flush_gap<'a>(diff: &mut Vec<DiffToken>, missing: &mut Vec<&'a str>, extra: &mut Vec<&'a str>) {
-    let paired = missing.len().min(extra.len());
-    for k in 0..paired {
-        diff.push(DiffToken {
-            kind: DiffKind::Changed,
-            expected: Some(missing[k].to_string()),
-            actual: Some(extra[k].to_string()),
-        });
+struct Word<'a> {
+    raw: &'a str,
+    normalized: String,
+}
+
+fn words(text: &str) -> Vec<Word<'_>> {
+    text.split_whitespace()
+        .map(|raw| Word {
+            raw,
+            normalized: normalize_word(raw),
+        })
+        .filter(|word| !word.normalized.is_empty())
+        .collect()
+}
+
+/// `table[i][j]` = length of the longest common subsequence of
+/// `source[i..]` and `answer[j..]`.
+fn lcs_table(source: &[Word<'_>], answer: &[Word<'_>]) -> Vec<Vec<usize>> {
+    let (n, m) = (source.len(), answer.len());
+    let mut table = vec![vec![0usize; m + 1]; n + 1];
+    for i in (0..n).rev() {
+        for j in (0..m).rev() {
+            table[i][j] = if source[i].normalized == answer[j].normalized {
+                table[i + 1][j + 1] + 1
+            } else {
+                table[i + 1][j].max(table[i][j + 1])
+            };
+        }
     }
-    for w in &missing[paired..] {
-        diff.push(DiffToken {
-            kind: DiffKind::Missing,
-            expected: Some(w.to_string()),
-            actual: None,
-        });
+    table
+}
+
+/// Walks the LCS table, emitting matches as they come and collecting the
+/// differences between two matches as one gap.
+fn word_diff(source: &[Word<'_>], answer: &[Word<'_>], lcs: &[Vec<usize>]) -> Vec<DiffToken> {
+    let (n, m) = (source.len(), answer.len());
+    let mut diff = Vec::with_capacity(n.max(m));
+    let mut gap = Gap::default();
+    let (mut i, mut j) = (0, 0);
+    while i < n || j < m {
+        if i < n && j < m && source[i].normalized == answer[j].normalized {
+            gap.flush_into(&mut diff);
+            diff.push(DiffToken::new(
+                DiffKind::Equal,
+                Some(source[i].raw),
+                Some(answer[j].raw),
+            ));
+            i += 1;
+            j += 1;
+        } else if j == m || (i < n && lcs[i + 1][j] >= lcs[i][j + 1]) {
+            gap.missing.push(source[i].raw);
+            i += 1;
+        } else {
+            gap.extra.push(answer[j].raw);
+            j += 1;
+        }
     }
-    for w in &extra[paired..] {
-        diff.push(DiffToken {
-            kind: DiffKind::Extra,
-            expected: None,
-            actual: Some(w.to_string()),
-        });
+    gap.flush_into(&mut diff);
+    diff
+}
+
+/// Differences between two matching words. Missing and extra words in the
+/// same gap are paired up as changes; leftovers stay missing/extra.
+#[derive(Default)]
+struct Gap<'a> {
+    missing: Vec<&'a str>,
+    extra: Vec<&'a str>,
+}
+
+impl Gap<'_> {
+    fn flush_into(&mut self, diff: &mut Vec<DiffToken>) {
+        let paired = self.missing.len().min(self.extra.len());
+        for (&expected, &actual) in self.missing.iter().zip(&self.extra) {
+            diff.push(DiffToken::new(
+                DiffKind::Changed,
+                Some(expected),
+                Some(actual),
+            ));
+        }
+        for &expected in &self.missing[paired..] {
+            diff.push(DiffToken::new(DiffKind::Missing, Some(expected), None));
+        }
+        for &actual in &self.extra[paired..] {
+            diff.push(DiffToken::new(DiffKind::Extra, None, Some(actual)));
+        }
+        self.missing.clear();
+        self.extra.clear();
     }
-    missing.clear();
-    extra.clear();
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn kinds(c: &Comparison) -> Vec<(DiffKind, Option<&str>, Option<&str>)> {
-        c.diff
+    fn kinds(comparison: &Comparison) -> Vec<(DiffKind, Option<&str>, Option<&str>)> {
+        comparison
+            .diff
             .iter()
             .map(|t| (t.kind.clone(), t.expected.as_deref(), t.actual.as_deref()))
             .collect()

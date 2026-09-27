@@ -1,26 +1,15 @@
-//! Lesson text parsing.
+//! Lesson text format.
 //!
 //! A lesson is a UTF-8 text file. Blank lines (empty or whitespace-only) are the
 //! only separator between dictation items; periods never split an item.
 
 use std::path::Path;
 
-/// Items longer than this trigger a warning (but are still accepted).
-pub const MAX_RECOMMENDED_WORDS: usize = 30;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParsedItem {
     /// 1-based position inside the lesson.
-    pub position: usize,
+    pub position: i64,
     pub text: String,
-}
-
-pub fn word_count(text: &str) -> usize {
-    text.split_whitespace().count()
-}
-
-pub fn is_too_long(text: &str) -> bool {
-    word_count(text) > MAX_RECOMMENDED_WORDS
 }
 
 /// Splits lesson content into dictation items.
@@ -34,54 +23,36 @@ pub fn is_too_long(text: &str) -> bool {
 /// - punctuation is preserved.
 pub fn parse_lesson(content: &str) -> Vec<ParsedItem> {
     let content = content.strip_prefix('\u{feff}').unwrap_or(content);
-    let mut items = Vec::new();
-    let mut current: Vec<&str> = Vec::new();
-
-    let flush = |current: &mut Vec<&str>, items: &mut Vec<ParsedItem>| {
-        if !current.is_empty() {
-            let text = current.join(" ");
-            let text = text.trim();
-            if !text.is_empty() {
-                items.push(ParsedItem {
-                    position: items.len() + 1,
-                    text: text.to_string(),
-                });
-            }
-            current.clear();
-        }
-    };
-
-    for line in content.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            flush(&mut current, &mut items);
-        } else {
-            current.push(line);
-        }
-    }
-    flush(&mut current, &mut items);
-    items
+    let lines: Vec<&str> = content.lines().map(str::trim).collect();
+    lines
+        .split(|line| line.is_empty())
+        .filter(|passage| !passage.is_empty())
+        .zip(1..)
+        .map(|(passage, position)| ParsedItem {
+            position,
+            text: passage.join(" "),
+        })
+        .collect()
 }
 
 /// Derives a lesson title from the imported file name.
 pub fn title_from_path(path: &Path) -> String {
     path.file_stem()
-        .map(|s| s.to_string_lossy().trim().to_string())
-        .filter(|s| !s.is_empty())
+        .map(|stem| stem.to_string_lossy().trim().to_string())
+        .filter(|stem| !stem.is_empty())
         .unwrap_or_else(|| "Untitled lesson".to_string())
-}
-
-/// Audio file name for an item position, e.g. `001.mp3`.
-pub fn audio_file_name(position: usize) -> String {
-    format!("{position:03}.mp3")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lesson::{is_too_long, word_count};
 
     fn texts(content: &str) -> Vec<String> {
-        parse_lesson(content).into_iter().map(|i| i.text).collect()
+        parse_lesson(content)
+            .into_iter()
+            .map(|item| item.text)
+            .collect()
     }
 
     #[test]
@@ -92,7 +63,7 @@ mod tests {
         assert_eq!(items[0].text, "I should have told you earlier.");
         assert_eq!(items[3].text, "She doesn't usually take the train to work.");
         assert_eq!(
-            items.iter().map(|i| i.position).collect::<Vec<_>>(),
+            items.iter().map(|item| item.position).collect::<Vec<_>>(),
             vec![1, 2, 3, 4]
         );
     }
@@ -149,9 +120,8 @@ mod tests {
     }
 
     #[test]
-    fn title_and_audio_names() {
+    fn title_comes_from_the_file_name() {
         assert_eq!(title_from_path(Path::new("/tmp/lesson01.txt")), "lesson01");
-        assert_eq!(audio_file_name(1), "001.mp3");
-        assert_eq!(audio_file_name(42), "042.mp3");
+        assert_eq!(title_from_path(Path::new("/tmp/ .txt")), "Untitled lesson");
     }
 }

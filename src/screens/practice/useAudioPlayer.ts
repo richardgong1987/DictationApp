@@ -1,20 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PLAYBACK_SPEEDS } from "../../api/constants";
+
+const DEFAULT_SPEED = 1;
+
+/** Saved in Settings so the next session starts where this one left off. */
+export interface PlayerPreferences {
+  speed: number;
+  isLooping: boolean;
+}
 
 export interface PlayerState {
-  playing: boolean;
+  isPlaying: boolean;
+  /** A source is loaded and can be played. */
+  isReady: boolean;
+  isLooping: boolean;
   currentTime: number;
   duration: number;
   speed: number;
-  loop: boolean;
-  /** A source is loaded and can be played. */
-  ready: boolean;
 }
+
+export type AudioPlayer = ReturnType<typeof useAudioPlayer>;
 
 /**
  * Owns one HTMLAudioElement for the practice screen. All playback happens
  * locally in the WebView; Rust only supplies the MP3 bytes.
  */
-export function usePlayer(initialSpeed: number, initialLoop: boolean) {
+export function useAudioPlayer(preferences: PlayerPreferences) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   if (audioRef.current === null) {
     const audio = new Audio();
@@ -24,12 +35,12 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
   }
 
   const [state, setState] = useState<PlayerState>({
-    playing: false,
+    isPlaying: false,
+    isReady: false,
+    isLooping: preferences.isLooping,
     currentTime: 0,
     duration: 0,
-    speed: initialSpeed,
-    loop: initialLoop,
-    ready: false,
+    speed: preferences.speed,
   });
 
   useEffect(() => {
@@ -39,8 +50,8 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
   }, [state.speed]);
 
   useEffect(() => {
-    audioRef.current!.loop = state.loop;
-  }, [state.loop]);
+    audioRef.current!.loop = state.isLooping;
+  }, [state.isLooping]);
 
   useEffect(() => {
     const audio = audioRef.current!;
@@ -48,7 +59,7 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
     const sync = () =>
       setState((s) => ({
         ...s,
-        playing: !audio.paused,
+        isPlaying: !audio.paused,
         currentTime: audio.currentTime,
         duration: Number.isFinite(audio.duration) ? audio.duration : 0,
       }));
@@ -62,23 +73,21 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
       frame = requestAnimationFrame(tick);
     };
     const onLoaded = () => {
-      setState((s) => ({ ...s, ready: true }));
+      setState((s) => ({ ...s, isReady: true }));
       sync();
     };
-    audio.addEventListener("play", onPlay);
-    audio.addEventListener("pause", sync);
-    audio.addEventListener("ended", sync);
-    audio.addEventListener("seeked", sync);
-    audio.addEventListener("durationchange", sync);
-    audio.addEventListener("loadedmetadata", onLoaded);
+    const listeners: [keyof HTMLMediaElementEventMap, () => void][] = [
+      ["play", onPlay],
+      ["pause", sync],
+      ["ended", sync],
+      ["seeked", sync],
+      ["durationchange", sync],
+      ["loadedmetadata", onLoaded],
+    ];
+    for (const [event, listener] of listeners) audio.addEventListener(event, listener);
     return () => {
       cancelAnimationFrame(frame);
-      audio.removeEventListener("play", onPlay);
-      audio.removeEventListener("pause", sync);
-      audio.removeEventListener("ended", sync);
-      audio.removeEventListener("seeked", sync);
-      audio.removeEventListener("durationchange", sync);
-      audio.removeEventListener("loadedmetadata", onLoaded);
+      for (const [event, listener] of listeners) audio.removeEventListener(event, listener);
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
@@ -93,11 +102,12 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
     audio.play().catch(() => undefined);
   }, []);
 
+  /** Switches to another source (`null` unloads) and optionally starts it. */
   const load = useCallback(
     (url: string | null, autoplay: boolean) => {
       const audio = audioRef.current!;
       audio.pause();
-      setState((s) => ({ ...s, ready: false, playing: false, currentTime: 0, duration: 0 }));
+      setState((s) => ({ ...s, isReady: false, isPlaying: false, currentTime: 0, duration: 0 }));
       if (url === null) {
         audio.removeAttribute("src");
         audio.load();
@@ -110,17 +120,15 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
     [play],
   );
 
-  const pause = useCallback(() => audioRef.current!.pause(), []);
-
   /** Returns true when playback (re)started from the beginning. */
   const toggle = useCallback((): boolean => {
     const audio = audioRef.current!;
     if (!audio.src) return false;
     if (audio.paused) {
-      const fromStart = audio.ended || audio.currentTime === 0;
+      const isFromStart = audio.ended || audio.currentTime === 0;
       if (audio.ended) audio.currentTime = 0;
       play();
-      return fromStart;
+      return isFromStart;
     }
     audio.pause();
     return false;
@@ -141,7 +149,21 @@ export function usePlayer(initialSpeed: number, initialLoop: boolean) {
   }, []);
 
   const setSpeed = useCallback((speed: number) => setState((s) => ({ ...s, speed })), []);
-  const setLoop = useCallback((loop: boolean) => setState((s) => ({ ...s, loop })), []);
 
-  return { state, load, play, pause, toggle, replay, seek, setSpeed, setLoop };
+  /** Moves `steps` places along the offered speeds (negative is slower). */
+  const stepSpeed = useCallback(
+    (steps: number) => setState((s) => ({ ...s, speed: stepPlaybackSpeed(s.speed, steps) })),
+    [],
+  );
+
+  const toggleLoop = useCallback(() => setState((s) => ({ ...s, isLooping: !s.isLooping })), []);
+
+  return { state, load, toggle, replay, seek, setSpeed, stepSpeed, toggleLoop };
+}
+
+function stepPlaybackSpeed(speed: number, steps: number): number {
+  const current = PLAYBACK_SPEEDS.findIndex((offered) => Math.abs(offered - speed) < 1e-6);
+  const from = current < 0 ? PLAYBACK_SPEEDS.indexOf(DEFAULT_SPEED) : current;
+  const to = Math.min(Math.max(from + steps, 0), PLAYBACK_SPEEDS.length - 1);
+  return PLAYBACK_SPEEDS[to];
 }

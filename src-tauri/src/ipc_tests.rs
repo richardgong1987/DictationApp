@@ -7,25 +7,34 @@ use tauri::test::{
     get_ipc_response, mock_builder, mock_context, noop_assets, MockRuntime, INVOKE_KEY,
 };
 use tauri::webview::InvokeRequest;
-use tauri::{Manager, WebviewWindow, WebviewWindowBuilder};
+use tauri::{WebviewWindow, WebviewWindowBuilder};
 
-use crate::cache::cache_key;
-use crate::commands::AppState;
+use crate::app_state::AppState;
+use crate::audio::cache::cache_key;
 use crate::database::Database;
-use crate::settings::Settings;
+use crate::lesson::files::LessonFiles;
+use crate::lesson::repository::LessonRepository;
+use crate::settings::{EnvCredentials, Settings};
 
 struct Harness {
     _app: tauri::App<MockRuntime>,
     webview: WebviewWindow<MockRuntime>,
+    database: Database,
     dir: tempfile::TempDir,
 }
 
 impl Harness {
+    /// An app with an empty data directory and no Azure credentials.
     fn new() -> Self {
         let dir = tempfile::tempdir().unwrap();
-        let db = Database::open(&dir.path().join("dictation.db")).unwrap();
+        let database = Database::open(&dir.path().join("dictation.db")).unwrap();
+        let state = AppState::new(
+            database.clone(),
+            dir.path().to_path_buf(),
+            EnvCredentials::default(),
+        );
         let app = super::with_commands(mock_builder())
-            .manage(AppState::new(db, dir.path().to_path_buf()))
+            .manage(state)
             .build(mock_context(noop_assets()))
             .unwrap();
         let webview = WebviewWindowBuilder::new(&app, "main", Default::default())
@@ -34,6 +43,7 @@ impl Harness {
         Self {
             _app: app,
             webview,
+            database,
             dir,
         }
     }
@@ -63,6 +73,19 @@ impl Harness {
         std::fs::write(&path, content).unwrap();
         path.to_string_lossy().into_owned()
     }
+
+    /// Stores an MP3 for the item as if it had been generated earlier with
+    /// the default voice settings.
+    fn fake_generated_audio(&self, lesson_id: &str, item: &Value) {
+        let id = item["id"].as_i64().unwrap();
+        let text = item["text"].as_str().unwrap();
+        let path = LessonFiles::audio_path(lesson_id, item["position"].as_i64().unwrap());
+        std::fs::write(self.dir.path().join(&path), format!("mp3 {id}")).unwrap();
+        let key = cache_key(&Settings::default().tts_request(text));
+        LessonRepository::new(self.database.clone())
+            .set_item_audio(id, &path, &key)
+            .unwrap();
+    }
 }
 
 const LESSON: &str = "I haven't seen him since last Monday.\n\nHe told me that he would call me back.\n\nWould you mind closing the window?\n";
@@ -91,21 +114,8 @@ fn import_practice_and_reopen_flow() {
         serde_json::from_slice(&std::fs::read(lesson_dir.join("metadata.json")).unwrap()).unwrap();
     assert_eq!(metadata["items"][1]["audioFile"], "002.mp3");
 
-    // Pretend audio was generated earlier with the current voice settings.
-    let state = h.webview.state::<AppState>();
-    let settings = Settings::default();
     for item in items {
-        let id = item["id"].as_i64().unwrap();
-        let text = item["text"].as_str().unwrap();
-        let rel = format!(
-            "lessons/{lesson_id}/audio/{:03}.mp3",
-            item["position"].as_i64().unwrap()
-        );
-        std::fs::write(h.dir.path().join(&rel), format!("mp3 {id}")).unwrap();
-        state
-            .db
-            .set_item_audio(id, &rel, &cache_key(&settings.tts_request(text)))
-            .unwrap();
+        h.fake_generated_audio(&lesson_id, item);
     }
 
     // Everything is cached, so no Azure call (and no credentials) is needed.
@@ -209,9 +219,6 @@ fn import_rejects_empty_and_non_utf8_files() {
 
 #[test]
 fn missing_audio_without_credentials_is_a_clear_error() {
-    if std::env::var(crate::settings::ENV_SPEECH_KEY).is_ok() {
-        return; // Would call Azure for real.
-    }
     let h = Harness::new();
     let path = h.write_lesson_file("l.txt", "One.\n\nTwo.");
     let detail = h.call("import_lesson", json!({ "path": path })).unwrap();

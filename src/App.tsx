@@ -1,40 +1,35 @@
 import { useState } from "react";
-import Library from "./screens/Library";
-import LessonDetailScreen from "./screens/LessonDetail";
-import Practice from "./screens/Practice";
-import SettingsScreen from "./screens/Settings";
-
-export type View =
-  | { name: "library" }
-  | { name: "lesson"; lessonId: string; autoGenerate?: boolean }
-  | { name: "practice"; lessonId: string; startIndex: number }
-  | { name: "settings"; back: View };
+import type { Route } from "./navigation";
+import LibraryScreen from "./screens/LibraryScreen";
+import LessonScreen from "./screens/lesson/LessonScreen";
+import PracticeScreen from "./screens/practice/PracticeScreen";
+import SettingsScreen from "./screens/SettingsScreen";
 
 export default function App() {
-  const [view, setView] = useState<View>({ name: "library" });
+  const [route, setRoute] = useState<Route>({ name: "library" });
 
-  switch (view.name) {
+  switch (route.name) {
     case "library":
-      return <Library navigate={setView} />;
+      return <LibraryScreen navigate={setRoute} />;
     case "lesson":
       return (
-        <LessonDetailScreen
-          key={view.lessonId}
-          lessonId={view.lessonId}
-          autoGenerate={view.autoGenerate ?? false}
-          navigate={setView}
+        <LessonScreen
+          key={route.lessonId}
+          lessonId={route.lessonId}
+          autoGenerate={route.autoGenerate ?? false}
+          navigate={setRoute}
         />
       );
     case "practice":
       return (
-        <Practice
-          key={`${view.lessonId}:${view.startIndex}`}
-          lessonId={view.lessonId}
-          startIndex={view.startIndex}
-          navigate={setView}
+        <PracticeScreen
+          key={`${route.lessonId}:${route.startIndex}`}
+          lessonId={route.lessonId}
+          startIndex={route.startIndex}
+          navigate={setRoute}
         />
       );
     case "settings":
-      return <SettingsScreen onClose={() => setView(view.back)} />;
+      return <SettingsScreen onClose={() => setRoute(route.back)} />;
   }
 }

@@ -1,4 +1,4 @@
-// Mirrors the Rust models serialized by the Tauri commands.
+// Mirrors the response types the Rust commands serialize (src-tauri/src).
 
 export type AudioStatus = "ready" | "stale" | "missing";
 
@@ -16,7 +16,7 @@ export interface LessonSummary extends Lesson {
   longItemCount: number;
 }
 
-export interface ItemView {
+export interface ItemDetail {
   id: number;
   position: number;
   text: string;
@@ -30,17 +30,17 @@ export interface ItemView {
 
 export interface LessonDetail {
   lesson: Lesson;
-  items: ItemView[];
+  items: ItemDetail[];
 }
 
-export interface GenerationSummary {
+export interface AudioGenerationSummary {
   generated: number;
   cached: number;
   failed: number;
   errors: string[];
 }
 
-export interface AudioProgress {
+export interface AudioGenerationProgress {
   lessonId: string;
   itemId: number;
   done: number;
@@ -78,12 +78,9 @@ export interface Settings {
   loopEnabled: boolean;
 }
 
-export interface SettingsView {
+export interface SettingsDetail {
   settings: Settings;
   keyFromEnv: boolean;
   regionFromEnv: boolean;
   credentialsConfigured: boolean;
 }
-
-export const PLAYBACK_SPEEDS = [0.6, 0.75, 0.9, 1.0, 1.1, 1.25] as const;
-export const MAX_RECOMMENDED_WORDS = 30;

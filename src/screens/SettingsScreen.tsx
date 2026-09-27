@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { api, errorMessage } from "../api";
-import type { Settings, SettingsView } from "../types";
+import { api, errorMessage } from "../api/client";
+import type { Settings, SettingsDetail } from "../api/types";
 import ErrorBanner from "../components/ErrorBanner";
+import { formatSignedPercent } from "../format";
 
+/** Suggestions only; any Azure neural voice name can be typed in. */
 const COMMON_VOICES = [
   "en-US-JennyNeural",
   "en-US-GuyNeural",
@@ -15,41 +17,41 @@ const COMMON_VOICES = [
 ];
 
 export default function SettingsScreen({ onClose }: { onClose: () => void }) {
-  const [view, setView] = useState<SettingsView | null>(null);
+  const [detail, setDetail] = useState<SettingsDetail | null>(null);
   const [form, setForm] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     api
       .getSettings()
-      .then((v) => {
-        setView(v);
-        setForm(v.settings);
+      .then((loaded) => {
+        setDetail(loaded);
+        setForm(loaded.settings);
       })
       .catch((e) => setError(errorMessage(e)));
   }, []);
 
   const update = <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    setSaved(false);
+    setIsSaved(false);
     setForm((f) => f && { ...f, [key]: value });
   };
 
-  async function save(e: FormEvent) {
-    e.preventDefault();
+  async function save(event: FormEvent) {
+    event.preventDefault();
     if (!form) return;
-    setSaving(true);
+    setIsSaving(true);
     setError(null);
     try {
-      const v = await api.saveSettings(form);
-      setView(v);
-      setForm(v.settings);
-      setSaved(true);
-    } catch (err) {
-      setError(errorMessage(err));
+      const saved = await api.saveSettings(form);
+      setDetail(saved);
+      setForm(saved.settings);
+      setIsSaved(true);
+    } catch (e) {
+      setError(errorMessage(e));
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   }
 
@@ -61,21 +63,21 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
       <h1>Settings</h1>
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
-      {form && view && (
+      {form && detail && (
         <form onSubmit={save} className="settings">
           <fieldset>
             <legend>Azure Speech</legend>
-            <p className={`banner ${view.credentialsConfigured ? "success" : "info"}`}>
-              {view.credentialsConfigured
+            <p className={`banner ${detail.credentialsConfigured ? "success" : "info"}`}>
+              {detail.credentialsConfigured
                 ? "Credentials are configured."
                 : "Enter your Azure Speech key and region to generate audio."}
             </p>
             <label>
               Region
               <input
-                value={view.regionFromEnv ? "" : form.azureRegion}
-                placeholder={view.regionFromEnv ? "Set by AZURE_SPEECH_REGION" : "e.g. eastus"}
-                disabled={view.regionFromEnv}
+                value={detail.regionFromEnv ? "" : form.azureRegion}
+                placeholder={detail.regionFromEnv ? "Set by AZURE_SPEECH_REGION" : "e.g. eastus"}
+                disabled={detail.regionFromEnv}
                 onChange={(e) => update("azureRegion", e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
@@ -85,9 +87,9 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
               Key
               <input
                 type="password"
-                value={view.keyFromEnv ? "" : form.azureKey}
-                placeholder={view.keyFromEnv ? "Set by AZURE_SPEECH_KEY" : "Azure Speech resource key"}
-                disabled={view.keyFromEnv}
+                value={detail.keyFromEnv ? "" : form.azureKey}
+                placeholder={detail.keyFromEnv ? "Set by AZURE_SPEECH_KEY" : "Azure Speech resource key"}
+                disabled={detail.keyFromEnv}
                 onChange={(e) => update("azureKey", e.target.value)}
                 autoComplete="off"
               />
@@ -110,14 +112,13 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
                 spellCheck={false}
               />
               <datalist id="voices">
-                {COMMON_VOICES.map((v) => (
-                  <option key={v} value={v} />
+                {COMMON_VOICES.map((voice) => (
+                  <option key={voice} value={voice} />
                 ))}
               </datalist>
             </label>
             <label>
-              Speaking rate: {form.speakingRate > 0 ? "+" : ""}
-              {form.speakingRate}%
+              Speaking rate: {formatSignedPercent(form.speakingRate)}
               <input
                 type="range"
                 min={-50}
@@ -128,8 +129,7 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
               />
             </label>
             <label>
-              Pitch: {form.pitch > 0 ? "+" : ""}
-              {form.pitch}%
+              Pitch: {formatSignedPercent(form.pitch)}
               <input
                 type="range"
                 min={-50}
@@ -146,10 +146,10 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
           </fieldset>
 
           <div className="actions">
-            <button type="submit" className="primary" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
+            <button type="submit" className="primary" disabled={isSaving}>
+              {isSaving ? "Saving…" : "Save"}
             </button>
-            {saved && <span className="success-text">Saved.</span>}
+            {isSaved && <span className="success-text">Saved.</span>}
           </div>
         </form>
       )}

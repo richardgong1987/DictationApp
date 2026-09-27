@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
-import { api, errorMessage } from "../api";
-import type { LessonSummary } from "../types";
-import type { View } from "../App";
+import { api, errorMessage } from "../api/client";
+import { MAX_RECOMMENDED_WORDS } from "../api/constants";
+import type { LessonSummary } from "../api/types";
+import type { Navigate, Route } from "../navigation";
 import ErrorBanner from "../components/ErrorBanner";
 
-export default function Library({ navigate }: { navigate: (v: View) => void }) {
+const SETTINGS_ROUTE: Route = { name: "settings", back: { name: "library" } };
+
+export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   const [lessons, setLessons] = useState<LessonSummary[] | null>(null);
   const [credentialsConfigured, setCredentialsConfigured] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -34,14 +37,14 @@ export default function Library({ navigate }: { navigate: (v: View) => void }) {
       filters: [{ name: "Text lesson", extensions: ["txt"] }],
     });
     if (typeof path !== "string") return;
-    setImporting(true);
+    setIsImporting(true);
     try {
       const detail = await api.importLesson(path);
       navigate({ name: "lesson", lessonId: detail.lesson.id, autoGenerate: credentialsConfigured });
     } catch (e) {
       setError(errorMessage(e));
     } finally {
-      setImporting(false);
+      setIsImporting(false);
     }
   }
 
@@ -64,11 +67,9 @@ export default function Library({ navigate }: { navigate: (v: View) => void }) {
       <header className="topbar">
         <h1>Lessons</h1>
         <div className="actions">
-          <button onClick={() => navigate({ name: "settings", back: { name: "library" } })}>
-            Settings
-          </button>
-          <button className="primary" onClick={importLesson} disabled={importing}>
-            {importing ? "Importing…" : "Import .txt lesson"}
+          <button onClick={() => navigate(SETTINGS_ROUTE)}>Settings</button>
+          <button className="primary" onClick={importLesson} disabled={isImporting}>
+            {isImporting ? "Importing…" : "Import .txt lesson"}
           </button>
         </div>
       </header>
@@ -78,10 +79,7 @@ export default function Library({ navigate }: { navigate: (v: View) => void }) {
       {!credentialsConfigured && (
         <div className="banner info">
           Azure Speech is not configured yet, so new audio cannot be generated.{" "}
-          <button
-            className="link"
-            onClick={() => navigate({ name: "settings", back: { name: "library" } })}
-          >
+          <button className="link" onClick={() => navigate(SETTINGS_ROUTE)}>
             Open Settings
           </button>
         </div>
@@ -100,7 +98,7 @@ export default function Library({ navigate }: { navigate: (v: View) => void }) {
       ) : (
         <ul className="lesson-list">
           {lessons.map((lesson) => {
-            const allReady = lesson.audioReadyCount === lesson.itemCount;
+            const isAudioComplete = lesson.audioReadyCount === lesson.itemCount;
             return (
               <li key={lesson.id} className="card lesson-card">
                 <button
@@ -112,11 +110,14 @@ export default function Library({ navigate }: { navigate: (v: View) => void }) {
                 <div className="muted small">
                   {lesson.itemCount} items · audio {lesson.audioReadyCount}/{lesson.itemCount}
                   {lesson.longItemCount > 0 && (
-                    <span className="warn-text"> · {lesson.longItemCount} over 30 words</span>
+                    <span className="warn-text">
+                      {" "}
+                      · {lesson.longItemCount} over {MAX_RECOMMENDED_WORDS} words
+                    </span>
                   )}
                 </div>
                 <div className="actions">
-                  {!allReady && (
+                  {!isAudioComplete && (
                     <button
                       onClick={() =>
                         navigate({ name: "lesson", lessonId: lesson.id, autoGenerate: true })

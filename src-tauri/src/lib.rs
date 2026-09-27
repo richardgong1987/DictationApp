@@ -1,17 +1,29 @@
-mod cache;
+//! DictationApp backend.
+//!
+//! Code is grouped by feature (`lesson`, `audio`, `practice`, `settings`).
+//! Inside each feature, `mod.rs` holds its types and rules, `repository.rs`
+//! its SQL and `service.rs` its workflows. `commands` exposes the services to
+//! the frontend; `app_state` wires everything together.
+
+mod app_state;
+mod audio;
 mod commands;
-mod compare;
 mod database;
 mod error;
 mod lesson;
-mod models;
+mod practice;
 mod settings;
 mod tts;
 
 use tauri::{Manager, Runtime};
 
-use commands::AppState;
+use app_state::AppState;
 use database::Database;
+use settings::EnvCredentials;
+
+/// Environment variables that take precedence over credentials stored in Settings.
+const ENV_SPEECH_KEY: &str = "AZURE_SPEECH_KEY";
+const ENV_SPEECH_REGION: &str = "AZURE_SPEECH_REGION";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -26,12 +38,19 @@ pub fn run() {
             std::fs::create_dir_all(&data_dir)?;
             // Installed builds can also read a `.env` from the app data directory.
             let _ = dotenvy::from_path(data_dir.join(".env"));
-            let db = Database::open(&data_dir.join("dictation.db"))?;
-            app.manage(AppState::new(db, data_dir));
+            let database = Database::open(&data_dir.join("dictation.db"))?;
+            app.manage(AppState::new(database, data_dir, read_env_credentials()));
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running DictationApp");
+}
+
+fn read_env_credentials() -> EnvCredentials {
+    EnvCredentials::new(
+        std::env::var(ENV_SPEECH_KEY).ok(),
+        std::env::var(ENV_SPEECH_REGION).ok(),
+    )
 }
 
 /// Registers every frontend-callable command.

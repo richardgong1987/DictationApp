@@ -522,6 +522,8 @@ src-tauri/src/
 └── error.rs
 ```
 
+(The implemented layout groups these by feature; see [Code layout](#code-layout) under Implementation Notes.)
+
 Keep Azure-specific code behind a small TTS abstraction so another provider can be added later if desired.
 
 For example:
@@ -746,7 +748,7 @@ Decisions made while implementing V1, where the specification left room:
 - **Azure**: REST endpoint `https://<region>.tts.speech.microsoft.com/cognitiveservices/v1`, output
   `audio-24khz-48kbitrate-mono-mp3`, with retries and backoff on 429/5xx. Lesson generation runs one
   item at a time to stay within free-tier rate limits.
-- **Answer comparison** is implemented in Rust (`compare.rs`): case and surrounding punctuation are
+- **Answer comparison** is implemented in Rust (`practice/comparison.rs`): case and surrounding punctuation are
   ignored, curly apostrophes are normalized, and every word counts. The diff is an LCS over words;
   missing and extra words between two matches are paired as "changed". Accuracy is
   `correct words / max(source words, answer words)`.
@@ -754,6 +756,58 @@ Decisions made while implementing V1, where the specification left room:
   SQLite `settings` table.
 - `metadata.json` in each lesson folder is written for readability; SQLite (`dictation.db` in the app
   data directory) is the source of truth.
+- **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` are read once at startup and passed
+  to the settings service; no business code reads environment variables.
+
+### Code layout
+
+The backend is grouped by feature. Inside a feature, `mod.rs` holds its types and rules,
+`repository.rs` its SQL, and `service.rs` its workflows. Commands stay thin: they unpack arguments
+and call one service.
+
+```text
+src-tauri/src/
+├── lib.rs            startup: .env, database, AppState, command registration
+├── app_state.rs      composition root: builds every repository and service once
+├── commands.rs       the IPC surface (mirrored by src/api/client.ts)
+├── database.rs       SQLite connection and schema
+├── error.rs          AppError; each variant's text is what the user sees
+├── lesson/           Lesson, DictationItem, response shapes
+│   ├── parser.rs       blank-line splitting (the lesson text format)
+│   ├── files.rs        lessons/<id>/{source.txt, metadata.json, audio/NNN.mp3}
+│   ├── repository.rs   lessons + dictation_items tables
+│   └── service.rs      import, list, detail, delete
+├── audio/            generation summary/progress types
+│   ├── cache.rs        cache key, Ready/Stale/Missing, reuse-or-synthesize
+│   └── service.rs      lesson/item generation, one run per lesson at a time
+├── practice/         ItemStats, CheckResult
+│   ├── comparison.rs   normalization + LCS word diff
+│   ├── repository.rs   attempts table + per-item stats
+│   └── service.rs      check an answer and record the attempt
+├── settings/         Settings, sanitizing, credential precedence
+│   ├── repository.rs   settings stored as one JSON row
+│   └── service.rs      load/save, player preferences, credentials
+└── tts/              TtsProvider trait and TtsRequest
+    └── azure.rs        Azure REST client, SSML, retries with backoff
+```
+
+The frontend keeps a screen's helpers next to the screen; only code shared by several screens
+lives outside `screens/`.
+
+```text
+src/
+├── App.tsx           route → screen
+├── navigation.ts     Route type
+├── api/              typed command wrappers, response types, constants shared with Rust
+├── components/       ErrorBanner, LoadingPage
+├── format.ts         time/speed/percent formatting
+└── screens/
+    ├── LibraryScreen.tsx
+    ├── SettingsScreen.tsx
+    ├── lesson/       LessonScreen, item row, audio generation hook and status
+    └── practice/     PracticeScreen → PracticeSession, player hook, item audio loading,
+                      keyboard shortcuts (key → command table), player panel, result, diff
+```
 
 ---
 
