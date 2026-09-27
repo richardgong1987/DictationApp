@@ -1,16 +1,40 @@
 # DictationApp
-![](docs/layout-design.png)
-A desktop English dictation application for focused listening practice.
 
-The application is intentionally simple:
+**Turn any English text into focused dictation practice.**
+Import a lesson, get natural-sounding audio for every sentence, listen as often as you need, type
+what you hear, and see exactly which words you missed.
 
-1. The user prepares a text lesson.
-2. Each text segment becomes one dictation item.
-3. The application calls Microsoft Azure Text-to-Speech (TTS) to generate audio for each item.
-4. The user listens, pauses, replays, loops, and moves between items while typing what they hear.
-5. The application compares the typed answer with the source text and tracks practice results.
+**英语听写练习桌面应用**：导入英文文本，逐句生成自然语音，反复听、边听边打，逐词标出听错和漏掉的词。
 
-The first version should prioritize a smooth dictation workflow over advanced features.
+![DictationApp practice screen](docs/layout-design.png)
+
+## Features
+
+- **One clip per sentence.** Audio is generated with Microsoft Azure neural voices (US, UK,
+  Australian and more) and cached on your computer, so replaying never costs another request.
+- **A player built for dictation.** Play, pause, replay, loop, seek and change speed from 0.6× to
+  1.25×, all from the keyboard without leaving the answer box.
+- **Type first, then look.** The original text stays hidden until you choose to show it.
+- **Word-by-word feedback.** Every word is marked correct, wrong (`fix → fox`), missing or extra,
+  with an accuracy score. Small words such as *the*, *a* and *to* always count.
+- **Pick up where you left off.** Answers are saved as you type; reopen a lesson and continue from
+  the last sentence. Clear them whenever you want to start over.
+- **Track your progress.** Attempts and best accuracy for every sentence.
+- **Your data stays local.** Lessons, answers and progress live in a local SQLite database; only the
+  lesson text is sent to Azure, to generate audio.
+- **Plain-text lessons.** Any UTF-8 `.txt` file with passages separated by blank lines is a lesson.
+
+## How it works
+
+1. **Import** a `.txt` file (try [`examples/lesson01.txt`](examples/lesson01.txt)); each passage
+   becomes one dictation item.
+2. **Generate audio** once with your Azure Speech key; every passage gets its own MP3.
+3. **Practice**: listen, type what you hear, press **Enter** to reveal the original and see your
+   mistakes, and **Enter** again for the next sentence.
+
+Built with Tauri 2, Rust, React 19 + TypeScript and SQLite, for macOS, Windows and Linux. You need
+your own [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) key; the
+free tier covers typical personal use.
 
 ---
 
@@ -72,6 +96,9 @@ Keyboard shortcuts on the practice screen:
 | — | Esc | Leave the answer box |
 
 ---
+
+> The rest of this document is the V1 specification the app was built from, followed by
+> implementation notes.
 
 ## 1. Product Goal
 
