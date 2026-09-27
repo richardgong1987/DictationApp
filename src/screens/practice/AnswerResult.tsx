@@ -20,7 +20,7 @@ export default function AnswerResult({
   ].filter(Boolean);
 
   return (
-    <div className={`feedback ${result.isCorrect ? "correct" : ""}`}>
+    <div className="feedback">
       <div className="score">
         {result.isCorrect && (
           <span className="score-icon" aria-hidden="true">
