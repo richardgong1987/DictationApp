@@ -48,6 +48,12 @@ impl PracticeService {
         }
     }
 
+    /// Starts the lesson over: every saved answer goes, the statistics stay.
+    pub fn clear_answers(&self, lesson_id: &str) -> AppResult<()> {
+        let lesson = self.lessons.get(lesson_id)?;
+        self.practice.delete_lesson_answers(&lesson.id)
+    }
+
     /// The saved answers of a lesson and the item to continue with.
     pub fn progress(&self, lesson_id: &str) -> AppResult<PracticeProgress> {
         let items = self.lessons.items(lesson_id)?;

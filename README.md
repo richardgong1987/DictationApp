@@ -759,7 +759,8 @@ Decisions made while implementing V1, where the specification left room:
 - **Saved answers**: the latest answer to each item is kept in the `answers` table (schema v2), exactly
   as typed, with a status: `draft` (typed or edited since its last check) or `checked`. Typing saves a
   draft once it pauses for half a second; "Show original text" saves it as checked, in the same
-  transaction as the attempt. Clearing the text deletes the saved answer. The result of a checked answer
+  transaction as the attempt. Clearing the text deletes the saved answer, and "Clear answers" in the
+  practice header deletes all of a lesson's answers (attempts are kept). The result of a checked answer
   is recomputed when the lesson is opened rather than stored. `attempts` stays the full history of
   checks behind the statistics.
 - **Resuming**: opening practice without choosing an item continues with the item answered last, or the

@@ -81,6 +81,16 @@ impl PracticeRepository {
         Ok(())
     }
 
+    /// Deletes every answer in the lesson. Attempts, and so the statistics, stay.
+    pub fn delete_lesson_answers(&self, lesson_id: &str) -> AppResult<()> {
+        self.database.connection().execute(
+            "DELETE FROM answers
+             WHERE dictation_item_id IN (SELECT id FROM dictation_items WHERE lesson_id = ?1)",
+            [lesson_id],
+        )?;
+        Ok(())
+    }
+
     /// The lesson's answers, least recently updated first. Answers updated in
     /// the same second are in lesson order.
     pub fn answers(&self, lesson_id: &str) -> AppResult<Vec<Answer>> {
@@ -262,5 +272,35 @@ mod tests {
 
         let order: Vec<i64> = statuses(&practice).iter().map(|a| a.0).collect();
         assert_eq!(order, [ids[0], ids[2]]);
+    }
+
+    #[test]
+    fn clearing_a_lesson_keeps_its_statistics_and_other_lessons() {
+        let (lessons, practice, ids) = setup(2);
+        lessons
+            .insert(&NewLesson {
+                id: "b".into(),
+                title: "Other".into(),
+                source_path: "/tmp/b.txt".into(),
+                items: vec![NewItem {
+                    position: 1,
+                    text: "Other.".into(),
+                    audio_path: "lessons/b/audio/001.mp3".into(),
+                }],
+            })
+            .unwrap();
+        let other_id = lessons.items("b").unwrap()[0].id;
+        practice.save_draft(ids[0], "one").unwrap();
+        practice.record_check(&attempt(ids[1], 0.5), "two").unwrap();
+        practice.save_draft(other_id, "other").unwrap();
+
+        practice.delete_lesson_answers("a").unwrap();
+
+        assert!(practice.answers("a").unwrap().is_empty());
+        assert_eq!(practice.answers("b").unwrap().len(), 1);
+        assert_eq!(
+            practice.stats_by_item("a").unwrap()[&ids[1]].attempt_count,
+            1
+        );
     }
 }

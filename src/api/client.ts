@@ -32,6 +32,8 @@ export const api = {
   saveAnswer: (itemId: number, answer: string) => invoke<void>("save_answer", { itemId, answer }),
   getPracticeProgress: (lessonId: string) =>
     invoke<PracticeProgress>("get_practice_progress", { lessonId }),
+  /** Deletes every saved answer in the lesson; statistics are kept. */
+  clearAnswers: (lessonId: string) => invoke<void>("clear_answers", { lessonId }),
 
   getSettings: () => invoke<SettingsDetail>("get_settings"),
   saveSettings: (settings: Settings) => invoke<SettingsDetail>("save_settings", { settings }),

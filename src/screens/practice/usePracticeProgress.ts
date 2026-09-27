@@ -90,10 +90,20 @@ export function usePracticeProgress({ savedAnswers, onChecked }: Options) {
     }
   };
 
-  const accuracies = [...progressById.values()].flatMap((p) => p.result?.accuracy ?? []);
+  /** Deletes every answer in the lesson, here and saved. Rejects if deleting fails. */
+  const clearAll = async (lessonId: string) => {
+    saving.discardAll();
+    await api.clearAnswers(lessonId);
+    setProgressById(new Map());
+    setError(null);
+  };
+
+  const all = [...progressById.values()];
+  const accuracies = all.flatMap((p) => p.result?.accuracy ?? []);
 
   return {
     progressOf,
+    hasAnswers: all.some((p) => p.answer !== "" || p.result !== null),
     checkedCount: accuracies.length,
     averageAccuracy: accuracies.length
       ? accuracies.reduce((a, b) => a + b, 0) / accuracies.length
@@ -106,6 +116,7 @@ export function usePracticeProgress({ savedAnswers, onChecked }: Options) {
       update(itemId, (progress) => ({ replayCount: progress.replayCount + 1 })),
     reveal,
     hide: (itemId: number) => update(itemId, () => ({ isRevealed: false })),
+    clearAll,
   };
 }
 
@@ -151,6 +162,12 @@ function useAnswerSaving(onError: (itemId: number, error: unknown) => void) {
     [saveNow],
   );
 
+  /** Drops pending saves, so none of them brings back a cleared answer. */
+  const discardAll = useCallback(() => {
+    for (const draft of pending.current.values()) window.clearTimeout(draft.timer);
+    pending.current.clear();
+  }, []);
+
   useEffect(() => {
     const drafts = pending.current;
     return () => {
@@ -158,5 +175,5 @@ function useAnswerSaving(onError: (itemId: number, error: unknown) => void) {
     };
   }, [saveNow]);
 
-  return { saveLater, saveNow };
+  return { saveLater, saveNow, discardAll };
 }

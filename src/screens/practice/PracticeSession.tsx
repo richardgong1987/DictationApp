@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "../../api/client";
+import { ask } from "@tauri-apps/plugin-dialog";
+import { api, errorMessage } from "../../api/client";
 import type { ItemDetail, Lesson, SavedAnswer } from "../../api/types";
 import type { Navigate } from "../../navigation";
 import { formatPercent } from "../../format";
+import ErrorBanner from "../../components/ErrorBanner";
+import ControlButton from "./ControlButton";
 import { useAudioDurations, useAudioUrls, useCurrentItemAudio } from "./itemAudio";
 import PlayerPanel, { type PlayerCommands } from "./PlayerPanel";
 import PracticeItemCard from "./PracticeItemCard";
@@ -34,6 +37,7 @@ export default function PracticeSession({
 }: Props) {
   const [items, setItems] = useState(initialItems);
   const [index, setIndex] = useState(startIndex);
+  const [error, setError] = useState<string | null>(null);
   const activeItem = items[index];
   const isLast = index === items.length - 1;
 
@@ -81,6 +85,26 @@ export default function PracticeSession({
   const hide = (itemId: number) => {
     progress.hide(itemId);
     if (itemId === activeItem.id) answerBoxes.current.get(itemId)?.focus();
+  };
+
+  /** After confirmation, deletes every answer and starts over from the first item. */
+  const clearAnswers = async () => {
+    const confirmed = await ask(
+      "Clear all your answers in this lesson and start again from the first item? Your practice statistics are kept.",
+      { title: "Clear answers", kind: "warning", okLabel: "Clear", cancelLabel: "Cancel" },
+    );
+    if (!confirmed) return;
+    try {
+      await progress.clearAll(lesson.id);
+      setError(null);
+    } catch (e) {
+      setError(errorMessage(e));
+      return;
+    }
+    keepFocusOutsideAnswer.current = false;
+    goTo(0);
+    // Already on the first item: focus it here, as the item-change effect will not run.
+    answerBoxes.current.get(items[0].id)?.focus();
   };
 
   const commands: PracticeCommands = {
@@ -144,11 +168,20 @@ export default function PracticeSession({
             {progress.averageAccuracy !== null &&
               ` · average ${formatPercent(progress.averageAccuracy)}`}
           </span>
+          <ControlButton
+            onClick={clearAnswers}
+            disabled={!progress.hasAnswers}
+            title="Delete all your answers in this lesson and start again"
+          >
+            Clear answers
+          </ControlButton>
           <span className="counter">
             {index + 1} / {items.length}
           </span>
         </div>
       </header>
+
+      <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       <ol className="practice-list">
         {items.map((item, rowIndex) => {

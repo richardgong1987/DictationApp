@@ -99,6 +99,12 @@ pub fn get_practice_progress(
     state.practice.progress(&lesson_id)
 }
 
+/// Deletes every saved answer in the lesson; practice statistics are kept.
+#[tauri::command]
+pub fn clear_answers(state: State<'_, AppState>, lesson_id: String) -> AppResult<()> {
+    state.practice.clear_answers(&lesson_id)
+}
+
 // ---------------------------------------------------------------------------
 // Settings
 

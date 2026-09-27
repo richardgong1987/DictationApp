@@ -334,6 +334,11 @@ select:focus {
   gap: 18px;
 }
 
+.practice-status button {
+  padding: 3px 10px;
+  font-size: 0.87rem;
+}
+
 .practice .counter {
   font-size: 1.5rem;
   font-weight: 700;

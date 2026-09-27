@@ -295,4 +295,25 @@ fn answers_are_kept_and_practice_resumes_where_it_stopped() {
     h.call("save_answer", json!({ "itemId": ids[0], "answer": "  " }))
         .unwrap();
     assert_eq!(progress(&h), nothing_saved);
+
+    // Clearing the lesson deletes every answer but keeps the statistics.
+    for id in &ids {
+        h.call(
+            "save_answer",
+            json!({ "itemId": id, "answer": "something" }),
+        )
+        .unwrap();
+    }
+    h.call("clear_answers", json!({ "lessonId": lesson_id }))
+        .unwrap();
+    assert_eq!(progress(&h), nothing_saved);
+    let detail = h
+        .call("get_lesson", json!({ "lessonId": lesson_id }))
+        .unwrap();
+    assert_eq!(detail["items"][0]["attemptCount"], 1);
+
+    let err = h
+        .call("clear_answers", json!({ "lessonId": "no-such-lesson" }))
+        .unwrap_err();
+    assert_eq!(err, "Lesson not found");
 }

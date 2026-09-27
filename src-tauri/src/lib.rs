@@ -66,6 +66,7 @@ fn with_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
         commands::check_answer,
         commands::save_answer,
         commands::get_practice_progress,
+        commands::clear_answers,
         commands::get_settings,
         commands::save_settings,
         commands::save_player_preferences,
