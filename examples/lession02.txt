@@ -1,0 +1,115 @@
+Financial markets connect people and institutions that need capital with investors who are willing to provide it in exchange for an expected return.
+
+A company may issue shares to raise money for expansion, while investors buy those shares because they expect future profits and price appreciation.
+
+Bond markets allow governments and corporations to borrow money directly from investors, usually by promising regular interest payments and repayment at maturity.
+
+Interest rates influence almost every part of finance because they affect borrowing costs, investment decisions, asset valuations, and the present value of future cash flows.
+
+When central banks raise policy rates, loans generally become more expensive, economic activity may slow, and investors may reassess the value of risky assets.
+
+Inflation reduces the purchasing power of money, so investors often compare nominal returns with inflation to understand the real growth of their wealth.
+
+A diversified portfolio spreads capital across different assets, industries, and regions in order to reduce the impact of a single investment performing badly.
+
+Risk and return are closely related because investors usually expect higher potential returns when they accept greater uncertainty about future outcomes.
+
+Volatility measures how much the price of an asset moves over time and is often used as a practical indicator of market risk.
+
+Liquidity describes how easily an asset can be bought or sold without causing a large change in its market price.
+
+Highly liquid markets usually have many participants, narrow bid-ask spreads, and enough trading activity to execute large orders efficiently.
+
+The bid price is the highest price a buyer is willing to pay, while the ask price is the lowest price a seller accepts.
+
+The difference between the bid and ask prices is called the spread, and tighter spreads generally indicate better market liquidity.
+
+Market orders prioritize execution speed, while limit orders give traders more control over price but may not be filled immediately.
+
+A stop-loss order is designed to limit potential losses by closing a position when the market reaches a predetermined price level.
+
+Leverage allows traders to control a larger position with less capital, but it can increase both profits and losses very quickly.
+
+Margin is the amount of capital required to open or maintain a leveraged position in markets such as futures, foreign exchange, or derivatives.
+
+A margin call occurs when an account no longer has enough equity to support its open positions under the broker's risk requirements.
+
+Position sizing is one of the most important parts of risk management because it determines how much capital is exposed to a single trade.
+
+Professional traders often think in terms of risk per trade instead of focusing only on the number of shares or contracts they buy.
+
+A portfolio manager may reduce risk by combining assets whose returns do not move in exactly the same direction at the same time.
+
+Correlation measures how strongly two assets move together, while covariance also reflects the scale of their joint movements.
+
+Negative correlation can provide diversification benefits because losses in one asset may be partly offset by gains in another.
+
+Value at Risk estimates the potential loss of a portfolio over a specific time period at a chosen confidence level.
+
+Stress testing goes beyond normal market assumptions and asks how a portfolio might behave during severe but plausible financial shocks.
+
+Banks manage credit risk by evaluating whether borrowers are likely to repay loans and whether enough collateral exists if they default.
+
+Credit spreads represent the extra yield investors demand for holding risky debt instead of safer government securities.
+
+When credit spreads widen, markets may be signaling greater concern about default risk, economic weakness, or reduced investor confidence.
+
+Equity analysts study revenue, profit margins, cash flow, competitive advantages, and valuation metrics to estimate the value of a company.
+
+Price-to-earnings ratios compare a company's share price with its earnings and are often used to evaluate whether a stock appears expensive or cheap.
+
+Discounted cash flow analysis estimates the value of an asset by forecasting future cash flows and discounting them back to the present.
+
+The discount rate used in valuation should reflect both the time value of money and the risk associated with the expected cash flows.
+
+Foreign exchange markets determine the relative value of currencies through global trading, interest rate expectations, capital flows, and economic conditions.
+
+A stronger domestic currency can make imports cheaper but may reduce the competitiveness of exporters in international markets.
+
+Forward contracts allow two parties to agree today on a price for a transaction that will take place at a future date.
+
+Futures contracts are standardized agreements traded on exchanges, and they are commonly used for hedging, speculation, and price discovery.
+
+Options give the buyer the right, but not the obligation, to buy or sell an underlying asset at a specified strike price.
+
+A call option benefits from upward price movement, while a put option generally benefits when the price of the underlying asset falls.
+
+Option prices are influenced by the underlying price, strike price, time to expiration, volatility, interest rates, and expected dividends.
+
+Delta measures how much an option price is expected to change when the price of the underlying asset changes by one unit.
+
+Gamma measures how quickly delta changes, which becomes especially important when an option position is close to the strike price.
+
+Hedging does not necessarily eliminate risk, but it can reduce exposure to specific market movements that a business or investor wants to avoid.
+
+A multinational company may hedge currency risk if future revenue will be received in a foreign currency that could weaken before payment arrives.
+
+Market makers provide liquidity by continuously quoting buy and sell prices and managing the inventory risk created by customer transactions.
+
+Algorithmic trading systems can react to market data in milliseconds, but speed alone does not guarantee profitability or good risk management.
+
+Backtesting evaluates a trading strategy using historical data, but results can be misleading if the model is overfitted to past market behavior.
+
+Transaction costs, slippage, market impact, and execution delays should be included when evaluating whether a trading strategy is realistically profitable.
+
+A robust strategy should be tested across different market environments rather than only during periods that strongly favor its underlying assumptions.
+
+Financial regulation aims to promote market integrity, protect customers, reduce systemic risk, and improve transparency across financial institutions.
+
+Know Your Customer procedures help financial institutions verify customer identities and understand the risks associated with business relationships.
+
+Anti-money-laundering controls are designed to detect suspicious transactions and prevent financial systems from being used to hide criminal proceeds.
+
+Payment systems must balance speed, reliability, security, fraud prevention, and regulatory requirements while processing very large transaction volumes.
+
+Modern financial institutions depend heavily on software systems that must remain available, accurate, secure, and resilient during periods of extreme market activity.
+
+Operational risk includes losses caused by failed processes, system outages, human error, cyberattacks, or weaknesses in internal controls.
+
+A strong financial platform should record important events, monitor unusual behavior, and provide enough information for engineers to investigate incidents quickly.
+
+Risk limits should be enforced automatically when possible, because manual controls may be too slow during fast and volatile market conditions.
+
+Good financial engineering combines domain knowledge, careful software design, testing, observability, security, and a clear understanding of business risk.
+
+In the long run, successful investing depends less on predicting every market movement and more on disciplined decisions, controlled risk, and consistent execution.
