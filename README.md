@@ -36,6 +36,13 @@ Built with Tauri 2, Rust, React 19 + TypeScript and SQLite, for macOS, Windows a
 your own [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) key; the
 free tier covers typical personal use.
 
+## Download
+
+Get the installer for your computer from the
+[latest release](https://github.com/richardgong1987/DictationApp/releases/latest): a `.dmg` for Mac
+(Apple Silicon and Intel), a `-setup.exe` or `.msi` for Windows, and an `.AppImage`, `.deb` or
+`.rpm` for Linux. The release page explains the one-time step to open an app that is not code-signed.
+
 ---
 
 ## Getting Started
@@ -67,6 +74,20 @@ Azure credentials are resolved in this order:
 ```bash
 npm run tauri build
 ```
+
+### Publish a release
+
+Push a version tag, or publish a release with such a tag on GitHub:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+`.github/workflows/release.yml` then builds the macOS, Windows and Linux installers, attaches them to
+the release for that tag and publishes it once every build has succeeded. The version comes from the
+tag, which must look like `v1.2.3`. A new release gets the download instructions in
+`.github/release-notes.md` as its description.
 
 ### Tests and checks
 
