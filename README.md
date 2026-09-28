@@ -792,7 +792,10 @@ Decisions made while implementing V1, where the specification left room:
 - **Wrapped lines**: lines inside one passage (no blank line between them) are joined with a single space.
 - **Audio delivery**: Rust returns an item's MP3 bytes over IPC (`get_item_audio`); the frontend plays them
   through a `Blob` URL with a regular `HTMLAudioElement`. No asset-protocol scope is needed, and all
-  playback state (pause, seek, loop, speed) stays in the WebView.
+  playback state (pause, seek, loop, speed) stays in the WebView. The CSP in `tauri.conf.json` must
+  keep `connect-src ipc: http://ipc.localhost`: without it Tauri falls back to its postMessage IPC,
+  which hands the MP3 over as an array of numbers instead of an `ArrayBuffer`, and installed builds
+  play no audio (dev builds apply no CSP, so they still work).
 - **Cache key**: `SHA-256("v1", text, voice, rate, pitch, output_format)`, fields separated by `0x1F`.
   Audio is stored as `lessons/<lesson-id>/audio/NNN.mp3` and the key is saved with the item. If voice
   settings change, the item shows "Voice changed" and is regenerated on the next generation or practice.
