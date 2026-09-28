@@ -75,6 +75,9 @@ Azure credentials are resolved in this order:
 npm run tauri build
 ```
 
+On a Mac, `./package.sh` builds just the universal `.dmg` (Apple Silicon and Intel);
+`./package.sh --native` builds one for the current Mac only, which is faster.
+
 ### Publish a release
 
 Push a version tag, or publish a release with such a tag on GitHub:
