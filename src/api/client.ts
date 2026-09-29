@@ -5,6 +5,7 @@ import type {
   AudioGenerationSummary,
   CheckResult,
   ItemDetail,
+  Lesson,
   LessonDetail,
   LessonSummary,
   PracticeProgress,
@@ -17,6 +18,9 @@ export const api = {
   listLessons: () => invoke<LessonSummary[]>("list_lessons"),
   importLesson: (path: string) => invoke<LessonDetail>("import_lesson", { path }),
   getLesson: (lessonId: string) => invoke<LessonDetail>("get_lesson", { lessonId }),
+  /** The title is trimmed and must not be blank. */
+  renameLesson: (lessonId: string, title: string) =>
+    invoke<Lesson>("rename_lesson", { lessonId, title }),
   deleteLesson: (lessonId: string) => invoke<void>("delete_lesson", { lessonId }),
 
   generateLessonAudio: (lessonId: string, force = false) =>

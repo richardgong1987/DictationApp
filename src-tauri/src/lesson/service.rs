@@ -1,4 +1,4 @@
-//! Lesson workflows: import, browse and delete.
+//! Lesson workflows: import, browse, rename and delete.
 
 use std::path::Path;
 
@@ -109,6 +109,17 @@ impl LessonService {
             .remove(&item.id)
             .unwrap_or_default();
         Ok(self.item_detail_of(item, &settings, stats))
+    }
+
+    /// Only the lesson's own title changes; the imported file keeps its name.
+    pub fn rename(&self, lesson_id: &str, title: &str) -> AppResult<Lesson> {
+        let title = title.trim();
+        if title.is_empty() {
+            return Err(AppError::LessonTitleEmpty);
+        }
+        self.lessons.rename(lesson_id, title)?;
+        self.write_metadata(lesson_id)?;
+        self.lessons.get(lesson_id)
     }
 
     /// Removes the lesson, its practice history and its folder. The original

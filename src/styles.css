@@ -199,6 +199,16 @@ button.toggle.on {
   grid-column: 1;
 }
 
+/* Same text position as the title it replaces, so nothing jumps. */
+.lesson-card .lesson-title-input {
+  grid-column: 1;
+  width: 100%;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0 6px;
+  margin-left: -7px;
+}
+
 .lesson-card .actions {
   grid-column: 2;
   grid-row: 1 / span 2;

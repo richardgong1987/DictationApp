@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../api/client";
 import { MAX_RECOMMENDED_WORDS } from "../api/constants";
@@ -13,6 +13,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   const [credentialsConfigured, setCredentialsConfigured] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [renamingLessonId, setRenamingLessonId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -45,6 +46,24 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
       setError(errorMessage(e));
     } finally {
       setIsImporting(false);
+    }
+  }
+
+  async function renameLesson(lesson: LessonSummary, title: string) {
+    // Another lesson may have started renaming while this save was running.
+    const stopRenaming = () => setRenamingLessonId((id) => (id === lesson.id ? null : id));
+    if (title === lesson.title) {
+      stopRenaming();
+      return;
+    }
+    setError(null);
+    try {
+      const renamed = await api.renameLesson(lesson.id, title);
+      setLessons((list) => list && list.map((l) => (l.id === renamed.id ? { ...l, ...renamed } : l)));
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      stopRenaming();
     }
   }
 
@@ -99,14 +118,23 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
         <ul className="lesson-list">
           {lessons.map((lesson) => {
             const isAudioComplete = lesson.audioReadyCount === lesson.itemCount;
+            const isRenaming = renamingLessonId === lesson.id;
             return (
               <li key={lesson.id} className="card lesson-card">
-                <button
-                  className="lesson-title link"
-                  onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}
-                >
-                  {lesson.title}
-                </button>
+                {isRenaming ? (
+                  <TitleInput
+                    initialTitle={lesson.title}
+                    onSave={(title) => renameLesson(lesson, title)}
+                    onCancel={() => setRenamingLessonId(null)}
+                  />
+                ) : (
+                  <button
+                    className="lesson-title link"
+                    onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}
+                  >
+                    {lesson.title}
+                  </button>
+                )}
                 <div className="muted small">
                   {lesson.itemCount} items · audio {lesson.audioReadyCount}/{lesson.itemCount}
                   {lesson.longItemCount > 0 && (
@@ -126,6 +154,9 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                       Generate missing audio
                     </button>
                   )}
+                  <button onClick={() => setRenamingLessonId(lesson.id)} disabled={isRenaming}>
+                    Rename
+                  </button>
                   <button onClick={() => deleteLesson(lesson)}>Delete</button>
                   <button
                     className="primary"
@@ -141,5 +172,50 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
         </ul>
       )}
     </main>
+  );
+}
+
+interface TitleInputProps {
+  initialTitle: string;
+  onSave: (title: string) => void;
+  onCancel: () => void;
+}
+
+/** Enter or clicking elsewhere saves; Escape cancels. */
+function TitleInput({ initialTitle, onSave, onCancel }: TitleInputProps) {
+  const [title, setTitle] = useState(initialTitle);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Removing a focused input fires blur, which would save right after
+  // Enter or Escape has already finished the edit.
+  const isFinished = useRef(false);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  function finish(save: boolean) {
+    if (isFinished.current) return;
+    isFinished.current = true;
+    if (save) onSave(title);
+    else onCancel();
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      className="lesson-title-input"
+      aria-label="Lesson title"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      onBlur={() => finish(true)}
+      onKeyDown={(e) => {
+        // WebKit reports the Enter that picks an IME candidate (e.g. Chinese
+        // pinyin) with isComposing false but keyCode 229; it must not save.
+        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+        if (e.key === "Enter") finish(true);
+        else if (e.key === "Escape") finish(false);
+      }}
+    />
   );
 }

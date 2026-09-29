@@ -9,7 +9,7 @@ use tauri::{AppHandle, Emitter, Runtime, State};
 use crate::app_state::AppState;
 use crate::audio::{AudioGenerationProgress, AudioGenerationSummary, GENERATION_PROGRESS_EVENT};
 use crate::error::AppResult;
-use crate::lesson::{ItemDetail, LessonDetail, LessonSummary};
+use crate::lesson::{ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::{CheckResult, PracticeProgress};
 use crate::settings::{Settings, SettingsDetail};
 
@@ -29,6 +29,15 @@ pub fn import_lesson(state: State<'_, AppState>, path: String) -> AppResult<Less
 #[tauri::command]
 pub fn get_lesson(state: State<'_, AppState>, lesson_id: String) -> AppResult<LessonDetail> {
     state.lessons.detail(&lesson_id)
+}
+
+#[tauri::command]
+pub fn rename_lesson(
+    state: State<'_, AppState>,
+    lesson_id: String,
+    title: String,
+) -> AppResult<Lesson> {
+    state.lessons.rename(&lesson_id, &title)
 }
 
 #[tauri::command]

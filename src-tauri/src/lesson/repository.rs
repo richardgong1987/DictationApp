@@ -73,6 +73,17 @@ impl LessonRepository {
             .ok_or(AppError::LessonNotFound)
     }
 
+    pub fn rename(&self, id: &str, title: &str) -> AppResult<()> {
+        let renamed = self.database.connection().execute(
+            "UPDATE lessons SET title = ?1, updated_at = ?2 WHERE id = ?3",
+            params![title, timestamp_now(), id],
+        )?;
+        if renamed == 0 {
+            return Err(AppError::LessonNotFound);
+        }
+        Ok(())
+    }
+
     pub fn touch(&self, id: &str) -> AppResult<()> {
         self.database.connection().execute(
             "UPDATE lessons SET updated_at = ?1 WHERE id = ?2",

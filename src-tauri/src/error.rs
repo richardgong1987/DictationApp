@@ -13,6 +13,8 @@ pub enum AppError {
     LessonHasNoItems,
     #[error("Lesson not found")]
     LessonNotFound,
+    #[error("Lesson title cannot be empty.")]
+    LessonTitleEmpty,
     #[error("Dictation item not found")]
     ItemNotFound,
     #[error("Audio for this item not found")]

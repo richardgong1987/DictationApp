@@ -227,6 +227,47 @@ fn import_rejects_empty_and_non_utf8_files() {
 }
 
 #[test]
+fn renamed_title_is_trimmed_and_survives_restart() {
+    let h = Harness::new();
+    let path = h.write_lesson_file("lesson01.txt", LESSON);
+    let detail = h.call("import_lesson", json!({ "path": path })).unwrap();
+    let lesson_id = detail["lesson"]["id"].as_str().unwrap().to_string();
+
+    let lesson = h
+        .call(
+            "rename_lesson",
+            json!({ "lessonId": lesson_id, "title": "  Unit 1: Everyday phrases  " }),
+        )
+        .unwrap();
+    assert_eq!(lesson["title"], "Unit 1: Everyday phrases");
+
+    let h = h.restart();
+    let lessons = h.call("list_lessons", json!({})).unwrap();
+    assert_eq!(lessons[0]["title"], "Unit 1: Everyday phrases");
+    assert_eq!(lessons[0]["itemCount"], 3);
+    let metadata_path = h
+        .dir
+        .path()
+        .join("lessons")
+        .join(&lesson_id)
+        .join("metadata.json");
+    let metadata: Value = serde_json::from_slice(&std::fs::read(metadata_path).unwrap()).unwrap();
+    assert_eq!(metadata["title"], "Unit 1: Everyday phrases");
+
+    let err = h
+        .call("rename_lesson", json!({ "lessonId": lesson_id, "title": "   " }))
+        .unwrap_err();
+    assert_eq!(err, "Lesson title cannot be empty.");
+    let err = h
+        .call(
+            "rename_lesson",
+            json!({ "lessonId": "no-such-lesson", "title": "Anything" }),
+        )
+        .unwrap_err();
+    assert_eq!(err, "Lesson not found");
+}
+
+#[test]
 fn missing_audio_without_credentials_is_a_clear_error() {
     let h = Harness::new();
     let path = h.write_lesson_file("l.txt", "One.\n\nTwo.");
