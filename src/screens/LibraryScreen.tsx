@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../api/client";
 import { MAX_RECOMMENDED_WORDS } from "../api/constants";
 import type { LessonSummary } from "../api/types";
 import type { Navigate, Route } from "../navigation";
 import ErrorBanner from "../components/ErrorBanner";
+import TitleInput from "../components/TitleInput";
 
 const SETTINGS_ROUTE: Route = { name: "settings", back: { name: "library" } };
 
@@ -50,12 +51,6 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   }
 
   async function renameLesson(lesson: LessonSummary, title: string) {
-    // Another lesson may have started renaming while this save was running.
-    const stopRenaming = () => setRenamingLessonId((id) => (id === lesson.id ? null : id));
-    if (title === lesson.title) {
-      stopRenaming();
-      return;
-    }
     setError(null);
     try {
       const renamed = await api.renameLesson(lesson.id, title);
@@ -63,7 +58,8 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
     } catch (e) {
       setError(errorMessage(e));
     } finally {
-      stopRenaming();
+      // Another lesson may have started renaming while this save was running.
+      setRenamingLessonId((id) => (id === lesson.id ? null : id));
     }
   }
 
@@ -172,50 +168,5 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
         </ul>
       )}
     </main>
-  );
-}
-
-interface TitleInputProps {
-  initialTitle: string;
-  onSave: (title: string) => void;
-  onCancel: () => void;
-}
-
-/** Enter or clicking elsewhere saves; Escape cancels. */
-function TitleInput({ initialTitle, onSave, onCancel }: TitleInputProps) {
-  const [title, setTitle] = useState(initialTitle);
-  const inputRef = useRef<HTMLInputElement>(null);
-  // Removing a focused input fires blur, which would save right after
-  // Enter or Escape has already finished the edit.
-  const isFinished = useRef(false);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-    inputRef.current?.select();
-  }, []);
-
-  function finish(save: boolean) {
-    if (isFinished.current) return;
-    isFinished.current = true;
-    if (save) onSave(title);
-    else onCancel();
-  }
-
-  return (
-    <input
-      ref={inputRef}
-      className="lesson-title-input"
-      aria-label="Lesson title"
-      value={title}
-      onChange={(e) => setTitle(e.target.value)}
-      onBlur={() => finish(true)}
-      onKeyDown={(e) => {
-        // WebKit reports the Enter that picks an IME candidate (e.g. Chinese
-        // pinyin) with isComposing false but keyCode 229; it must not save.
-        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
-        if (e.key === "Enter") finish(true);
-        else if (e.key === "Escape") finish(false);
-      }}
-    />
   );
 }

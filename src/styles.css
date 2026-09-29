@@ -199,14 +199,10 @@ button.toggle.on {
   grid-column: 1;
 }
 
-/* Same text position as the title it replaces, so nothing jumps. */
-.lesson-card .lesson-title-input {
+.lesson-card .title-input {
   grid-column: 1;
-  width: 100%;
   font-size: 1.1rem;
   font-weight: 600;
-  padding: 0 6px;
-  margin-left: -7px;
 }
 
 .lesson-card .actions {
@@ -238,6 +234,32 @@ button.toggle.on {
 .empty {
   text-align: center;
   padding: 48px 0;
+}
+
+/* Renaming in place. The input and the clickable heading share padding,
+   border and offset, so the text stays put when editing starts. */
+
+.title-input,
+button.title-button {
+  padding: 0 6px;
+  margin-left: -7px;
+}
+
+.title-input {
+  width: 100%;
+}
+
+button.title-button {
+  background: none;
+  border-color: transparent;
+  text-align: left;
+  cursor: text;
+}
+
+/* Wide enough for the title input, not just the current title. */
+.lesson-heading {
+  flex: 1 1 320px;
+  min-width: 0;
 }
 
 /* Badges and banners */
