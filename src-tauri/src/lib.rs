@@ -22,12 +22,13 @@ use database::Database;
 use settings::EnvCredentials;
 
 /// Environment variables that take precedence over credentials stored in Settings.
-const ENV_SPEECH_KEY: &str = "AZURE_SPEECH_KEY";
-const ENV_SPEECH_REGION: &str = "AZURE_SPEECH_REGION";
+const ENV_AZURE_SPEECH_KEY: &str = "AZURE_SPEECH_KEY";
+const ENV_AZURE_SPEECH_REGION: &str = "AZURE_SPEECH_REGION";
+const ENV_ELEVENLABS_API_KEY: &str = "ELEVENLABS_API_KEY";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Local development: pick up AZURE_SPEECH_* from a `.env` in the working
+    // Local development: pick up TTS credentials from a `.env` in the working
     // directory. Real environment variables always win.
     let _ = dotenvy::dotenv();
 
@@ -48,8 +49,9 @@ pub fn run() {
 
 fn read_env_credentials() -> EnvCredentials {
     EnvCredentials::new(
-        std::env::var(ENV_SPEECH_KEY).ok(),
-        std::env::var(ENV_SPEECH_REGION).ok(),
+        std::env::var(ENV_AZURE_SPEECH_KEY).ok(),
+        std::env::var(ENV_AZURE_SPEECH_REGION).ok(),
+        std::env::var(ENV_ELEVENLABS_API_KEY).ok(),
     )
 }
 

@@ -85,7 +85,7 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
 
   async function regenerateAll() {
     const confirmed = await ask(
-      "Regenerate audio for every item? This calls Azure once per item.",
+      "Regenerate audio for every item? This calls the text-to-speech provider once per item.",
       { title: "Regenerate all audio", okLabel: "Regenerate", cancelLabel: "Cancel" },
     );
     if (confirmed) generateAudio(true);

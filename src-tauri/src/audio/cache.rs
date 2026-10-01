@@ -8,19 +8,20 @@ use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
 use crate::lesson::DictationItem;
 use crate::settings::Settings;
-use crate::tts::{TtsProvider, TtsRequest};
+use crate::tts::{TtsProvider, TtsProviderKind, TtsRequest};
 
 /// Bump when the key recipe changes so old audio is treated as stale.
 const CACHE_KEY_VERSION: &str = "v1";
 
-/// `SHA-256(version, text, voice, rate, pitch, output_format)` as lowercase hex.
+/// `SHA-256(version, text, voice, rate, pitch, output_format)` as lowercase
+/// hex, followed by `provider, model` for providers other than Azure.
 ///
 /// Fields are separated by a control character that cannot appear in any of
 /// them, so different field boundaries can never produce the same input.
 pub fn cache_key(request: &TtsRequest) -> String {
     let rate = request.rate.to_string();
     let pitch = request.pitch.to_string();
-    let fields = [
+    let mut fields = vec![
         CACHE_KEY_VERSION,
         request.text.as_str(),
         request.voice.as_str(),
@@ -28,6 +29,12 @@ pub fn cache_key(request: &TtsRequest) -> String {
         pitch.as_str(),
         request.output_format.as_str(),
     ];
+    match request.provider {
+        // Azure keys keep the recipe from before other providers existed, so
+        // audio generated back then is still recognized as current.
+        TtsProviderKind::Azure => {}
+        TtsProviderKind::ElevenLabs => fields.extend(["elevenlabs", request.model.as_str()]),
+    }
     let mut hasher = Sha256::new();
     for field in fields {
         hasher.update(field.as_bytes());
@@ -119,7 +126,7 @@ impl AudioCache {
             });
         }
 
-        let provider = provider.ok_or(AppError::MissingSpeechCredentials)?;
+        let provider = provider.ok_or(AppError::MissingSpeechCredentials(settings.tts_provider))?;
         let audio = provider.synthesize(&request).await?;
         self.files
             .write_audio(&path, &audio)
@@ -152,8 +159,10 @@ mod tests {
 
     fn request(text: &str) -> TtsRequest {
         TtsRequest {
+            provider: TtsProviderKind::Azure,
             text: text.into(),
             voice: "en-US-JennyNeural".into(),
+            model: String::new(),
             rate: 0,
             pitch: 0,
             output_format: "audio-24khz-48kbitrate-mono-mp3".into(),
@@ -217,10 +226,36 @@ mod tests {
                 output_format: "riff-24khz-16bit-mono-pcm".into(),
                 ..base.clone()
             },
+            TtsRequest {
+                provider: TtsProviderKind::ElevenLabs,
+                ..base.clone()
+            },
         ];
         for variant in variants {
             assert_ne!(cache_key(&variant), key, "{variant:?}");
         }
+    }
+
+    #[test]
+    fn azure_keys_are_unchanged_so_existing_audio_stays_current() {
+        // Computed with the recipe used before ElevenLabs was supported.
+        assert_eq!(
+            cache_key(&request("Hello there.")),
+            "972d3452bf9025ee15750491167c05526cc922e0dfb0e5681fb442d75dff878e"
+        );
+    }
+
+    #[test]
+    fn elevenlabs_keys_depend_on_the_model() {
+        let elevenlabs = |model: &str| TtsRequest {
+            provider: TtsProviderKind::ElevenLabs,
+            model: model.into(),
+            ..request("Hello there.")
+        };
+        assert_ne!(
+            cache_key(&elevenlabs("eleven_multilingual_v2")),
+            cache_key(&elevenlabs("eleven_flash_v2_5"))
+        );
     }
 
     #[test]
@@ -326,6 +361,9 @@ mod tests {
             .await
             .err()
             .unwrap();
-        assert!(matches!(error, AppError::MissingSpeechCredentials));
+        assert!(matches!(
+            error,
+            AppError::MissingSpeechCredentials(TtsProviderKind::Azure)
+        ));
     }
 }

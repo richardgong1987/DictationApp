@@ -1,7 +1,7 @@
 [package]
 name = "dictation-app"
 version = "0.1.0"
-description = "Desktop English dictation practice with Azure TTS"
+description = "Desktop English dictation practice with Azure or ElevenLabs TTS"
 edition = "2021"
 rust-version = "1.77"
 

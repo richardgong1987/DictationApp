@@ -1,4 +1,4 @@
-//! User settings: TTS voice, player preferences and Azure credentials.
+//! User settings: TTS provider and voice, player preferences and credentials.
 
 pub mod repository;
 pub mod service;
@@ -6,29 +6,44 @@ pub mod service;
 use serde::{Deserialize, Serialize};
 
 use crate::tts::azure::AzureCredentials;
-use crate::tts::TtsRequest;
+use crate::tts::{TtsProviderKind, TtsRequest};
 
-/// Azure output format. Fixed for the MVP, but still part of the cache key.
-pub const OUTPUT_FORMAT: &str = "audio-24khz-48kbitrate-mono-mp3";
+/// Output formats. Fixed for the MVP, but still part of the cache key.
+const AZURE_OUTPUT_FORMAT: &str = "audio-24khz-48kbitrate-mono-mp3";
+const ELEVENLABS_OUTPUT_FORMAT: &str = "mp3_44100_128";
 
 /// Speeds the player offers; any other stored value falls back to 1.0.
 pub const PLAYBACK_SPEEDS: [f64; 6] = [0.6, 0.75, 0.9, 1.0, 1.1, 1.25];
 
-const DEFAULT_VOICE: &str = "en-US-JennyNeural";
+const DEFAULT_AZURE_VOICE: &str = "en-US-JennyNeural";
+/// "George", one of the default voices every ElevenLabs account has.
+const DEFAULT_ELEVENLABS_VOICE: &str = "JBFqnCBsd6RMkjVDRZzb";
+const DEFAULT_ELEVENLABS_MODEL: &str = "eleven_multilingual_v2";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
+    /// Which service generates new audio.
+    pub tts_provider: TtsProviderKind,
     /// Azure neural voice name, e.g. `en-US-JennyNeural`.
-    pub voice: String,
-    /// TTS speaking rate adjustment in percent, -50..=100 (0 = normal).
+    // Stored as `voice` before ElevenLabs was supported.
+    #[serde(alias = "voice")]
+    pub azure_voice: String,
+    /// TTS speaking rate adjustment in percent (0 = normal), within
+    /// [`TtsProviderKind::speaking_rate_range`] of the selected provider.
     pub speaking_rate: i32,
-    /// TTS pitch adjustment in percent, -50..=50 (0 = normal).
+    /// TTS pitch adjustment in percent, -50..=50 (0 = normal). Azure only.
     pub pitch: i32,
     /// Azure region stored in-app; `AZURE_SPEECH_REGION` takes precedence.
     pub azure_region: String,
     /// Azure key stored in-app; `AZURE_SPEECH_KEY` takes precedence.
     pub azure_key: String,
+    /// ElevenLabs voice ID, e.g. `JBFqnCBsd6RMkjVDRZzb`.
+    pub elevenlabs_voice_id: String,
+    /// ElevenLabs model ID, e.g. `eleven_multilingual_v2`.
+    pub elevenlabs_model: String,
+    /// ElevenLabs API key stored in-app; `ELEVENLABS_API_KEY` takes precedence.
+    pub elevenlabs_key: String,
     /// Last used player speed, one of [`PLAYBACK_SPEEDS`].
     pub playback_speed: f64,
     /// Last used loop state.
@@ -38,11 +53,15 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            voice: DEFAULT_VOICE.to_string(),
+            tts_provider: TtsProviderKind::default(),
+            azure_voice: DEFAULT_AZURE_VOICE.to_string(),
             speaking_rate: 0,
             pitch: 0,
             azure_region: String::new(),
             azure_key: String::new(),
+            elevenlabs_voice_id: DEFAULT_ELEVENLABS_VOICE.to_string(),
+            elevenlabs_model: DEFAULT_ELEVENLABS_MODEL.to_string(),
+            elevenlabs_key: String::new(),
             playback_speed: 1.0,
             loop_enabled: false,
         }
@@ -52,14 +71,17 @@ impl Default for Settings {
 impl Settings {
     /// Clamps values into supported ranges and trims text fields.
     pub fn sanitized(mut self) -> Self {
-        self.voice = self.voice.trim().to_string();
-        if self.voice.is_empty() {
-            self.voice = DEFAULT_VOICE.to_string();
-        }
-        self.speaking_rate = self.speaking_rate.clamp(-50, 100);
+        self.azure_voice = trimmed_or(&self.azure_voice, DEFAULT_AZURE_VOICE);
+        self.elevenlabs_voice_id = trimmed_or(&self.elevenlabs_voice_id, DEFAULT_ELEVENLABS_VOICE);
+        self.elevenlabs_model = trimmed_or(&self.elevenlabs_model, DEFAULT_ELEVENLABS_MODEL);
+        let rate_range = self.tts_provider.speaking_rate_range();
+        self.speaking_rate = self
+            .speaking_rate
+            .clamp(*rate_range.start(), *rate_range.end());
         self.pitch = self.pitch.clamp(-50, 50);
         self.azure_region = self.azure_region.trim().to_lowercase();
         self.azure_key = self.azure_key.trim().to_string();
+        self.elevenlabs_key = self.elevenlabs_key.trim().to_string();
         let is_offered_speed = PLAYBACK_SPEEDS
             .iter()
             .any(|speed| (speed - self.playback_speed).abs() < 1e-6);
@@ -69,41 +91,71 @@ impl Settings {
         self
     }
 
-    /// The TTS request for one item under the current voice settings.
+    /// The TTS request for one item under the current provider and voice settings.
     pub fn tts_request(&self, text: &str) -> TtsRequest {
-        TtsRequest {
-            text: text.to_string(),
-            voice: self.voice.clone(),
-            rate: self.speaking_rate,
-            pitch: self.pitch,
-            output_format: OUTPUT_FORMAT.to_string(),
+        match self.tts_provider {
+            TtsProviderKind::Azure => TtsRequest {
+                provider: TtsProviderKind::Azure,
+                text: text.to_string(),
+                voice: self.azure_voice.clone(),
+                model: String::new(),
+                rate: self.speaking_rate,
+                pitch: self.pitch,
+                output_format: AZURE_OUTPUT_FORMAT.to_string(),
+            },
+            TtsProviderKind::ElevenLabs => TtsRequest {
+                provider: TtsProviderKind::ElevenLabs,
+                text: text.to_string(),
+                voice: self.elevenlabs_voice_id.clone(),
+                model: self.elevenlabs_model.clone(),
+                rate: self.speaking_rate,
+                pitch: 0,
+                output_format: ELEVENLABS_OUTPUT_FORMAT.to_string(),
+            },
         }
     }
 
     /// Environment variables win over values stored in the app.
-    pub fn credentials(&self, env: &EnvCredentials) -> Option<AzureCredentials> {
-        let key = env.key.clone().or_else(|| non_empty(&self.azure_key))?;
+    pub fn azure_credentials(&self, env: &EnvCredentials) -> Option<AzureCredentials> {
+        let key = env
+            .azure_key
+            .clone()
+            .or_else(|| non_empty(&self.azure_key))?;
         let region = env
-            .region
+            .azure_region
             .clone()
             .or_else(|| non_empty(&self.azure_region))?;
         Some(AzureCredentials { key, region })
     }
+
+    /// `ELEVENLABS_API_KEY` wins over the key stored in the app.
+    pub fn elevenlabs_key(&self, env: &EnvCredentials) -> Option<String> {
+        env.elevenlabs_key
+            .clone()
+            .or_else(|| non_empty(&self.elevenlabs_key))
+    }
 }
 
-/// Credentials from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION`, read once at startup.
+/// Credentials from `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` and
+/// `ELEVENLABS_API_KEY`, read once at startup.
 #[derive(Debug, Clone, Default)]
 pub struct EnvCredentials {
-    key: Option<String>,
-    region: Option<String>,
+    azure_key: Option<String>,
+    azure_region: Option<String>,
+    elevenlabs_key: Option<String>,
 }
 
 impl EnvCredentials {
     /// Blank values count as unset.
-    pub fn new(key: Option<String>, region: Option<String>) -> Self {
+    pub fn new(
+        azure_key: Option<String>,
+        azure_region: Option<String>,
+        elevenlabs_key: Option<String>,
+    ) -> Self {
         Self {
-            key: key.as_deref().and_then(non_empty),
-            region: region.as_deref().and_then(non_empty),
+            azure_key: azure_key.as_deref().and_then(non_empty),
+            azure_region: azure_region.as_deref().and_then(non_empty),
+            elevenlabs_key: elevenlabs_key.as_deref().and_then(non_empty),
         }
     }
 }
@@ -113,22 +165,38 @@ fn non_empty(value: &str) -> Option<String> {
     (!trimmed.is_empty()).then(|| trimmed.to_string())
 }
 
+fn trimmed_or(value: &str, default: &str) -> String {
+    non_empty(value).unwrap_or_else(|| default.to_string())
+}
+
 /// The stored settings plus where the credentials come from, for the settings screen.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettingsDetail {
     pub settings: Settings,
-    pub key_from_env: bool,
-    pub region_from_env: bool,
+    pub azure_key_from_env: bool,
+    pub azure_region_from_env: bool,
+    pub elevenlabs_key_from_env: bool,
+    pub azure_configured: bool,
+    pub elevenlabs_configured: bool,
+    /// Whether the selected provider can generate audio.
     pub credentials_configured: bool,
 }
 
 impl SettingsDetail {
     pub fn new(settings: Settings, env: &EnvCredentials) -> Self {
+        let azure_configured = settings.azure_credentials(env).is_some();
+        let elevenlabs_configured = settings.elevenlabs_key(env).is_some();
         Self {
-            key_from_env: env.key.is_some(),
-            region_from_env: env.region.is_some(),
-            credentials_configured: settings.credentials(env).is_some(),
+            azure_key_from_env: env.azure_key.is_some(),
+            azure_region_from_env: env.azure_region.is_some(),
+            elevenlabs_key_from_env: env.elevenlabs_key.is_some(),
+            azure_configured,
+            elevenlabs_configured,
+            credentials_configured: match settings.tts_provider {
+                TtsProviderKind::Azure => azure_configured,
+                TtsProviderKind::ElevenLabs => elevenlabs_configured,
+            },
             settings,
         }
     }
@@ -138,25 +206,45 @@ impl SettingsDetail {
 mod tests {
     use super::*;
 
+    fn env(
+        azure_key: Option<&str>,
+        azure_region: Option<&str>,
+        elevenlabs_key: Option<&str>,
+    ) -> EnvCredentials {
+        EnvCredentials::new(
+            azure_key.map(Into::into),
+            azure_region.map(Into::into),
+            elevenlabs_key.map(Into::into),
+        )
+    }
+
     #[test]
     fn env_takes_precedence_over_stored_values() {
         let settings = Settings {
             azure_key: "stored-key".into(),
             azure_region: "westus".into(),
+            elevenlabs_key: "stored-eleven".into(),
             ..Settings::default()
         };
-        let env = EnvCredentials::new(Some("env-key".into()), None);
-        let credentials = settings.credentials(&env).unwrap();
+        let env = env(Some("env-key"), None, Some("env-eleven"));
+        let credentials = settings.azure_credentials(&env).unwrap();
         assert_eq!(credentials.key, "env-key");
         assert_eq!(credentials.region, "westus");
+        assert_eq!(settings.elevenlabs_key(&env).as_deref(), Some("env-eleven"));
     }
 
     #[test]
     fn missing_credentials_resolve_to_none() {
         let settings = Settings::default();
-        assert!(settings.credentials(&EnvCredentials::default()).is_none());
-        let blank = EnvCredentials::new(Some("   ".into()), Some("   ".into()));
-        assert!(settings.credentials(&blank).is_none());
+        assert!(settings
+            .azure_credentials(&EnvCredentials::default())
+            .is_none());
+        assert!(settings
+            .elevenlabs_key(&EnvCredentials::default())
+            .is_none());
+        let blank = env(Some("   "), Some("   "), Some("   "));
+        assert!(settings.azure_credentials(&blank).is_none());
+        assert!(settings.elevenlabs_key(&blank).is_none());
     }
 
     #[test]
@@ -165,17 +253,32 @@ mod tests {
             azure_key: "stored-key".into(),
             ..Settings::default()
         };
-        let detail =
-            SettingsDetail::new(settings, &EnvCredentials::new(None, Some("eastus".into())));
-        assert!(!detail.key_from_env);
-        assert!(detail.region_from_env);
+        let detail = SettingsDetail::new(settings, &env(None, Some("eastus"), None));
+        assert!(!detail.azure_key_from_env);
+        assert!(detail.azure_region_from_env);
+        assert!(detail.azure_configured);
+        assert!(!detail.elevenlabs_configured);
         assert!(detail.credentials_configured);
+    }
+
+    #[test]
+    fn credentials_configured_follows_the_selected_provider() {
+        let settings = Settings {
+            tts_provider: TtsProviderKind::ElevenLabs,
+            azure_key: "stored-key".into(),
+            azure_region: "eastus".into(),
+            ..Settings::default()
+        };
+        let detail = SettingsDetail::new(settings, &EnvCredentials::default());
+        assert!(detail.azure_configured);
+        assert!(!detail.credentials_configured);
     }
 
     #[test]
     fn sanitize_clamps_values() {
         let settings = Settings {
-            voice: "  ".into(),
+            azure_voice: "  ".into(),
+            elevenlabs_voice_id: " ".into(),
             speaking_rate: 500,
             pitch: -500,
             azure_region: " EastUS ".into(),
@@ -183,7 +286,8 @@ mod tests {
             ..Settings::default()
         }
         .sanitized();
-        assert_eq!(settings.voice, "en-US-JennyNeural");
+        assert_eq!(settings.azure_voice, "en-US-JennyNeural");
+        assert_eq!(settings.elevenlabs_voice_id, DEFAULT_ELEVENLABS_VOICE);
         assert_eq!(settings.speaking_rate, 100);
         assert_eq!(settings.pitch, -50);
         assert_eq!(settings.azure_region, "eastus");
@@ -191,9 +295,43 @@ mod tests {
     }
 
     #[test]
-    fn missing_fields_use_defaults() {
+    fn elevenlabs_speaking_rate_is_clamped_to_its_speed_range() {
+        let settings = |speaking_rate| {
+            Settings {
+                tts_provider: TtsProviderKind::ElevenLabs,
+                speaking_rate,
+                ..Settings::default()
+            }
+            .sanitized()
+        };
+        assert_eq!(settings(50).speaking_rate, 20);
+        assert_eq!(settings(-50).speaking_rate, -30);
+    }
+
+    #[test]
+    fn elevenlabs_request_uses_its_voice_and_model_and_ignores_pitch() {
+        let settings = Settings {
+            tts_provider: TtsProviderKind::ElevenLabs,
+            elevenlabs_voice_id: "abc123".into(),
+            elevenlabs_model: "eleven_flash_v2_5".into(),
+            speaking_rate: 10,
+            pitch: 20,
+            ..Settings::default()
+        };
+        let request = settings.tts_request("Hello.");
+        assert_eq!(request.provider, TtsProviderKind::ElevenLabs);
+        assert_eq!(request.voice, "abc123");
+        assert_eq!(request.model, "eleven_flash_v2_5");
+        assert_eq!(request.rate, 10);
+        assert_eq!(request.pitch, 0);
+    }
+
+    #[test]
+    fn settings_saved_before_elevenlabs_support_still_load() {
         let settings: Settings = serde_json::from_str(r#"{"voice":"en-GB-SoniaNeural"}"#).unwrap();
-        assert_eq!(settings.voice, "en-GB-SoniaNeural");
+        assert_eq!(settings.tts_provider, TtsProviderKind::Azure);
+        assert_eq!(settings.azure_voice, "en-GB-SoniaNeural");
+        assert_eq!(settings.elevenlabs_model, DEFAULT_ELEVENLABS_MODEL);
         assert_eq!(settings.playback_speed, 1.0);
     }
 }

@@ -13,6 +13,8 @@ use crate::lesson::DictationItem;
 use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 use crate::tts::azure::AzureTts;
+use crate::tts::elevenlabs::ElevenLabsTts;
+use crate::tts::{TtsClient, TtsProviderKind};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -47,7 +49,7 @@ impl AudioService {
     }
 
     /// Generates audio for every item that lacks up-to-date audio (every item
-    /// when `force`), one at a time to stay within Azure free-tier limits.
+    /// when `force`), one at a time to stay within free-tier rate limits.
     /// Reports progress after each item and keeps going when one item fails.
     pub async fn generate_lesson(
         &self,
@@ -58,19 +60,19 @@ impl AudioService {
         let _running = self.running.start(lesson_id)?;
         let settings = self.settings.load()?;
         let items = self.lessons.items(lesson_id)?;
-        let provider = self.tts_provider(&settings)?;
+        let client = self.tts_client(&settings)?;
         let needs_synthesis = force
             || items
                 .iter()
                 .any(|item| self.cache.status(item, &settings) != AudioStatus::Ready);
-        if needs_synthesis && provider.is_none() {
-            return Err(AppError::MissingSpeechCredentials);
+        if needs_synthesis && client.is_none() {
+            return Err(AppError::MissingSpeechCredentials(settings.tts_provider));
         }
 
         let mut summary = AudioGenerationSummary::default();
         for (index, item) in items.iter().enumerate() {
             let result = self
-                .ensure_item_audio(provider.as_ref(), &settings, item, force)
+                .ensure_item_audio(client.as_ref(), &settings, item, force)
                 .await;
             let error = summary.record(item.position, result);
             let updated = self.lessons.get_item(item.id)?;
@@ -93,8 +95,8 @@ impl AudioService {
     pub async fn generate_item(&self, item_id: i64, force: bool) -> AppResult<()> {
         let settings = self.settings.load()?;
         let item = self.lessons.get_item(item_id)?;
-        let provider = self.tts_provider(&settings)?;
-        self.ensure_item_audio(provider.as_ref(), &settings, &item, force)
+        let client = self.tts_client(&settings)?;
+        self.ensure_item_audio(client.as_ref(), &settings, &item, force)
             .await?;
         self.write_metadata(&item.lesson_id)
     }
@@ -107,12 +109,12 @@ impl AudioService {
     /// Makes sure the item has current audio and records where it is.
     async fn ensure_item_audio(
         &self,
-        provider: Option<&AzureTts>,
+        client: Option<&TtsClient>,
         settings: &Settings,
         item: &DictationItem,
         force: bool,
     ) -> AppResult<AudioOutcome> {
-        let audio = self.cache.ensure(provider, item, settings, force).await?;
+        let audio = self.cache.ensure(client, item, settings, force).await?;
         let is_recorded = item.audio_path.as_deref() == Some(audio.path.as_str())
             && item.audio_cache_key.as_deref() == Some(audio.cache_key.as_str());
         if !is_recorded {
@@ -122,12 +124,23 @@ impl AudioService {
         Ok(audio.outcome)
     }
 
-    /// `None` when no credentials are configured; cached audio still works then.
-    fn tts_provider(&self, settings: &Settings) -> AppResult<Option<AzureTts>> {
-        match self.settings.credentials(settings) {
-            Some(credentials) => Ok(Some(AzureTts::new(self.http.clone(), credentials)?)),
-            None => Ok(None),
-        }
+    /// A client for the selected provider, or `None` when it has no
+    /// credentials; cached audio still works then.
+    fn tts_client(&self, settings: &Settings) -> AppResult<Option<TtsClient>> {
+        let client = match settings.tts_provider {
+            TtsProviderKind::Azure => match self.settings.azure_credentials(settings) {
+                Some(credentials) => Some(TtsClient::Azure(AzureTts::new(
+                    self.http.clone(),
+                    credentials,
+                )?)),
+                None => None,
+            },
+            TtsProviderKind::ElevenLabs => self
+                .settings
+                .elevenlabs_key(settings)
+                .map(|key| TtsClient::ElevenLabs(ElevenLabsTts::new(self.http.clone(), key))),
+        };
+        Ok(client)
     }
 
     fn write_metadata(&self, lesson_id: &str) -> AppResult<()> {

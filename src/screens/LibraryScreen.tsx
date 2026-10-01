@@ -93,7 +93,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
 
       {!credentialsConfigured && (
         <div className="banner info">
-          Azure Speech is not configured yet, so new audio cannot be generated.{" "}
+          Text-to-speech is not configured yet, so new audio cannot be generated.{" "}
           <button className="link" onClick={() => navigate(SETTINGS_ROUTE)}>
             Open Settings
           </button>

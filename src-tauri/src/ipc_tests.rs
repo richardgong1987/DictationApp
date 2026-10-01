@@ -24,7 +24,7 @@ struct Harness {
 }
 
 impl Harness {
-    /// An app with an empty data directory and no Azure credentials.
+    /// An app with an empty data directory and no TTS credentials.
     fn new() -> Self {
         Self::open(tempfile::tempdir().unwrap())
     }
@@ -127,7 +127,7 @@ fn import_practice_and_reopen_flow() {
         h.fake_generated_audio(&lesson_id, item);
     }
 
-    // Everything is cached, so no Azure call (and no credentials) is needed.
+    // Everything is cached, so no TTS call (and no credentials) is needed.
     let summary = h
         .call(
             "generate_lesson_audio",
@@ -183,7 +183,7 @@ fn import_practice_and_reopen_flow() {
 
     // A voice change marks audio as outdated rather than silently reusing it.
     let mut changed = h.call("get_settings", json!({})).unwrap()["settings"].clone();
-    changed["voice"] = json!("en-GB-SoniaNeural");
+    changed["azureVoice"] = json!("en-GB-SoniaNeural");
     h.call("save_settings", json!({ "settings": changed }))
         .unwrap();
     let detail = h
@@ -198,7 +198,7 @@ fn import_practice_and_reopen_flow() {
     )
     .unwrap();
     let view = h.call("get_settings", json!({})).unwrap();
-    assert_eq!(view["settings"]["voice"], "en-GB-SoniaNeural");
+    assert_eq!(view["settings"]["azureVoice"], "en-GB-SoniaNeural");
     assert_eq!(view["settings"]["playbackSpeed"], 0.75);
     assert_eq!(view["settings"]["loopEnabled"], true);
 
@@ -255,7 +255,10 @@ fn renamed_title_is_trimmed_and_survives_restart() {
     assert_eq!(metadata["title"], "Unit 1: Everyday phrases");
 
     let err = h
-        .call("rename_lesson", json!({ "lessonId": lesson_id, "title": "   " }))
+        .call(
+            "rename_lesson",
+            json!({ "lessonId": lesson_id, "title": "   " }),
+        )
         .unwrap_err();
     assert_eq!(err, "Lesson title cannot be empty.");
     let err = h
@@ -289,6 +292,51 @@ fn missing_audio_without_credentials_is_a_clear_error() {
         .call("get_item_audio", json!({ "itemId": item_id }))
         .unwrap_err();
     assert!(err.as_str().unwrap().contains("not found"));
+}
+
+#[test]
+fn switching_provider_marks_audio_outdated_until_switched_back() {
+    let h = Harness::new();
+    let path = h.write_lesson_file("l.txt", "One.\n\nTwo.");
+    let detail = h.call("import_lesson", json!({ "path": path })).unwrap();
+    let lesson_id = detail["lesson"]["id"].as_str().unwrap().to_string();
+    for item in detail["items"].as_array().unwrap() {
+        h.fake_generated_audio(&lesson_id, item);
+    }
+    let audio_status = || {
+        h.call("get_lesson", json!({ "lessonId": lesson_id }))
+            .unwrap()["items"][0]["audioStatus"]
+            .clone()
+    };
+
+    let mut settings = h.call("get_settings", json!({})).unwrap()["settings"].clone();
+    settings["ttsProvider"] = json!("elevenlabs");
+    settings["speakingRate"] = json!(50);
+    let saved = h
+        .call("save_settings", json!({ "settings": settings }))
+        .unwrap();
+    // ElevenLabs speaks at most 1.2x.
+    assert_eq!(saved["settings"]["speakingRate"], 20);
+    assert_eq!(saved["credentialsConfigured"], false);
+    assert_eq!(audio_status(), "stale");
+
+    let err = h
+        .call(
+            "generate_lesson_audio",
+            json!({ "lessonId": lesson_id, "force": false }),
+        )
+        .unwrap_err();
+    assert!(err
+        .as_str()
+        .unwrap()
+        .contains("ElevenLabs API key is not configured"));
+
+    // Nothing was regenerated, so the Azure audio is current again.
+    settings["ttsProvider"] = json!("azure");
+    settings["speakingRate"] = json!(0);
+    h.call("save_settings", json!({ "settings": settings }))
+        .unwrap();
+    assert_eq!(audio_status(), "ready");
 }
 
 #[test]

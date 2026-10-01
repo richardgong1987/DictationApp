@@ -41,7 +41,7 @@ export default function LessonItemRow({
         <button
           onClick={onRegenerate}
           disabled={isLessonGenerating || isBusy}
-          title="Call Azure again for this item"
+          title="Generate this item's audio again"
         >
           Regenerate
         </button>

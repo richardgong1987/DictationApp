@@ -82,19 +82,31 @@ export interface PracticeProgress {
   resumeItemId: number | null;
 }
 
+/** `tts::TtsProviderKind` */
+export type TtsProvider = "azure" | "elevenlabs";
+
 export interface Settings {
-  voice: string;
+  ttsProvider: TtsProvider;
+  azureVoice: string;
   speakingRate: number;
+  /** Azure only. */
   pitch: number;
   azureRegion: string;
   azureKey: string;
+  elevenlabsVoiceId: string;
+  elevenlabsModel: string;
+  elevenlabsKey: string;
   playbackSpeed: number;
   loopEnabled: boolean;
 }
 
 export interface SettingsDetail {
   settings: Settings;
-  keyFromEnv: boolean;
-  regionFromEnv: boolean;
+  azureKeyFromEnv: boolean;
+  azureRegionFromEnv: boolean;
+  elevenlabsKeyFromEnv: boolean;
+  azureConfigured: boolean;
+  elevenlabsConfigured: boolean;
+  /** Whether the selected provider can generate audio. */
   credentialsConfigured: boolean;
 }

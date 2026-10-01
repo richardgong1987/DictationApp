@@ -44,7 +44,12 @@ impl SettingsService {
     }
 
     /// `None` when neither the environment nor the stored settings provide both values.
-    pub fn credentials(&self, settings: &Settings) -> Option<AzureCredentials> {
-        settings.credentials(&self.env)
+    pub fn azure_credentials(&self, settings: &Settings) -> Option<AzureCredentials> {
+        settings.azure_credentials(&self.env)
+    }
+
+    /// `None` when neither the environment nor the stored settings provide a key.
+    pub fn elevenlabs_key(&self, settings: &Settings) -> Option<String> {
+        settings.elevenlabs_key(&self.env)
     }
 }

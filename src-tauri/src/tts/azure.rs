@@ -1,17 +1,9 @@
-//! Azure Speech text-to-speech over the REST API, with retries on rate limits
-//! and server errors.
+//! Azure Speech text-to-speech over the REST API.
 
-use std::time::Duration;
+use reqwest::StatusCode;
 
-use crate::tts::{TtsError, TtsProvider, TtsRequest};
-
-/// Attempts per request, including the first one.
-const MAX_ATTEMPTS: u32 = 4;
-/// Longest single backoff, so a struggling service cannot freeze generation.
-const MAX_RETRY_DELAY: Duration = Duration::from_secs(20);
-const NETWORK_RETRY_DELAY: Duration = Duration::from_secs(1);
-/// Used when a 429/5xx response carries no `Retry-After` header.
-const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(2);
+use crate::tts::http::fetch_audio;
+use crate::tts::{TtsError, TtsProvider, TtsProviderKind, TtsRequest};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AzureCredentials {
@@ -42,92 +34,34 @@ impl AzureTts {
             self.credentials.region
         )
     }
-
-    async fn request_once(&self, request: &TtsRequest) -> Result<Vec<u8>, FailedAttempt> {
-        let response = self
-            .client
-            .post(self.endpoint())
-            .header("Ocp-Apim-Subscription-Key", &self.credentials.key)
-            .header("Content-Type", "application/ssml+xml")
-            .header("X-Microsoft-OutputFormat", &request.output_format)
-            .header("User-Agent", "DictationApp")
-            .body(build_ssml(request))
-            .send()
-            .await
-            .map_err(FailedAttempt::network)?;
-
-        if !response.status().is_success() {
-            return Err(FailedAttempt::from_error_response(response).await);
-        }
-        let audio = response.bytes().await.map_err(FailedAttempt::network)?;
-        if audio.is_empty() {
-            return Err(FailedAttempt {
-                error: TtsError::EmptyAudio,
-                retry_after: None,
-            });
-        }
-        Ok(audio.to_vec())
-    }
 }
 
 impl TtsProvider for AzureTts {
     async fn synthesize(&self, request: &TtsRequest) -> Result<Vec<u8>, TtsError> {
-        let mut attempt = 1;
-        loop {
-            match self.request_once(request).await {
-                Ok(audio) => return Ok(audio),
-                Err(FailedAttempt {
-                    retry_after: Some(delay),
-                    ..
-                }) if attempt < MAX_ATTEMPTS => {
-                    // Back off a little more on each retry.
-                    tokio::time::sleep((delay * attempt).min(MAX_RETRY_DELAY)).await;
-                    attempt += 1;
-                }
-                Err(failed) => return Err(failed.error),
-            }
-        }
-    }
-}
-
-/// One failed HTTP attempt. `retry_after` is `None` when retrying cannot help.
-struct FailedAttempt {
-    error: TtsError,
-    retry_after: Option<Duration>,
-}
-
-impl FailedAttempt {
-    fn network(error: reqwest::Error) -> Self {
-        Self {
-            error: TtsError::Network(error.to_string()),
-            retry_after: Some(NETWORK_RETRY_DELAY),
-        }
-    }
-
-    /// Rate limits (429) and server errors are retried, honoring `Retry-After`.
-    async fn from_error_response(response: reqwest::Response) -> Self {
-        let status = response.status();
-        let retry_after = response
-            .headers()
-            .get("Retry-After")
-            .and_then(|value| value.to_str().ok())
-            .and_then(|value| value.parse::<u64>().ok())
-            .map(Duration::from_secs);
-        let body = response.text().await.unwrap_or_default();
-        let message = match (status.as_u16(), body.trim()) {
-            (401, _) => "unauthorized - check the Azure Speech key and region".to_string(),
-            (429, _) => "too many requests - Azure rate limit reached".to_string(),
-            (_, "") => status.canonical_reason().unwrap_or("error").to_string(),
-            (_, text) => text.chars().take(300).collect(),
+        let endpoint = self.endpoint();
+        let ssml = build_ssml(request);
+        let build = || {
+            self.client
+                .post(&endpoint)
+                .header("Ocp-Apim-Subscription-Key", &self.credentials.key)
+                .header("Content-Type", "application/ssml+xml")
+                .header("X-Microsoft-OutputFormat", &request.output_format)
+                .header("User-Agent", "DictationApp")
+                .body(ssml.clone())
         };
-        let is_retryable = status.as_u16() == 429 || status.is_server_error();
-        Self {
-            error: TtsError::Api {
-                status: status.as_u16(),
-                message,
-            },
-            retry_after: is_retryable.then(|| retry_after.unwrap_or(DEFAULT_RETRY_DELAY)),
+        fetch_audio(TtsProviderKind::Azure, build, describe_error).await
+    }
+}
+
+fn describe_error(status: StatusCode, _body: &str) -> Option<String> {
+    match status {
+        StatusCode::UNAUTHORIZED => {
+            Some("unauthorized - check the Azure Speech key and region".to_string())
         }
+        StatusCode::TOO_MANY_REQUESTS => {
+            Some("too many requests - Azure rate limit reached".to_string())
+        }
+        _ => None,
     }
 }
 
@@ -181,8 +115,10 @@ mod tests {
 
     fn request(text: &str) -> TtsRequest {
         TtsRequest {
+            provider: TtsProviderKind::Azure,
             text: text.into(),
             voice: "en-GB-SoniaNeural".into(),
+            model: String::new(),
             rate: -10,
             pitch: 0,
             output_format: "audio-24khz-48kbitrate-mono-mp3".into(),

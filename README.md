@@ -11,7 +11,8 @@ what you hear, and see exactly which words you missed.
 ## Features
 
 - **One clip per sentence.** Audio is generated with Microsoft Azure neural voices (US, UK,
-  Australian and more) and cached on your computer, so replaying never costs another request.
+  Australian and more) or ElevenLabs voices, whichever you pick in Settings, and cached on your
+  computer, so replaying never costs another request.
 - **A player built for dictation.** Play, pause, replay, loop, seek and change speed from 0.6× to
   1.25×, all from the keyboard without leaving the answer box.
 - **Type first, then look.** The original text stays hidden until you choose to show it.
@@ -21,20 +22,20 @@ what you hear, and see exactly which words you missed.
   the last sentence. Clear them whenever you want to start over.
 - **Track your progress.** Attempts and best accuracy for every sentence.
 - **Your data stays local.** Lessons, answers and progress live in a local SQLite database; only the
-  lesson text is sent to Azure, to generate audio.
+  lesson text is sent to the text-to-speech provider you chose, to generate audio.
 - **Plain-text lessons.** Any UTF-8 `.txt` file with passages separated by blank lines is a lesson.
 
 ## How it works
 
 1. **Import** a `.txt` file (try [`examples/lesson01.txt`](examples/lesson01.txt)); each passage
    becomes one dictation item.
-2. **Generate audio** once with your Azure Speech key; every passage gets its own MP3.
+2. **Generate audio** once with your Azure Speech or ElevenLabs key; every passage gets its own MP3.
 3. **Practice**: listen, type what you hear, press **Enter** to reveal the original and see your
    mistakes, and **Enter** again for the next sentence.
 
 Built with Tauri 2, Rust, React 19 + TypeScript and SQLite, for macOS, Windows and Linux. You need
-your own [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) key; the
-free tier covers typical personal use.
+your own [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) key (the
+free tier covers typical personal use) or [ElevenLabs](https://elevenlabs.io) API key.
 
 ## Download
 
@@ -53,21 +54,22 @@ Get the installer for your computer from the
 - Node.js 20+ and npm
 - Tauri system dependencies for your OS — see <https://v2.tauri.app/start/prerequisites/>
   (on Debian/Ubuntu: `libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev`)
-- A Microsoft Azure Speech resource (key + region)
+- A Microsoft Azure Speech resource (key + region), or an ElevenLabs API key
 
 ### Run
 
 ```bash
 npm install
-cp .env.example .env        # then put your Azure key/region in .env
+cp .env.example .env        # then put your Azure key/region or ElevenLabs key in .env
 npm run tauri dev
 ```
 
-Azure credentials are resolved in this order:
+Pick the text-to-speech provider (Azure Speech or ElevenLabs) in the app's **Settings** screen.
+Credentials are resolved in this order:
 
-1. `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` environment variables
+1. `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` and `ELEVENLABS_API_KEY` environment variables
    (a `.env` file in the working directory or in the app data directory is loaded at startup);
-2. key/region entered in the app's **Settings** screen (stored unencrypted in the local app data folder).
+2. keys entered in the app's **Settings** screen (stored unencrypted in the local app data folder).
 
 ### Build an installer
 
@@ -95,15 +97,15 @@ tag, which must look like `v1.2.3`. A new release gets the download instructions
 ### Tests and checks
 
 ```bash
-cd src-tauri && cargo test     # parsing, cache keys, TTS/SSML, answer comparison, database, IPC commands
+cd src-tauri && cargo test     # parsing, cache keys, TTS requests, answer comparison, database, IPC commands
 npm run build                  # TypeScript type check + frontend build
 ```
 
 ### Using the app
 
 1. **Lessons → Import .txt lesson**: pick a UTF-8 text file with passages separated by blank lines.
-2. Audio for every passage is generated with Azure (one MP3 per passage) and cached;
-   reopening a lesson never calls Azure again for audio that already exists.
+2. Audio for every passage is generated with the provider chosen in Settings (one MP3 per passage)
+   and cached; reopening a lesson never calls it again for audio that already exists.
 3. **Practice**: listen, type what you hear, press **Enter** to check, **Enter** again for the next passage.
 
 Keyboard shortcuts on the practice screen:
@@ -796,18 +798,27 @@ Decisions made while implementing V1, where the specification left room:
   keep `connect-src ipc: http://ipc.localhost`: without it Tauri falls back to its postMessage IPC,
   which hands the MP3 over as an array of numbers instead of an `ArrayBuffer`, and installed builds
   play no audio (dev builds apply no CSP, so they still work).
-- **Cache key**: `SHA-256("v1", text, voice, rate, pitch, output_format)`, fields separated by `0x1F`.
-  Audio is stored as `lessons/<lesson-id>/audio/NNN.mp3` and the key is saved with the item. If voice
-  settings change, the item shows "Voice changed" and is regenerated on the next generation or practice.
+- **Cache key**: `SHA-256("v1", text, voice, rate, pitch, output_format)`, fields separated by `0x1F`;
+  ElevenLabs keys append `"elevenlabs", model`. Azure keys deliberately keep the original recipe so
+  audio generated before ElevenLabs support stays current. Audio is stored as
+  `lessons/<lesson-id>/audio/NNN.mp3` and the key is saved with the item. If the provider or voice
+  settings change, the item shows "Voice changed" and is regenerated on the next generation or
+  practice. There is one file per item, so switching providers back and forth means regenerating.
 - **Azure**: REST endpoint `https://<region>.tts.speech.microsoft.com/cognitiveservices/v1`, output
-  `audio-24khz-48kbitrate-mono-mp3`, with retries and backoff on 429/5xx. Lesson generation runs one
-  item at a time to stay within free-tier rate limits.
+  `audio-24khz-48kbitrate-mono-mp3`.
+- **ElevenLabs**: REST endpoint `https://api.elevenlabs.io/v1/text-to-speech/<voice-id>`, output
+  `mp3_44100_128`, model `eleven_multilingual_v2` by default. The speaking rate maps to
+  `voice_settings.speed` (0.7–1.2, so −30% to +20%); pitch is not supported and ignored. At normal
+  speed `voice_settings` is left out so the voice keeps its own settings.
+- Both providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). Lesson generation
+  runs one item at a time to stay within free-tier rate limits.
 - **Answer comparison** is implemented in Rust (`practice/comparison.rs`): case and surrounding punctuation are
   ignored, curly apostrophes are normalized, and every word counts. The diff is an LCS over words;
   missing and extra words between two matches are paired as "changed". Accuracy is
   `correct words / max(source words, answer words)`.
-- **Settings** (voice, TTS rate/pitch, player speed/loop, optional credentials) are stored as JSON in the
-  SQLite `settings` table.
+- **Settings** (TTS provider, each provider's voice, TTS rate/pitch, player speed/loop, optional
+  credentials) are stored as JSON in the SQLite `settings` table. The Azure voice used to be stored as
+  `voice`; that name is still read.
 - `metadata.json` in each lesson folder is written for readability; SQLite (`dictation.db` in the app
   data directory) is the source of truth.
 - **Saved answers**: the latest answer to each item is kept in the `answers` table (schema v2), exactly
@@ -820,8 +831,8 @@ Decisions made while implementing V1, where the specification left room:
 - **Resuming**: opening practice without choosing an item continues with the item answered last, or the
   next one if that answer is already checked (`practice::resume_item_id`).
 - **Schema upgrades** run at startup, in order, recorded in `PRAGMA user_version` (`database.rs`).
-- **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` are read once at startup and passed
-  to the settings service; no business code reads environment variables.
+- **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` / `ELEVENLABS_API_KEY` are read once
+  at startup and passed to the settings service; no business code reads environment variables.
 
 ### Code layout
 
@@ -851,8 +862,10 @@ src-tauri/src/
 ├── settings/         Settings, sanitizing, credential precedence
 │   ├── repository.rs   settings stored as one JSON row
 │   └── service.rs      load/save, player preferences, credentials
-└── tts/              TtsProvider trait and TtsRequest
-    └── azure.rs        Azure REST client, SSML, retries with backoff
+└── tts/              TtsProvider trait, TtsRequest, provider choice (TtsProviderKind, TtsClient)
+    ├── azure.rs        Azure REST client, SSML
+    ├── elevenlabs.rs   ElevenLabs REST client
+    └── http.rs         request retries with backoff, shared by both
 ```
 
 The frontend keeps a screen's helpers next to the screen; only code shared by several screens

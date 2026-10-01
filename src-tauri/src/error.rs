@@ -3,7 +3,7 @@
 
 use serde::{Serialize, Serializer};
 
-use crate::tts::TtsError;
+use crate::tts::{TtsError, TtsProviderKind};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
@@ -21,8 +21,8 @@ pub enum AppError {
     AudioNotFound,
     #[error("Audio for this lesson is already being generated.")]
     GenerationAlreadyRunning,
-    #[error("Azure Speech credentials are not configured. Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION, or enter them in Settings.")]
-    MissingSpeechCredentials,
+    #[error("{}", missing_credentials_message(.0))]
+    MissingSpeechCredentials(TtsProviderKind),
     #[error("{0}")]
     Tts(#[from] TtsError),
     #[error("Could not save audio: {0}")]
@@ -42,3 +42,10 @@ impl Serialize for AppError {
 }
 
 pub type AppResult<T> = Result<T, AppError>;
+
+fn missing_credentials_message(provider: &TtsProviderKind) -> &'static str {
+    match provider {
+        TtsProviderKind::Azure => "Azure Speech credentials are not configured. Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION, or enter them in Settings.",
+        TtsProviderKind::ElevenLabs => "The ElevenLabs API key is not configured. Set ELEVENLABS_API_KEY, or enter it in Settings.",
+    }
+}

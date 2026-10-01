@@ -56,7 +56,7 @@ mod tests {
         assert_eq!(repository.load().unwrap(), Settings::default());
 
         let settings = Settings {
-            voice: "en-GB-RyanNeural".into(),
+            azure_voice: "en-GB-RyanNeural".into(),
             playback_speed: 0.75,
             loop_enabled: true,
             ..Settings::default()

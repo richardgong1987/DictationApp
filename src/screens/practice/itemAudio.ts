@@ -8,7 +8,7 @@ export type AudioUrlFor = (item: ItemDetail) => Promise<string>;
 
 /**
  * Item audio as Blob URLs, fetched once per session and revoked on unmount.
- * Missing or outdated audio is generated first; cached audio never calls Azure.
+ * Missing or outdated audio is generated first; cached audio never calls the TTS provider.
  */
 export function useAudioUrls(onItemUpdated: (item: ItemDetail) => void): AudioUrlFor {
   const urls = useRef(new Map<number, Promise<string>>());
@@ -84,7 +84,7 @@ export function useCurrentItemAudio(
 /**
  * Length in seconds, by item id, of every item whose audio already exists.
  * Fetching them one at a time also means each item starts without a wait.
- * Items that still need generating are skipped, since that would call Azure.
+ * Items that still need generating are skipped, since that would call the TTS provider.
  */
 export function useAudioDurations(
   items: ItemDetail[],
