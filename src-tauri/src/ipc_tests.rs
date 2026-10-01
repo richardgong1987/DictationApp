@@ -227,6 +227,52 @@ fn import_rejects_empty_and_non_utf8_files() {
 }
 
 #[test]
+fn pasted_text_becomes_a_lesson_like_a_file() {
+    let h = Harness::new();
+
+    let detail = h
+        .call(
+            "import_lesson_text",
+            json!({ "title": "  ", "text": LESSON }),
+        )
+        .unwrap();
+    assert_eq!(
+        detail["lesson"]["title"],
+        "I haven't seen him since last Monday."
+    );
+    assert_eq!(detail["lesson"]["sourcePath"], Value::Null);
+    assert_eq!(detail["items"].as_array().unwrap().len(), 3);
+    let lesson_id = detail["lesson"]["id"].as_str().unwrap().to_string();
+    let source = h
+        .dir
+        .path()
+        .join("lessons")
+        .join(&lesson_id)
+        .join("source.txt");
+    assert_eq!(std::fs::read_to_string(source).unwrap(), LESSON);
+
+    let detail = h
+        .call(
+            "import_lesson_text",
+            json!({ "title": " Unit 2 ", "text": LESSON }),
+        )
+        .unwrap();
+    assert_eq!(detail["lesson"]["title"], "Unit 2");
+
+    let err = h
+        .call(
+            "import_lesson_text",
+            json!({ "title": "Empty", "text": " \n\n" }),
+        )
+        .unwrap_err();
+    assert!(err.as_str().unwrap().contains("No dictation items"));
+
+    let h = h.restart();
+    let lessons = h.call("list_lessons", json!({})).unwrap();
+    assert_eq!(lessons.as_array().unwrap().len(), 2);
+}
+
+#[test]
 fn renamed_title_is_trimmed_and_survives_restart() {
     let h = Harness::new();
     let path = h.write_lesson_file("lesson01.txt", LESSON);

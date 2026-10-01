@@ -55,8 +55,25 @@ CREATE TABLE answers (
 );
 ";
 
+/// Pasted lessons have no source file, so `source_path` becomes nullable: NULL
+/// means the text was pasted. SQLite cannot drop NOT NULL in place, so the
+/// table is rebuilt.
+const SCHEMA_V3: &str = "
+CREATE TABLE lessons_v3 (
+    id          TEXT PRIMARY KEY,
+    title       TEXT NOT NULL,
+    source_path TEXT,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+INSERT INTO lessons_v3 (id, title, source_path, created_at, updated_at)
+    SELECT id, title, source_path, created_at, updated_at FROM lessons;
+DROP TABLE lessons;
+ALTER TABLE lessons_v3 RENAME TO lessons;
+";
+
 /// Applied in order; `PRAGMA user_version` counts how many already ran.
-const MIGRATIONS: [&str; 2] = [SCHEMA_V1, SCHEMA_V2];
+const MIGRATIONS: [&str; 3] = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3];
 
 /// Shared handle to the application database; cloning it is cheap.
 #[derive(Clone)]
@@ -74,9 +91,11 @@ impl Database {
         Self::initialize(Connection::open_in_memory()?)
     }
 
-    /// Enables foreign keys and brings the schema up to date.
+    /// Brings the schema up to date, then enables foreign keys. They stay off
+    /// while migrating: dropping the old copy of a rebuilt table would
+    /// otherwise cascade-delete every row that refers to it.
     fn initialize(connection: Connection) -> AppResult<Self> {
-        connection.pragma_update(None, "foreign_keys", "ON")?;
+        connection.pragma_update(None, "foreign_keys", "OFF")?;
         connection.pragma_update(None, "journal_mode", "WAL")?;
         let applied: i64 = connection.pragma_query_value(None, "user_version", |row| row.get(0))?;
         for (index, migration) in MIGRATIONS.iter().enumerate().skip(applied.max(0) as usize) {
@@ -85,6 +104,7 @@ impl Database {
                 "BEGIN; {migration} PRAGMA user_version = {version}; COMMIT;"
             ))?;
         }
+        connection.pragma_update(None, "foreign_keys", "ON")?;
         Ok(Self {
             connection: Arc::new(Mutex::new(connection)),
         })
@@ -142,6 +162,67 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM answers", [], |row| row.get(0))
             .unwrap();
         assert_eq!(answers, 0);
+    }
+
+    #[test]
+    fn rebuilding_lessons_keeps_items_attempts_and_answers() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("dictation.db");
+        {
+            // A version 2 database with practice history, foreign keys on as the app runs it.
+            let connection = Connection::open(&path).unwrap();
+            connection
+                .execute_batch(&format!(
+                    "PRAGMA foreign_keys = ON; {SCHEMA_V1} {SCHEMA_V2} PRAGMA user_version = 2;
+                     INSERT INTO lessons VALUES ('a', 'Old lesson', '/tmp/a.txt', 't', 't');
+                     INSERT INTO dictation_items (id, lesson_id, position, text, created_at)
+                         VALUES (7, 'a', 1, 'One.', 't');
+                     INSERT INTO attempts (dictation_item_id, answer, is_correct, accuracy, replay_count, created_at)
+                         VALUES (7, 'one', 1, 1.0, 0, 't');
+                     INSERT INTO answers VALUES (7, 'one', 'checked', 't', 't');"
+                ))
+                .unwrap();
+        }
+
+        let database = Database::open(&path).unwrap();
+
+        let connection = database.connection();
+        let count = |table: &str| -> i64 {
+            connection
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                    row.get(0)
+                })
+                .unwrap()
+        };
+        assert_eq!(
+            [
+                count("lessons"),
+                count("dictation_items"),
+                count("attempts"),
+                count("answers")
+            ],
+            [1, 1, 1, 1]
+        );
+        let source_path: Option<String> = connection
+            .query_row(
+                "SELECT source_path FROM lessons WHERE id = 'a'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(source_path.as_deref(), Some("/tmp/a.txt"));
+
+        // Pasted lessons store no path, and items still belong to their lesson.
+        connection
+            .execute(
+                "INSERT INTO lessons VALUES ('b', 'Pasted', NULL, 't', 't')",
+                [],
+            )
+            .unwrap();
+        connection
+            .execute("DELETE FROM lessons WHERE id = 'a'", [])
+            .unwrap();
+        assert_eq!([count("dictation_items"), count("answers")], [0, 0]);
     }
 
     #[test]

@@ -262,6 +262,30 @@ button.title-button {
   min-width: 0;
 }
 
+/* A new lesson from pasted text */
+
+.paste-lesson {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.paste-lesson label {
+  display: grid;
+  gap: 4px;
+}
+
+/* 16px keeps iOS from zooming the page in when a field gets focus. */
+.paste-lesson textarea,
+.paste-lesson input {
+  font-size: 16px;
+}
+
+.paste-lesson textarea {
+  min-height: 40vh;
+  resize: vertical;
+}
+
 /* Badges and banners */
 
 .badge {

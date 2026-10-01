@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::audio::cache::{AudioCache, AudioStatus};
 use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
-use crate::lesson::parser::{parse_lesson, title_from_path};
+use crate::lesson::parser::{parse_lesson, title_from_path, title_from_text};
 use crate::lesson::repository::{LessonRepository, NewItem, NewLesson};
 use crate::lesson::{is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::repository::PracticeRepository;
@@ -49,11 +49,33 @@ impl LessonService {
             .collect()
     }
 
-    /// Imports a UTF-8 text file: every passage between blank lines becomes one
-    /// dictation item. Audio is generated separately.
-    pub fn import(&self, source_path: &Path) -> AppResult<LessonDetail> {
+    /// Imports a UTF-8 text file, titled after the file name.
+    pub fn import_file(&self, source_path: &Path) -> AppResult<LessonDetail> {
         let content = LessonFiles::read_source(source_path)?;
-        let passages = parse_lesson(&content);
+        let title = title_from_path(source_path);
+        let source_path = source_path.to_string_lossy().into_owned();
+        self.create(title, Some(source_path), &content)
+    }
+
+    /// Creates a lesson from pasted text. A blank title is replaced by the
+    /// text's opening words.
+    pub fn import_text(&self, title: &str, content: &str) -> AppResult<LessonDetail> {
+        let title = match title.trim() {
+            "" => title_from_text(content),
+            title => title.to_string(),
+        };
+        self.create(title, None, content)
+    }
+
+    /// Every passage between blank lines becomes one dictation item. Audio is
+    /// generated separately.
+    fn create(
+        &self,
+        title: String,
+        source_path: Option<String>,
+        content: &str,
+    ) -> AppResult<LessonDetail> {
+        let passages = parse_lesson(content);
         if passages.is_empty() {
             return Err(AppError::LessonHasNoItems);
         }
@@ -69,12 +91,12 @@ impl LessonService {
             .collect();
         let lesson = NewLesson {
             id: lesson_id.clone(),
-            title: title_from_path(source_path),
-            source_path: source_path.to_string_lossy().into_owned(),
+            title,
+            source_path,
             items,
         };
 
-        self.files.create_lesson_folder(&lesson_id, &content)?;
+        self.files.create_lesson_folder(&lesson_id, content)?;
         if let Err(error) = self.lessons.insert(&lesson) {
             // Best-effort cleanup; the database error is the one worth reporting.
             let _ = self.files.delete_lesson_folder(&lesson_id);
@@ -122,8 +144,8 @@ impl LessonService {
         self.lessons.get(lesson_id)
     }
 
-    /// Removes the lesson, its practice history and its folder. The original
-    /// text file the user imported is not touched.
+    /// Removes the lesson, its practice history and its folder. A text file the
+    /// lesson was imported from is not touched.
     pub fn delete(&self, lesson_id: &str) -> AppResult<()> {
         self.lessons.delete(lesson_id)?;
         Ok(self.files.delete_lesson_folder(lesson_id)?)

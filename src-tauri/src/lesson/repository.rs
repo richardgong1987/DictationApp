@@ -10,7 +10,8 @@ use crate::lesson::{DictationItem, Lesson};
 pub struct NewLesson {
     pub id: String,
     pub title: String,
-    pub source_path: String,
+    /// `None` for pasted text.
+    pub source_path: Option<String>,
     pub items: Vec<NewItem>,
 }
 
@@ -168,7 +169,7 @@ mod tests {
         NewLesson {
             id: id.into(),
             title: "Daily English 01".into(),
-            source_path: "/tmp/daily.txt".into(),
+            source_path: Some("/tmp/daily.txt".into()),
             items: texts
                 .iter()
                 .zip(1..)

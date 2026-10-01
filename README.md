@@ -121,7 +121,8 @@ pnpm test                      # shadowing player: modes, repeat pause, switchin
 
 ### Using the app
 
-1. **Lessons → Import .txt lesson**: pick a UTF-8 text file with passages separated by blank lines.
+1. **Lessons → Paste text**: paste passages separated by blank lines, the easy way on a phone.
+   Or **Import .txt lesson**: pick a UTF-8 text file in the same format.
 2. Audio for every passage is generated with the provider chosen in Settings (one MP3 per passage)
    and cached; reopening a lesson never calls it again for audio that already exists.
 3. **Dictation**: listen, type what you hear, press **Enter** to check, **Enter** again for the next passage.
@@ -535,7 +536,7 @@ MVP should include three main areas.
 ### Lesson Library
 
 - list imported lessons;
-- import a text file;
+- import a text file, or paste text;
 - open a lesson;
 - regenerate missing audio;
 - delete a lesson from local application data.

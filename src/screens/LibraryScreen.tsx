@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../api/client";
 import { MAX_RECOMMENDED_WORDS } from "../api/constants";
-import type { LessonSummary } from "../api/types";
+import type { LessonDetail, LessonSummary } from "../api/types";
 import type { Navigate, Route } from "../navigation";
 import ErrorBanner from "../components/ErrorBanner";
 import TitleInput from "../components/TitleInput";
@@ -14,6 +14,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   const [credentialsConfigured, setCredentialsConfigured] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isPasting, setIsPasting] = useState(false);
   const [renamingLessonId, setRenamingLessonId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -31,7 +32,21 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
     refresh();
   }, [refresh]);
 
-  async function importLesson() {
+  /** Opens the new lesson, generating its audio straight away when possible. */
+  async function createLesson(create: () => Promise<LessonDetail>) {
+    setError(null);
+    setIsImporting(true);
+    try {
+      const detail = await create();
+      navigate({ name: "lesson", lessonId: detail.lesson.id, autoGenerate: credentialsConfigured });
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  async function importFile() {
     setError(null);
     const path = await open({
       multiple: false,
@@ -39,15 +54,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
       filters: [{ name: "Text lesson", extensions: ["txt"] }],
     });
     if (typeof path !== "string") return;
-    setIsImporting(true);
-    try {
-      const detail = await api.importLesson(path);
-      navigate({ name: "lesson", lessonId: detail.lesson.id, autoGenerate: credentialsConfigured });
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setIsImporting(false);
-    }
+    await createLesson(() => api.importLesson(path));
   }
 
   async function renameLesson(lesson: LessonSummary, title: string) {
@@ -64,8 +71,9 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   }
 
   async function deleteLesson(lesson: LessonSummary) {
+    const fileNote = lesson.sourcePath ? " Your original text file is not touched." : "";
     const confirmed = await ask(
-      `Delete "${lesson.title}" and its audio from this computer? Your original text file is not touched.`,
+      `Delete "${lesson.title}" and its audio from this device?${fileNote}`,
       { title: "Delete lesson", kind: "warning", okLabel: "Delete", cancelLabel: "Cancel" },
     );
     if (!confirmed) return;
@@ -83,13 +91,28 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
         <h1>Lessons</h1>
         <div className="actions">
           <button onClick={() => navigate(SETTINGS_ROUTE)}>Settings</button>
-          <button className="primary" onClick={importLesson} disabled={isImporting}>
-            {isImporting ? "Importing…" : "Import .txt lesson"}
+          <button
+            className="primary"
+            onClick={() => setIsPasting(true)}
+            disabled={isImporting || isPasting}
+          >
+            Paste text
+          </button>
+          <button className="primary" onClick={importFile} disabled={isImporting}>
+            {isImporting && !isPasting ? "Importing…" : "Import .txt lesson"}
           </button>
         </div>
       </header>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
+
+      {isPasting && (
+        <PasteLessonForm
+          isCreating={isImporting}
+          onCreate={(title, text) => createLesson(() => api.importLessonText(title, text))}
+          onCancel={() => setIsPasting(false)}
+        />
+      )}
 
       {!credentialsConfigured && (
         <div className="banner info">
@@ -106,8 +129,8 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
         <div className="empty">
           <p>No lessons yet.</p>
           <p className="muted">
-            Import a UTF-8 <code>.txt</code> file. Separate passages with a blank line; each
-            passage becomes one dictation item.
+            Paste text or import a UTF-8 <code>.txt</code> file. Separate passages with a blank
+            line; each passage becomes one dictation item.
           </p>
         </div>
       ) : (
@@ -175,5 +198,48 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
         </ul>
       )}
     </main>
+  );
+}
+
+interface PasteLessonFormProps {
+  isCreating: boolean;
+  onCreate: (title: string, text: string) => void;
+  onCancel: () => void;
+}
+
+/** A lesson from pasted text, the usual way to add one on a phone. */
+function PasteLessonForm({ isCreating, onCreate, onCancel }: PasteLessonFormProps) {
+  const [title, setTitle] = useState("");
+  const [text, setText] = useState("");
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    onCreate(title, text);
+  }
+
+  return (
+    <form className="card paste-lesson" onSubmit={submit}>
+      <label>
+        Text
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Paste your text here. Separate passages with a blank line; each passage becomes one dictation item."
+          autoFocus
+        />
+      </label>
+      <label>
+        Title <span className="muted small">(optional: taken from the first words if empty)</span>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} />
+      </label>
+      <div className="actions">
+        <button type="submit" className="primary" disabled={isCreating || !text.trim()}>
+          {isCreating ? "Creating…" : "Create lesson"}
+        </button>
+        <button type="button" onClick={onCancel} disabled={isCreating}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }

@@ -1,9 +1,15 @@
 //! Lesson text format.
 //!
-//! A lesson is a UTF-8 text file. Blank lines (empty or whitespace-only) are the
-//! only separator between dictation items; periods never split an item.
+//! A lesson is UTF-8 text, imported from a file or pasted. Blank lines (empty or
+//! whitespace-only) are the only separator between dictation items; periods
+//! never split an item.
 
 use std::path::Path;
+
+const UNTITLED: &str = "Untitled lesson";
+
+/// A title derived from pasted text keeps at most this many opening words.
+const TITLE_WORDS: usize = 8;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParsedItem {
@@ -40,7 +46,20 @@ pub fn title_from_path(path: &Path) -> String {
     path.file_stem()
         .map(|stem| stem.to_string_lossy().trim().to_string())
         .filter(|stem| !stem.is_empty())
-        .unwrap_or_else(|| "Untitled lesson".to_string())
+        .unwrap_or_else(|| UNTITLED.to_string())
+}
+
+/// Derives a lesson title for pasted text from the opening words of its first passage.
+pub fn title_from_text(content: &str) -> String {
+    let Some(first) = parse_lesson(content).into_iter().next() else {
+        return UNTITLED.to_string();
+    };
+    let words: Vec<&str> = first.text.split_whitespace().collect();
+    if words.len() <= TITLE_WORDS {
+        first.text
+    } else {
+        format!("{}…", words[..TITLE_WORDS].join(" "))
+    }
 }
 
 #[cfg(test)]
@@ -123,5 +142,26 @@ mod tests {
     fn title_comes_from_the_file_name() {
         assert_eq!(title_from_path(Path::new("/tmp/lesson01.txt")), "lesson01");
         assert_eq!(title_from_path(Path::new("/tmp/ .txt")), "Untitled lesson");
+    }
+
+    #[test]
+    fn title_of_pasted_text_is_its_first_passage_when_short() {
+        assert_eq!(
+            title_from_text("\n  Unit 3: At the airport\n\nWhere is gate 12?"),
+            "Unit 3: At the airport"
+        );
+    }
+
+    #[test]
+    fn title_of_pasted_text_is_cut_after_eight_words() {
+        assert_eq!(
+            title_from_text("If I had known about the problem, I would have called you."),
+            "If I had known about the problem, I…"
+        );
+    }
+
+    #[test]
+    fn title_of_blank_text_is_untitled() {
+        assert_eq!(title_from_text(" \n\n "), "Untitled lesson");
     }
 }

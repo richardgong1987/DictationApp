@@ -5,7 +5,8 @@ export type AudioStatus = "ready" | "stale" | "missing";
 export interface Lesson {
   id: string;
   title: string;
-  sourcePath: string;
+  /** The imported file; null when the text was pasted. */
+  sourcePath: string | null;
   createdAt: string;
   updatedAt: string;
 }

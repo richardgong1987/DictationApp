@@ -60,6 +60,7 @@ fn with_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
     builder.invoke_handler(tauri::generate_handler![
         commands::list_lessons,
         commands::import_lesson,
+        commands::import_lesson_text,
         commands::get_lesson,
         commands::rename_lesson,
         commands::delete_lesson,

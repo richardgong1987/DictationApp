@@ -1,4 +1,4 @@
-//! Lessons: imported text files, split into dictation items.
+//! Lessons: text imported from a file or pasted, split into dictation items.
 
 pub mod files;
 pub mod parser;
@@ -18,8 +18,9 @@ pub const MAX_RECOMMENDED_WORDS: usize = 30;
 pub struct Lesson {
     pub id: String,
     pub title: String,
-    /// Where the file was imported from; the lesson keeps its own copy.
-    pub source_path: String,
+    /// Where the file was imported from; `None` when the text was pasted. The
+    /// lesson keeps its own copy of the text either way.
+    pub source_path: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }

@@ -17,6 +17,9 @@ import type {
 export const api = {
   listLessons: () => invoke<LessonSummary[]>("list_lessons"),
   importLesson: (path: string) => invoke<LessonDetail>("import_lesson", { path }),
+  /** A blank title is taken from the text's opening words. */
+  importLessonText: (title: string, text: string) =>
+    invoke<LessonDetail>("import_lesson_text", { title, text }),
   getLesson: (lessonId: string) => invoke<LessonDetail>("get_lesson", { lessonId }),
   /** The title is trimmed and must not be blank. */
   renameLesson: (lessonId: string, title: string) =>

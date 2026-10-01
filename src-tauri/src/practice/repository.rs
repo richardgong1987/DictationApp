@@ -173,7 +173,7 @@ mod tests {
             .insert(&NewLesson {
                 id: "a".into(),
                 title: "Lesson".into(),
-                source_path: "/tmp/a.txt".into(),
+                source_path: Some("/tmp/a.txt".into()),
                 items: (1..=item_count)
                     .map(|position| NewItem {
                         position,
@@ -281,7 +281,7 @@ mod tests {
             .insert(&NewLesson {
                 id: "b".into(),
                 title: "Other".into(),
-                source_path: "/tmp/b.txt".into(),
+                source_path: Some("/tmp/b.txt".into()),
                 items: vec![NewItem {
                     position: 1,
                     text: "Other.".into(),

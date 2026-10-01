@@ -23,7 +23,17 @@ pub fn list_lessons(state: State<'_, AppState>) -> AppResult<Vec<LessonSummary>>
 
 #[tauri::command]
 pub fn import_lesson(state: State<'_, AppState>, path: String) -> AppResult<LessonDetail> {
-    state.lessons.import(Path::new(&path))
+    state.lessons.import_file(Path::new(&path))
+}
+
+/// Creates a lesson from pasted text; a blank title is derived from the text.
+#[tauri::command]
+pub fn import_lesson_text(
+    state: State<'_, AppState>,
+    title: String,
+    text: String,
+) -> AppResult<LessonDetail> {
+    state.lessons.import_text(&title, &text)
 }
 
 #[tauri::command]
