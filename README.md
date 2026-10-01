@@ -55,7 +55,8 @@ Get the installer for your computer from the
 ### Prerequisites
 
 - [Rust](https://rustup.rs/) (stable, 1.77+)
-- Node.js 20+ and npm (22.18+ to run `npm test`, which uses Node's built-in TypeScript support)
+- Node.js 20+ (22.18+ to run `pnpm test`, which uses Node's built-in TypeScript support) and
+  pnpm 10 (`corepack enable pnpm`)
 - Tauri system dependencies for your OS — see <https://v2.tauri.app/start/prerequisites/>
   (on Debian/Ubuntu: `libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev`)
 - A Microsoft Azure Speech resource (key + region), or an ElevenLabs API key
@@ -63,9 +64,9 @@ Get the installer for your computer from the
 ### Run
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env        # then put your Azure key/region or ElevenLabs key in .env
-npm run tauri dev
+pnpm tauri dev
 ```
 
 Pick the text-to-speech provider (Azure Speech or ElevenLabs) in the app's **Settings** screen.
@@ -78,7 +79,7 @@ Credentials are resolved in this order:
 ### Build an installer
 
 ```bash
-npm run tauri build
+pnpm tauri build
 ```
 
 On a Mac, `./package.sh` builds just the universal `.dmg` (Apple Silicon and Intel);
@@ -108,8 +109,8 @@ tag, which must look like `v1.2.3`. A new release gets the download instructions
 
 ```bash
 cd src-tauri && cargo test     # parsing, cache keys, TTS requests, answer comparison, database, IPC commands
-npm run build                  # TypeScript type check + frontend build
-npm test                       # shadowing player: modes, repeat pause, switching, cleanup
+pnpm build                     # TypeScript type check + frontend build
+pnpm test                      # shadowing player: modes, repeat pause, switching, cleanup
 ```
 
 ### Using the app

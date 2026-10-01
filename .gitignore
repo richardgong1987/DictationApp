@@ -152,5 +152,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .idea
-pnpm-lock.yaml
+# The project uses pnpm; pnpm-lock.yaml is committed, an npm lockfile never is.
 package-lock.json

@@ -28,7 +28,7 @@ require() {
 
 install_frontend_dependencies() {
   if [[ ! -d node_modules ]]; then
-    npm ci
+    pnpm install --frozen-lockfile
   fi
 }
 
@@ -47,7 +47,7 @@ build_dmg() {
 
   # DMGs from earlier versions stay in the bundle folder; clear them so the one listed below is new.
   rm -f "$bundle_dir"/*.dmg
-  npm run tauri -- build "${build_args[@]}"
+  pnpm tauri build "${build_args[@]}"
 
   echo
   echo "DMG ready:"
@@ -87,19 +87,19 @@ build_ios() {
 
   # The Xcode project in src-tauri/gen/apple is generated once, then kept with the code.
   if [[ ! -d src-tauri/gen/apple ]]; then
-    npm run tauri -- ios init --ci
+    pnpm tauri ios init --ci
   fi
 
   local output_dir="src-tauri/gen/apple/build"
   rm -rf "$output_dir"
   if [[ "$1" == device ]]; then
-    npm run tauri -- ios build --ci --target "$tauri_target" \
+    pnpm tauri ios build --ci --target "$tauri_target" \
       --export-method "${APPLE_EXPORT_METHOD:-debugging}"
     echo
     echo "IPA ready:"
     find "$PWD/$output_dir" -name "*.ipa"
   else
-    npm run tauri -- ios build --ci --target "$tauri_target" --no-sign
+    pnpm tauri ios build --ci --target "$tauri_target" --no-sign
     echo
     echo "Simulator app ready (open the Simulator, then: xcrun simctl install booted <app>):"
     find "$PWD/$output_dir" -name "*.app" -maxdepth 4
@@ -112,7 +112,8 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 cd "$(dirname "$0")"
-require npm "Install Node.js 20+ from https://nodejs.org"
+require node "Install Node.js 20+ from https://nodejs.org"
+require pnpm "Install pnpm: corepack enable pnpm"
 require cargo "Install Rust from https://rustup.rs"
 
 case "${1:-}" in
