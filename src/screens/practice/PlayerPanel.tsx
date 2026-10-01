@@ -1,8 +1,8 @@
 import { PLAYBACK_SPEEDS } from "../../api/constants";
 import { formatSpeed, formatTime } from "../../format";
 import ControlButton from "./ControlButton";
-import type { CurrentItemAudio } from "./itemAudio";
 import type { AudioPlayer } from "./useAudioPlayer";
+import type { CurrentItemAudio } from "./useCurrentItemAudio";
 import type { PracticeCommands } from "./usePracticeShortcuts";
 
 export type PlayerCommands = Pick<

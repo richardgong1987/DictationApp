@@ -162,9 +162,16 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
           <button
             className="primary"
             onClick={() => navigate({ name: "practice", lessonId })}
-            title="Continue where you stopped last time"
+            title="Type what you hear, continuing where you stopped last time"
           >
-            Practice
+            Dictation
+          </button>
+          <button
+            className="primary"
+            onClick={() => navigate({ name: "shadowing", lessonId })}
+            title="Listen and read aloud along with the audio"
+          >
+            Shadowing
           </button>
         </div>
       </header>

@@ -4,6 +4,7 @@ import LibraryScreen from "./screens/LibraryScreen";
 import LessonScreen from "./screens/lesson/LessonScreen";
 import PracticeScreen from "./screens/practice/PracticeScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+import ShadowingScreen from "./screens/shadowing/ShadowingScreen";
 
 export default function App() {
   const [route, setRoute] = useState<Route>({ name: "library" });
@@ -29,6 +30,8 @@ export default function App() {
           navigate={setRoute}
         />
       );
+    case "shadowing":
+      return <ShadowingScreen key={route.lessonId} lessonId={route.lessonId} navigate={setRoute} />;
     case "settings":
       return <SettingsScreen onClose={() => setRoute(route.back)} />;
   }

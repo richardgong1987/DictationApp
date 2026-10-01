@@ -157,9 +157,9 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                   <button
                     className="primary"
                     onClick={() => navigate({ name: "practice", lessonId: lesson.id })}
-                    title="Continue where you stopped last time"
+                    title="Dictation: continue where you stopped last time"
                   >
-                    Practice
+                    Dictation
                   </button>
                 </div>
               </li>

@@ -1,7 +1,8 @@
+// Item audio shared by dictation and shadowing: fetched once per screen and kept as Blob URLs.
+
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
-import { api, errorMessage } from "../../api/client";
-import type { ItemDetail } from "../../api/types";
-import type { AudioPlayer } from "./useAudioPlayer";
+import { api } from "../api/client";
+import type { ItemDetail } from "../api/types";
 
 /** Resolves an item's audio to a playable Blob URL. */
 export type AudioUrlFor = (item: ItemDetail) => Promise<string>;
@@ -35,52 +36,6 @@ export function useAudioUrls(onItemUpdated: (item: ItemDetail) => void): AudioUr
   );
 }
 
-export interface CurrentItemAudio {
-  /** The audio is being fetched or generated. */
-  isLoading: boolean;
-  error: string | null;
-  retry: () => void;
-}
-
-/** Loads the current item's audio into the player and starts playing it. */
-export function useCurrentItemAudio(
-  item: ItemDetail,
-  player: AudioPlayer,
-  audioUrlFor: AudioUrlFor,
-): CurrentItemAudio {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const latestLoadId = useRef(0);
-  const { load } = player;
-
-  // Reads the latest item without restarting playback when only its details change.
-  const currentItem = useEffectEvent(() => item);
-
-  useEffect(() => {
-    const loadId = ++latestLoadId.current;
-    const isSuperseded = () => loadId !== latestLoadId.current;
-    setError(null);
-    setIsLoading(true);
-    load(null, false);
-
-    audioUrlFor(currentItem())
-      .then((url) => {
-        if (isSuperseded()) return;
-        load(url, true);
-        setIsLoading(false);
-      })
-      .catch((e) => {
-        if (isSuperseded()) return;
-        setIsLoading(false);
-        setError(errorMessage(e));
-      });
-  }, [item.id, retryCount, audioUrlFor, load]);
-
-  const retry = useCallback(() => setRetryCount((count) => count + 1), []);
-  return { isLoading, error, retry };
-}
-
 /**
  * Length in seconds, by item id, of every item whose audio already exists.
  * Fetching them one at a time also means each item starts without a wait.
@@ -105,7 +60,10 @@ export function useAudioDurations(
       for (const item of readyItemsWithoutDuration()) {
         if (isCancelled) return;
         try {
-          const seconds = await readDuration(await audioUrlFor(item));
+          const url = await audioUrlFor(item);
+          // Leaving the screen revokes the URL; probing it then would only fail.
+          if (isCancelled) return;
+          const seconds = await readDuration(url);
           if (isCancelled) return;
           setDurations((known) => new Map(known).set(item.id, seconds));
         } catch {

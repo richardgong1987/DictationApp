@@ -45,7 +45,7 @@ export default function LessonItemRow({
         >
           Regenerate
         </button>
-        <button onClick={onPractice} title="Practice from this item">
+        <button onClick={onPractice} title="Start dictation from this item">
           ▶
         </button>
       </div>

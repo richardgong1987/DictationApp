@@ -21,6 +21,8 @@ what you hear, and see exactly which words you missed.
 - **Pick up where you left off.** Answers are saved as you type; reopen a lesson and continue from
   the last sentence. Clear them whenever you want to start over.
 - **Track your progress.** Attempts and best accuracy for every sentence.
+- **Shadowing with the same lesson.** Read aloud along with the audio: loop a passage you stumble
+  on, with a pause to repeat it aloud, then play the whole article and read along.
 - **Your data stays local.** Lessons, answers and progress live in a local SQLite database; only the
   lesson text is sent to the text-to-speech provider you chose, to generate audio.
 - **Plain-text lessons.** Any UTF-8 `.txt` file with passages separated by blank lines is a lesson.
@@ -30,8 +32,10 @@ what you hear, and see exactly which words you missed.
 1. **Import** a `.txt` file (try [`examples/lesson01.txt`](examples/lesson01.txt)); each passage
    becomes one dictation item.
 2. **Generate audio** once with your Azure Speech or ElevenLabs key; every passage gets its own MP3.
-3. **Practice**: listen, type what you hear, press **Enter** to reveal the original and see your
+3. **Dictation**: listen, type what you hear, press **Enter** to reveal the original and see your
    mistakes, and **Enter** again for the next sentence.
+4. **Shadowing**: with the text in view, loop a hard passage until you read it smoothly, then play
+   the whole article and read along.
 
 Built with Tauri 2, Rust, React 19 + TypeScript and SQLite, for macOS, Windows and Linux. You need
 your own [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) key (the
@@ -51,7 +55,7 @@ Get the installer for your computer from the
 ### Prerequisites
 
 - [Rust](https://rustup.rs/) (stable, 1.77+)
-- Node.js 20+ and npm
+- Node.js 20+ and npm (22.18+ to run `npm test`, which uses Node's built-in TypeScript support)
 - Tauri system dependencies for your OS — see <https://v2.tauri.app/start/prerequisites/>
   (on Debian/Ubuntu: `libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev`)
 - A Microsoft Azure Speech resource (key + region), or an ElevenLabs API key
@@ -99,6 +103,7 @@ tag, which must look like `v1.2.3`. A new release gets the download instructions
 ```bash
 cd src-tauri && cargo test     # parsing, cache keys, TTS requests, answer comparison, database, IPC commands
 npm run build                  # TypeScript type check + frontend build
+npm test                       # shadowing player: modes, repeat pause, switching, cleanup
 ```
 
 ### Using the app
@@ -106,9 +111,11 @@ npm run build                  # TypeScript type check + frontend build
 1. **Lessons → Import .txt lesson**: pick a UTF-8 text file with passages separated by blank lines.
 2. Audio for every passage is generated with the provider chosen in Settings (one MP3 per passage)
    and cached; reopening a lesson never calls it again for audio that already exists.
-3. **Practice**: listen, type what you hear, press **Enter** to check, **Enter** again for the next passage.
+3. **Dictation**: listen, type what you hear, press **Enter** to check, **Enter** again for the next passage.
+4. **Shadowing**: **Loop passage** repeats one passage with a pause to repeat it aloud (set it with
+   **Time to repeat aloud**); **Play article** plays every passage in order without pauses.
 
-Keyboard shortcuts on the practice screen:
+Keyboard shortcuts on the dictation screen:
 
 | Key (outside the answer box) | While typing in the answer box | Action |
 |---|---|---|
@@ -876,20 +883,28 @@ src/
 ├── App.tsx           route → screen
 ├── navigation.ts     Route type
 ├── api/              typed command wrappers, response types, constants shared with Rust
-├── components/       ErrorBanner, LoadingPage
+├── audio/            item MP3s as Blob URLs and clip lengths, shared by dictation and shadowing
+├── components/       ErrorBanner, LoadingPage, EyeIcons
 ├── format.ts         time/speed/percent formatting
 └── screens/
     ├── LibraryScreen.tsx
     ├── SettingsScreen.tsx
     ├── lesson/       LessonScreen, item row, audio generation hook and status
-    └── practice/
+    ├── shadowing/
+    │   ├── ShadowingScreen.tsx       loads the lesson
+    │   ├── ShadowingSession.tsx      article player on top, one row per passage
+    │   ├── ArticlePlayer.tsx         play the whole article, restart, loop
+    │   ├── PassageRow.tsx            one passage: its player, "Your turn" countdown, text
+    │   ├── shadowingPlayer.ts        the one player: article and passage modes, repeat pause
+    │   └── useShadowingPlayer.ts     creates it, renders its state, stops it on leaving
+    └── practice/     dictation
         ├── PracticeScreen.tsx        loads the lesson and player preferences
         ├── PracticeSession.tsx       all items as cards; wires player, answers and shortcuts
         ├── PracticeItemCard.tsx      one item: player row, original text, answer, feedback
         ├── PlayerPanel.tsx           audio controls of one card
         ├── AnswerResult.tsx          score and word chips (DiffView.tsx) of a checked answer
         ├── useAudioPlayer.ts         the one HTMLAudioElement: play, seek, loop, speed
-        ├── itemAudio.ts              item MP3s as Blob URLs, the current item, clip lengths
+        ├── useCurrentItemAudio.ts    loads the current item's audio into the player
         ├── usePracticeProgress.ts    each item's answer: saved as typed, checked, revealed, hidden
         └── usePracticeShortcuts.ts   key → command table
 ```
@@ -897,7 +912,12 @@ src/
 The practice screen shows every item as a card, but there is one audio player: the current card
 (blue border) is the one loaded in it and the one the keyboard shortcuts act on. "Show original
 text" checks the answer before revealing it; hiding it again makes the answer editable, and showing
-it again re-checks only if the answer changed. Answers are kept between sessions, and "Practice"
+it again re-checks only if the answer changed. Answers are kept between sessions, and "Dictation"
 continues where you stopped; the ▶ on an item in the lesson screen starts from that item instead.
+
+The shadowing screen uses the same items and cached audio but keeps nothing: no answers, no
+statistics, and its speed and pause choices last for the visit only. One `ShadowingPlayer` owns its
+single audio element and the "Your turn" timer, so the article and a looping passage never overlap,
+and leaving the screen stops both.
 
 ---

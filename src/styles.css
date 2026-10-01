@@ -613,6 +613,78 @@ select:focus {
   margin: 8px 0 0;
 }
 
+/* Shadowing: the article player above the passages, which reuse the
+   practice card and player row. */
+
+.inline-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button.text-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.article-player {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.article-player .transport .play {
+  min-width: 132px;
+}
+
+.article-status {
+  flex: 1;
+  min-width: 200px;
+}
+
+.article-player .banner {
+  margin: 0;
+}
+
+.passages-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.passages-heading h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.your-turn {
+  color: var(--accent);
+}
+
+.turn-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--info-bg);
+  overflow: hidden;
+}
+
+.turn-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.countdown {
+  min-width: 5.5em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Settings */
 
 .settings fieldset {

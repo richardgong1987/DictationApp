@@ -4,13 +4,14 @@ import { api, errorMessage } from "../../api/client";
 import type { ItemDetail, Lesson, SavedAnswer } from "../../api/types";
 import type { Navigate } from "../../navigation";
 import { formatPercent } from "../../format";
+import { useAudioDurations, useAudioUrls } from "../../audio/itemAudio";
 import ErrorBanner from "../../components/ErrorBanner";
 import ControlButton from "./ControlButton";
-import { useAudioDurations, useAudioUrls, useCurrentItemAudio } from "./itemAudio";
 import PlayerPanel, { type PlayerCommands } from "./PlayerPanel";
 import PracticeItemCard from "./PracticeItemCard";
 import ShortcutHelp from "./ShortcutHelp";
 import { useAudioPlayer, type PlayerPreferences, type PlayerState } from "./useAudioPlayer";
+import { useCurrentItemAudio } from "./useCurrentItemAudio";
 import { usePracticeProgress } from "./usePracticeProgress";
 import { usePracticeShortcuts, type PracticeCommands } from "./usePracticeShortcuts";
 
