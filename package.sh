@@ -83,6 +83,9 @@ build_ios() {
     rust_target=x86_64-apple-ios
   fi
   rustup target add "$rust_target"
+  # Xcode 27's Swift hides the functions Tauri's Swift code exports to Rust;
+  # swift-rs needs llvm-objcopy from llvm-tools to make them linkable again.
+  rustup component add llvm-tools
   install_frontend_dependencies
 
   # The Xcode project in src-tauri/gen/apple is generated once, then kept with the code.
