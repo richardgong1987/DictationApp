@@ -84,6 +84,12 @@ npm run tauri build
 On a Mac, `./package.sh` builds just the universal `.dmg` (Apple Silicon and Intel);
 `./package.sh --native` builds one for the current Mac only, which is faster.
 
+`./package.sh --ios` builds a signed `.ipa` for iPhone and iPad, and `./package.sh --ios-simulator`
+an unsigned app for the iOS Simulator. Both need Xcode's iOS platform
+(`xcodebuild -downloadPlatform iOS`) and `brew install cocoapods xcodegen`; `--ios` also needs your
+Apple team ID in `APPLE_DEVELOPMENT_TEAM` (Xcode → Settings → Accounts). The Xcode project lives in
+`src-tauri/gen/apple`; the first iOS build generates it.
+
 ### Publish a release
 
 Push a version tag, or publish a release with such a tag on GitHub:

@@ -14,7 +14,8 @@ Usage: ./package.sh [--native | --ios | --ios-simulator]
                    picks debugging (default), release-testing or app-store-connect.
   --ios-simulator  App for the iOS Simulator; needs no Apple account.
 
-iOS builds also need Xcode, CocoaPods and XcodeGen: brew install cocoapods xcodegen
+iOS builds also need Xcode with its iOS platform (xcodebuild -downloadPlatform iOS),
+CocoaPods and XcodeGen (brew install cocoapods xcodegen).
 EOF
 }
 
@@ -60,6 +61,11 @@ build_ios() {
   require pod "Install CocoaPods: brew install cocoapods"
   require xcodegen "Install XcodeGen: brew install xcodegen"
   require rustup "Install Rust from https://rustup.rs"
+  # Xcode installs without it; the Tauri CLI needs it even for device builds.
+  if ! xcrun simctl list runtimes 2>/dev/null | grep -q "^iOS "; then
+    echo "error: the iOS platform is not installed. Install it with: xcodebuild -downloadPlatform iOS" >&2
+    exit 1
+  fi
 
   local tauri_target rust_target
   if [[ "$1" == device ]]; then
