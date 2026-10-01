@@ -7,6 +7,8 @@ what you hear, and see exactly which words you missed.
 **英语听写练习桌面应用**：导入英文文本，逐句生成自然语音，反复听、边听边打，逐词标出听错和漏掉的词。
 
 ![DictationApp practice screen](docs/layout-design.png)
+![DictationApp practice screen](docs/main.png)
+![DictationApp practice screen](docs/shadowing.png)
 
 ## Features
 
