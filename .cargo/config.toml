@@ -1,0 +1,6 @@
+[env]
+# Xcode 27: the one Swift archive that exports swift-rs's runtime helpers.
+# Goes with the swift-rs patch in src-tauri/Cargo.toml; remove both together.
+# Kept at the repository root because the Tauri CLI runs cargo from here, and
+# cargo looks for this file from its working directory upwards.
+SWIFT_RS_RUNTIME_ARCHIVE = "Tauri"

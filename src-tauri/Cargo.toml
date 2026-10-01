@@ -31,3 +31,10 @@ dotenvy = "0.15"
 tauri = { version = "2", features = ["test"] }
 tempfile = "3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+
+# iOS builds with Xcode 27: swift-rs 1.0.8 leaves its runtime helpers unlinkable
+# (https://github.com/Brendonovich/swift-rs/issues/81). This commit is 1.0.8 plus
+# the fix from swift-rs PR #80, which also needs SWIFT_RS_RUNTIME_ARCHIVE in the
+# repository's .cargo/config.toml. Remove both once a swift-rs release includes the fix.
+[patch.crates-io]
+swift-rs = { git = "https://github.com/Brendonovich/swift-rs", rev = "aaf38d45ab3a4b10a5af3a3dbc64424e998fae8c" }

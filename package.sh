@@ -88,7 +88,7 @@ build_ios() {
   rustup component add llvm-tools
   install_frontend_dependencies
 
-  # The Xcode project in src-tauri/gen/apple is generated once, then kept with the code.
+  # The Xcode project in src-tauri/gen/apple is not committed; generate it when missing.
   if [[ ! -d src-tauri/gen/apple ]]; then
     pnpm tauri ios init --ci
   fi
