@@ -9,8 +9,9 @@ Usage: ./package.sh [--native | --ios | --ios-simulator]
 
   (no option)      Universal DMG for Apple Silicon and Intel Macs, like the release workflow.
   --native         DMG for this Mac's architecture only; builds about twice as fast.
-  --ios            Signed IPA for iPhone and iPad. Needs your Apple team ID in
-                   APPLE_DEVELOPMENT_TEAM (Xcode > Settings > Accounts). APPLE_EXPORT_METHOD
+  --ios            Signed IPA for iPhone and iPad, signed for the team of your Apple Development
+                   certificate. If you have certificates from several teams, set
+                   APPLE_DEVELOPMENT_TEAM to one (Xcode > Settings > Accounts). APPLE_EXPORT_METHOD
                    picks debugging (default), release-testing or app-store-connect.
   --ios-simulator  App for the iOS Simulator; needs no Apple account.
 
@@ -23,6 +24,20 @@ require() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "error: '$1' not found. $2" >&2
     exit 1
+  fi
+}
+
+# Prints the team ID of the Apple Development certificates in the keychain, or nothing
+# unless they all belong to one team.
+signing_team() {
+  local teams
+  teams=$(security find-certificate -a -c "Apple Development:" -p 2>/dev/null \
+    | openssl crl2pkcs7 -nocrl -certfile /dev/stdin 2>/dev/null \
+    | openssl pkcs7 -print_certs -noout 2>/dev/null \
+    | sed -n 's/^subject=.*OU *= *\([A-Z0-9]*\).*/\1/p' \
+    | sort -u) || true
+  if [[ "$teams" != *$'\n'* ]]; then
+    echo "$teams"
   fi
 }
 
@@ -69,8 +84,10 @@ build_ios() {
 
   local tauri_target rust_target
   if [[ "$1" == device ]]; then
-    if [[ -z "${APPLE_DEVELOPMENT_TEAM:-}" ]]; then
-      echo "error: set APPLE_DEVELOPMENT_TEAM to your Apple team ID, shown in Xcode > Settings > Accounts." >&2
+    export APPLE_DEVELOPMENT_TEAM="${APPLE_DEVELOPMENT_TEAM:-$(signing_team)}"
+    if [[ -z "$APPLE_DEVELOPMENT_TEAM" ]]; then
+      echo "error: cannot tell which Apple team to sign for. Set APPLE_DEVELOPMENT_TEAM to your team ID," \
+        "shown in Xcode > Settings > Accounts." >&2
       exit 1
     fi
     tauri_target=aarch64

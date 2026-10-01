@@ -22,47 +22,47 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0B0EBDAFAECED13E729127D0 /* ipc_tests.rs */ = {isa = PBXFileReference; path = ipc_tests.rs; sourceTree = "<group>"; };
+		0B0EBDAFAECED13E729127D0 /* ipc_tests.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = ipc_tests.rs; sourceTree = "<group>"; };
 		0C26C311A5F7FC97FDDBCEF3 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
-		168DB51FA4F21BB40D7853EA /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		28DC3020E8789F6B7FA7D16D /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		2D27E045E571393958CC9145 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		168DB51FA4F21BB40D7853EA /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
+		28DC3020E8789F6B7FA7D16D /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
+		2D27E045E571393958CC9145 /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
 		2E83AEAB490201655ABA2349 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		399DD7E67E3B1892EE2BD9FF /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
-		39BCB7EE71053E9AF29BD2EC /* dictation-app_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "dictation-app_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3FFE13B0140629ADE4CA5E31 /* elevenlabs.rs */ = {isa = PBXFileReference; path = elevenlabs.rs; sourceTree = "<group>"; };
+		399DD7E67E3B1892EE2BD9FF /* main.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.rs; sourceTree = "<group>"; };
+		39BCB7EE71053E9AF29BD2EC /* DictationApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DictationApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FFE13B0140629ADE4CA5E31 /* elevenlabs.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = elevenlabs.rs; sourceTree = "<group>"; };
 		402BAFE0B4EA2E96A13AAB6A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		4B9F097E911516737351C8E5 /* comparison.rs */ = {isa = PBXFileReference; path = comparison.rs; sourceTree = "<group>"; };
+		4B9F097E911516737351C8E5 /* comparison.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = comparison.rs; sourceTree = "<group>"; };
 		53D01480FBE58F61461A9143 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
 		5AC61D74AC46BB5F0635D000 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		5E05D551EE5D5BD0C7B2B02E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		6D5938C93688F610B11468DC /* commands.rs */ = {isa = PBXFileReference; path = commands.rs; sourceTree = "<group>"; };
+		6D5938C93688F610B11468DC /* commands.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = commands.rs; sourceTree = "<group>"; };
 		6DEBCF88687E81020B002C69 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		6F0903E7FABAD325FBF4F5AE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		719A41925BF53396A2A80108 /* dictation-app_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "dictation-app_iOS.entitlements"; sourceTree = "<group>"; };
-		7803FB291DC00B531FB2481A /* database.rs */ = {isa = PBXFileReference; path = database.rs; sourceTree = "<group>"; };
-		7B4EB76289274B8469B95EE6 /* error.rs */ = {isa = PBXFileReference; path = error.rs; sourceTree = "<group>"; };
-		7D67A28D8208E06B2BDC1C40 /* service.rs */ = {isa = PBXFileReference; path = service.rs; sourceTree = "<group>"; };
-		7E3F81644EF6EEA66E0BED8B /* app_state.rs */ = {isa = PBXFileReference; path = app_state.rs; sourceTree = "<group>"; };
-		8644ED96C7916980BA32DD0B /* repository.rs */ = {isa = PBXFileReference; path = repository.rs; sourceTree = "<group>"; };
+		7803FB291DC00B531FB2481A /* database.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = database.rs; sourceTree = "<group>"; };
+		7B4EB76289274B8469B95EE6 /* error.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = error.rs; sourceTree = "<group>"; };
+		7D67A28D8208E06B2BDC1C40 /* service.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = service.rs; sourceTree = "<group>"; };
+		7E3F81644EF6EEA66E0BED8B /* app_state.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = app_state.rs; sourceTree = "<group>"; };
+		8644ED96C7916980BA32DD0B /* repository.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = repository.rs; sourceTree = "<group>"; };
 		8665872273AC7636126BBAC3 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
-		86C1BE70A2381C9FD01B5E59 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		8D3548B2375D0F9812013515 /* repository.rs */ = {isa = PBXFileReference; path = repository.rs; sourceTree = "<group>"; };
+		86C1BE70A2381C9FD01B5E59 /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
+		8D3548B2375D0F9812013515 /* repository.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = repository.rs; sourceTree = "<group>"; };
 		92745708963CC390536A047D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		929A83DA5367F26A4DBB18D3 /* repository.rs */ = {isa = PBXFileReference; path = repository.rs; sourceTree = "<group>"; };
+		929A83DA5367F26A4DBB18D3 /* repository.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = repository.rs; sourceTree = "<group>"; };
 		9B79340405CADF708B51DAE4 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
-		9EA7B8669CDE1C6415BB64B8 /* files.rs */ = {isa = PBXFileReference; path = files.rs; sourceTree = "<group>"; };
-		AB9A779729831B8F0B9BB257 /* service.rs */ = {isa = PBXFileReference; path = service.rs; sourceTree = "<group>"; };
-		B6EC1FF2CC399C66DE6856F4 /* http.rs */ = {isa = PBXFileReference; path = http.rs; sourceTree = "<group>"; };
-		C0DAD4C03DA92C18BE502A10 /* service.rs */ = {isa = PBXFileReference; path = service.rs; sourceTree = "<group>"; };
-		CD4E066E95BD4B1F918F054F /* azure.rs */ = {isa = PBXFileReference; path = azure.rs; sourceTree = "<group>"; };
-		D08E4F3C3CDCEDFE7E0A10B4 /* parser.rs */ = {isa = PBXFileReference; path = parser.rs; sourceTree = "<group>"; };
-		D747DF622B7866AB00109BA5 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		E8DA1C27B56D3331039DAF11 /* service.rs */ = {isa = PBXFileReference; path = service.rs; sourceTree = "<group>"; };
-		EB7B689BACCF5E6A52DD23AB /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		9EA7B8669CDE1C6415BB64B8 /* files.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = files.rs; sourceTree = "<group>"; };
+		AB9A779729831B8F0B9BB257 /* service.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = service.rs; sourceTree = "<group>"; };
+		B6EC1FF2CC399C66DE6856F4 /* http.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = http.rs; sourceTree = "<group>"; };
+		C0DAD4C03DA92C18BE502A10 /* service.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = service.rs; sourceTree = "<group>"; };
+		CD4E066E95BD4B1F918F054F /* azure.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = azure.rs; sourceTree = "<group>"; };
+		D08E4F3C3CDCEDFE7E0A10B4 /* parser.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = parser.rs; sourceTree = "<group>"; };
+		D747DF622B7866AB00109BA5 /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
+		E8DA1C27B56D3331039DAF11 /* service.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = service.rs; sourceTree = "<group>"; };
+		EB7B689BACCF5E6A52DD23AB /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
 		EC0D818500A958F7854663CF /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		EC8BA89FB0E4C8C910479B47 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		EFDAA5B9D56D126A9440216C /* cache.rs */ = {isa = PBXFileReference; path = cache.rs; sourceTree = "<group>"; };
+		EFDAA5B9D56D126A9440216C /* cache.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = cache.rs; sourceTree = "<group>"; };
 		FB8C121BA2E71ED054A300D2 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -206,7 +206,7 @@
 		E143DE95D5F8EC29CEC322FB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				39BCB7EE71053E9AF29BD2EC /* dictation-app_iOS.app */,
+				39BCB7EE71053E9AF29BD2EC /* DictationApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -258,7 +258,7 @@
 			packageProductDependencies = (
 			);
 			productName = "dictation-app_iOS";
-			productReference = 39BCB7EE71053E9AF29BD2EC /* dictation-app_iOS.app */;
+			productReference = 39BCB7EE71053E9AF29BD2EC /* DictationApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -269,8 +269,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = B50FB7BC403241492E907E01 /* Build configuration list for PBXProject "dictation-app" */;
 			developmentRegion = en;
@@ -400,12 +398,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ARCHS = (
-					arm64,
-				);
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "dictation-app_iOS/dictation-app_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "GLUUGNTXRB";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -413,12 +411,25 @@
 					"\".\"",
 				);
 				INFOPLIST_FILE = "dictation-app_iOS/Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.dictationapp.desktop;
 				PRODUCT_NAME = "DictationApp";
 				SDKROOT = iphoneos;
@@ -494,12 +505,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ARCHS = (
-					arm64,
-				);
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "dictation-app_iOS/dictation-app_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "GLUUGNTXRB";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -507,12 +518,25 @@
 					"\".\"",
 				);
 				INFOPLIST_FILE = "dictation-app_iOS/Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.dictationapp.desktop;
 				PRODUCT_NAME = "DictationApp";
 				SDKROOT = iphoneos;
