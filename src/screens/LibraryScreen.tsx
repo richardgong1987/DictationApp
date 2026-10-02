@@ -2,16 +2,18 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../api/client";
 import { MAX_RECOMMENDED_WORDS } from "../api/constants";
-import type { LessonDetail, LessonSummary } from "../api/types";
+import type { LessonDetail, LessonSummary, TtsProvider } from "../api/types";
 import type { Navigate, Route } from "../navigation";
 import ErrorBanner from "../components/ErrorBanner";
 import TitleInput from "../components/TitleInput";
+import { formatTtsProvider } from "../format";
 
 const SETTINGS_ROUTE: Route = { name: "settings", back: { name: "library" } };
 
 export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   const [lessons, setLessons] = useState<LessonSummary[] | null>(null);
   const [credentialsConfigured, setCredentialsConfigured] = useState(true);
+  const [ttsProvider, setTtsProvider] = useState<TtsProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isPasting, setIsPasting] = useState(false);
@@ -22,6 +24,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
       const [list, settings] = await Promise.all([api.listLessons(), api.getSettings()]);
       setLessons(list);
       setCredentialsConfigured(settings.credentialsConfigured);
+      setTtsProvider(settings.settings.ttsProvider);
     } catch (e) {
       setError(errorMessage(e));
       setLessons([]);
@@ -88,7 +91,12 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   return (
     <main className="page">
       <header className="topbar">
-        <h1>Lessons</h1>
+        <div>
+          <h1>Lessons</h1>
+          {ttsProvider && (
+            <div className="muted small">TTS: {formatTtsProvider(ttsProvider)}</div>
+          )}
+        </div>
         <div className="actions">
           <button onClick={() => navigate(SETTINGS_ROUTE)}>Settings</button>
           <button

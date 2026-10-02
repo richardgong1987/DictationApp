@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../../api/client";
 import { MAX_RECOMMENDED_WORDS } from "../../api/constants";
-import type { AudioStatus, ItemDetail, LessonDetail } from "../../api/types";
+import type { AudioStatus, ItemDetail, LessonDetail, TtsProvider } from "../../api/types";
 import type { Navigate, Route } from "../../navigation";
 import ErrorBanner from "../../components/ErrorBanner";
 import LoadingPage from "../../components/LoadingPage";
 import TitleInput from "../../components/TitleInput";
+import { formatTtsProvider } from "../../format";
 import AudioGenerationStatus from "./AudioGenerationStatus";
 import LessonItemRow from "./LessonItemRow";
 import { useAudioGeneration } from "./useAudioGeneration";
@@ -20,6 +21,7 @@ interface Props {
 
 export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props) {
   const [detail, setDetail] = useState<LessonDetail | null>(null);
+  const [ttsProvider, setTtsProvider] = useState<TtsProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyItemIds, setBusyItemIds] = useState<ReadonlySet<number>>(new Set());
   const [isRenaming, setIsRenaming] = useState(false);
@@ -27,7 +29,12 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
 
   const refresh = useCallback(async () => {
     try {
-      setDetail(await api.getLesson(lessonId));
+      const [lessonDetail, settings] = await Promise.all([
+        api.getLesson(lessonId),
+        api.getSettings(),
+      ]);
+      setDetail(lessonDetail);
+      setTtsProvider(settings.settings.ttsProvider);
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -146,6 +153,7 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
           </h1>
           <div className="muted small">
             {items.length} items · audio {readyCount}/{items.length} ready
+            {ttsProvider && <> · TTS: {formatTtsProvider(ttsProvider)}</>}
           </div>
         </div>
         <div className="actions">

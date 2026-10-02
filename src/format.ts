@@ -1,3 +1,15 @@
+import type { TtsProvider } from "./api/types";
+
+const TTS_PROVIDER_NAMES: Record<TtsProvider, string> = {
+  azure: "Microsoft Azure Speech",
+  elevenlabs: "ElevenLabs",
+};
+
+/** "elevenlabs" -> "ElevenLabs" */
+export function formatTtsProvider(provider: TtsProvider): string {
+  return TTS_PROVIDER_NAMES[provider];
+}
+
 /** 2.44 -> "00:02.4" */
 export function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) seconds = 0;

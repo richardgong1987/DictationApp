@@ -3,7 +3,7 @@ import { api, errorMessage } from "../api/client";
 import { SPEAKING_RATE_RANGE } from "../api/constants";
 import type { Settings, SettingsDetail, TtsProvider } from "../api/types";
 import ErrorBanner from "../components/ErrorBanner";
-import { formatSignedPercent } from "../format";
+import { formatSignedPercent, formatTtsProvider } from "../format";
 
 /** Suggestions only; any Azure neural voice name can be typed in. */
 const AZURE_VOICES = [
@@ -104,8 +104,8 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
                 value={form.ttsProvider}
                 onChange={(e) => changeProvider(e.target.value as TtsProvider)}
               >
-                <option value="azure">Microsoft Azure Speech</option>
-                <option value="elevenlabs">ElevenLabs</option>
+                <option value="azure">{formatTtsProvider("azure")}</option>
+                <option value="elevenlabs">{formatTtsProvider("elevenlabs")}</option>
               </select>
             </label>
             <p className="muted small">
