@@ -87,7 +87,7 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <main className="page narrow">
+    <main className="page">
       <button className="link" onClick={onClose}>
         ← Back
       </button>

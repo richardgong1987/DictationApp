@@ -19,6 +19,9 @@
   --typing-bg: #d3ebd3;
   --typing-border: #9fd19f;
   --radius: 10px;
+  /* Left and right space at the window edge and inside cards: kept tiny so
+     the content gets nearly the whole width. */
+  --side-gap: 3px;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.5;
@@ -77,14 +80,10 @@ kbd {
   background: var(--surface);
 }
 
+/* No max width: on a wide window the content stretches rather than leaving
+   empty strips at the sides. */
 .page {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 20px 24px 48px;
-}
-
-.page.narrow {
-  max-width: 560px;
+  padding: 20px var(--side-gap) 48px;
 }
 
 .topbar {
@@ -173,7 +172,7 @@ button.toggle.on {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 14px var(--side-gap);
 }
 
 .lesson-list,
@@ -248,12 +247,14 @@ button.toggle.on {
 }
 
 /* Renaming in place. The input and the clickable heading share padding,
-   border and offset, so the text stays put when editing starts. */
+   border and offset, so the text stays put when editing starts. The offset
+   (padding plus border) fits inside --side-gap, so the input's border stays
+   on screen and inside the card. */
 
 .title-input,
 button.title-button {
-  padding: 0 6px;
-  margin-left: -7px;
+  padding: 0 2px;
+  margin-left: -3px;
 }
 
 .title-input {
@@ -634,7 +635,7 @@ select:focus {
 
 .shortcuts {
   margin-top: 20px;
-  padding: 10px 16px;
+  padding: 10px var(--side-gap);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -725,7 +726,7 @@ button.text-toggle {
 .settings fieldset {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 16px 16px;
+  padding: 12px var(--side-gap) 16px;
   margin: 0 0 16px;
   background: var(--surface);
   display: grid;
@@ -751,11 +752,11 @@ button.text-toggle {
 
 @media (max-width: 600px) {
   .page {
-    padding: 12px 8px 32px;
+    padding: 12px var(--side-gap) 32px;
   }
 
   .card {
-    padding: 12px 10px;
+    padding: 12px var(--side-gap);
   }
 
   /* Lesson items: the number starts the first line and the text wraps under
