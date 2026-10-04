@@ -12,6 +12,10 @@ says a sentence, and the child follows by saying it back. Being able to keep up 
 in the author's words, “half the battle.” If speech passes before a learner can catch its words
 and rhythm, it is hard to retain anything useful from it.
 
+AI-generated speech makes it easy to turn the material you need into a spoken model. Cached audio
+can then repeat as many times as you need, without anyone becoming tired or impatient. Use that
+freedom to focus on the sentences you cannot yet follow or say, and practice through your bottlenecks.
+
 Start with a short passage. Listen, repeat aloud, and use a slower speed or a repeat pause when
 needed. Keep practicing until you can follow the whole sentence; then move to the next passage.
 Use dictation to identify missed words and article playback to connect the passages into fluent
