@@ -14,6 +14,9 @@ practice modes, shared audio.
 
 ## Why I built DictationApp
 
+**I just want to learn English the dumbest, most basic way: listen and repeat.
+I don't need anything fancy.**
+
 I believe language learning should begin like a child learning from their mother: the mother says
 one sentence, and the child tries to say it back. Listen, follow, repeat. Before expecting fluent
 conversation, we need to be able to stay with a spoken sentence from beginning to end.

@@ -7,6 +7,9 @@ and **Shadowing** for listening and speaking. Both use the same per-passage MP3s
 
 ## The idea behind the practice
 
+**I just want to learn English the dumbest, most basic way: listen and repeat.
+I don't need anything fancy.**
+
 The author built DictationApp around a simple belief: learn as a child does with their mother—she
 says a sentence, and the child follows by saying it back. Being able to keep up with a sentence is,
 in the author's words, “half the battle.” If speech passes before a learner can catch its words
