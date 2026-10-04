@@ -15,6 +15,18 @@ practice modes, shared audio.
 
 ## Why I built DictationApp
 
+**I admit it: I'm one of the dumb ones.** I want a way to learn that does not depend on being
+exceptionally talented—just on having the patience to listen and repeat, one sentence at a time.
+
+**I just want to learn English the dumbest, most basic way: listen and repeat.
+I don't need anything fancy.**
+
+My blunt view is that most of us are “dumb” at learning a foreign language: we struggle to follow,
+forget what we hear, and fail to turn years of study into speech. Only a relatively small number
+become the outstanding learners who really master it. I want a way to learn that works for ordinary
+people, even when we feel slow or incapable. We should not need to be exceptional to make progress.
+A method can be as basic as hearing one sentence and saying it back, again and again.
+
 I believe language learning should begin like a child learning from their mother: the mother says
 one sentence, and the child tries to say it back. Listen, follow, repeat. Before expecting fluent
 conversation, we need to be able to stay with a spoken sentence from beginning to end.
@@ -37,6 +49,33 @@ Once individual passages feel familiar, read along with the whole article to bui
 
 The goal is simple: **first learn to follow a sentence, then learn to say it with confidence.**
 This is my personal learning philosophy and the reason for this project.
+
+## Personal practice without financial or social pressure
+
+I find many English-learning apps disappointing because they are built around the broadest problems
+shared by the largest audience. But a general course may never reach the particular sentence,
+sound or rhythm that is holding *you* back. An expensive subscription or an AI conversation feature
+can feel like progress while leaving you unable to say the things you actually need to say.
+Spending money and seeing little improvement adds frustration to an already difficult task.
+
+I do not believe learners should have to keep paying for that promise. When money is tight, a simple
+way to practice matters even more. Much of the practice we need does not require someone to teach
+us every step: we need a clear spoken example, material that matters to us, and enough repetition
+to become comfortable with it. DictationApp lets you bring your own articles, study notes or interview
+answers and work directly on the passages you find difficult. Generate the audio, keep it, and reuse
+it instead of paying for fresh synthesis every time you practice. Provider generation costs still
+apply, but DictationApp itself has no subscription or paid lesson library.
+
+Learning should also feel safe. You should be able to stumble, miss words and repeat a sentence
+many times without worrying that someone will think you are stupid or incapable. Here, you can
+practice privately, at your own pace, with a voice that never becomes impatient.
+
+For me, this comes back to the child and the mother: she says a sentence, the child follows, and
+little by little the child learns to say it. I believe that, for many learners, being able to follow
+and reproduce the sentences they need is the biggest practical bottleneck. Getting past it is
+already a large part of learning to speak. That is the experience I want this project to make
+accessible: **practice what you need, repeat without embarrassment, and build confidence without
+unnecessary expense.**
 
 ## English by default, practice in many languages
 
@@ -253,6 +292,22 @@ Exports include the audio that exists, even if some passages are missing audio o
 Generate missing audio before export if you want a complete pack. This is a lesson/audio transfer,
 not a full backup of practice progress. It does not import arbitrary MP3/WAV recordings or transcribe them.
 See the [full transfer guide](docs/USER_GUIDE.md#transfer-lessons-and-audio) for detailed steps and troubleshooting.
+
+## Keep everyday practice affordable
+
+As checked on 4 October 2026, [Azure Speech's Free (F0) tier](https://azure.microsoft.com/en-us/pricing/details/speech/)
+includes **500,000 Neural TTS characters per month**. [ElevenLabs' Free plan](https://elevenlabs.io/pricing)
+includes **10,000 credits per month**—equivalent to 10,000 characters with the app's default
+`eleven_multilingual_v2` model if all credits are used for that synthesis.
+
+My approach is to use Azure for most material and ElevenLabs for selected passages where I especially
+value the voice. I personally find ElevenLabs the best-sounding option for my needs. Generate once,
+keep the clip, and repeat it as often as needed; cached replay uses no further synthesis allowance.
+I expect this combination to cover much of my practice without a paid learning subscription.
+
+Check your resource's tier and account allowance. Switching providers changes global voice settings
+and can trigger regeneration, so select a lesson's original settings before replaying it.
+See the [free allowance and combined-use guide](docs/TTS_SETUP.md#monthly-free-allowances).
 
 ## Audio, data and common questions
 

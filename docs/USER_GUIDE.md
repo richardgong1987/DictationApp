@@ -7,6 +7,17 @@ and **Shadowing** for listening and speaking. Both use the same per-passage MP3s
 
 ## The idea behind the practice
 
+The author puts it self-deprecatingly: **“I admit it: I'm one of the dumb ones.”** He wants a method
+that relies on patient listening and repetition rather than exceptional talent.
+
+**I just want to learn English the dumbest, most basic way: listen and repeat.
+I don't need anything fancy.**
+
+The author's blunt personal view is that most of us are “dumb” at foreign-language learning,
+while only a relatively small number become outstanding learners who master it. That belief
+motivates a method ordinary people can use even when they feel slow or incapable: hear a sentence,
+say it back, and repeat. The project should not require you to be an exceptional learner.
+
 The author built DictationApp around a simple belief: learn as a child does with their mother—she
 says a sentence, and the child follows by saying it back. Being able to keep up with a sentence is,
 in the author's words, “half the battle.” If speech passes before a learner can catch its words
@@ -21,6 +32,21 @@ needed. Keep practicing until you can follow the whole sentence; then move to th
 Use dictation to identify missed words and article playback to connect the passages into fluent
 reading. This personal learning philosophy is the reason the project puts listening and
 repeating one passage at a time at the center of the experience.
+
+### Make the practice yours
+
+The author's motivation also comes from dissatisfaction with expensive learning apps that address
+general needs while missing an individual's bottleneck. Paying for a course or AI feature can add
+financial pressure without giving you enough practice with the sentences you actually need.
+
+Choose your own material and focus on the parts you cannot yet follow or say. Practice privately,
+repeat without embarrassment, and move at your own pace. The aim is to make useful practice simple
+and affordable, without the fear of being judged as slow or incapable. DictationApp has no app
+subscription; generating audio uses your provider's allowance, while ready cached clips can be
+replayed without another synthesis request.
+
+As in the child-and-mother analogy, the author sees learning to follow and reproduce a sentence as
+a major step toward being able to speak it. Use the app to work on that step as often as you need.
 
 ## Find your way around
 

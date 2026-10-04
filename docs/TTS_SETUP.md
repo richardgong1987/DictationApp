@@ -189,6 +189,31 @@ It updates an outdated clip. **Regenerate** forces a fresh request even if a cli
 
 ## Quota, cost and repeated practice
 
+### Monthly free allowances
+
+As checked on **4 October 2026**:
+
+| Provider/plan | Monthly allowance | Meaning for this app |
+|---|---|---|
+| **Azure Speech Free (F0), Neural TTS** | **500,000 characters free per month** | A generous starting allowance for generating personal practice material, then replaying it locally. This is characters, not words or API calls; check that your resource uses F0. |
+| **ElevenLabs Free** | **10,000 credits per month** | With `eleven_multilingual_v2`, one character uses one credit: 10,000 characters if the allowance is spent entirely on this TTS model. Other products share the credits, and other model rates can differ. |
+
+Sources: [Azure Speech pricing](https://azure.microsoft.com/en-us/pricing/details/speech/) and
+[ElevenLabs pricing and credit FAQ](https://elevenlabs.io/pricing). These figures describe the listed
+free plans, not every paid tier or voice/model. Check your account's current terms and usage.
+
+The author's approach is to use Azure for most everyday material and reserve ElevenLabs for
+selected passages where its voice matters more. In his personal judgment, ElevenLabs offers the
+best-sounding speech for his needs. With cached replay, he expects the two free allowances together
+to cover much of his own practice; your needs may differ. Repeating one clip many times does not
+consume its text allowance again.
+
+You can configure both providers and choose which generates the next lesson. There is no automatic
+quota routing or fallback between providers. Voice settings are global: switching providers can
+make the other provider's clips stale and cause regeneration when you practice. To keep both sets
+without replacing them, select the settings that made the lesson's clips **before** opening practice,
+and avoid **Regenerate all** when you only want to replay.
+
 Generating new audio uses your selected provider's allowance. Replaying a ready, unchanged cached
 MP3—including loops and slower/faster player playback—does not request synthesis again.
 
