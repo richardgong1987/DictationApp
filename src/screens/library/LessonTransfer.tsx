@@ -27,15 +27,22 @@ export default function LessonTransfer({ hasLessons, onLibraryChanged }: Props) 
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  /** Runs one export or import; `task` returns the message to show when it is done. */
-  async function run(kind: "exporting" | "importing", task: () => Promise<string>) {
+  /** Runs one export or import and describes its result; resolves to null if it failed. */
+  async function run<T>(
+    kind: "exporting" | "importing",
+    task: () => Promise<T>,
+    describe: (result: T) => string,
+  ): Promise<T | null> {
     setError(null);
     setNotice(null);
     setActivity(kind);
     try {
-      setNotice(await task());
+      const result = await task();
+      setNotice(describe(result));
+      return result;
     } catch (e) {
       setError(errorMessage(e));
+      return null;
     } finally {
       setActivity(null);
     }
@@ -47,20 +54,25 @@ export default function LessonTransfer({ hasLessons, onLibraryChanged }: Props) 
       ? await join(await documentDir(), fileName)
       : await save({ defaultPath: fileName, filters: [EXPORT_FILE_FILTER] });
     if (!path) return;
-    await run("exporting", async () => describeExport(await api.exportLessons(path), path));
+    await run(
+      "exporting",
+      () => api.exportLessons(path),
+      (summary) => describeExport(summary, path),
+    );
   }
 
   async function importLessons() {
     const path = await open({ multiple: false, directory: false, filters: [EXPORT_FILE_FILTER] });
     if (typeof path !== "string") return;
-    await run("importing", async () => {
-      const summary = await api.importLessons(path);
-      onLibraryChanged();
-      if (summary.audioWithOtherVoice > 0 && (await switchToExportedVoice(summary))) {
-        onLibraryChanged();
-      }
-      return describeImport(summary);
-    });
+    const summary = await run("importing", () => api.importLessons(path), describeImport);
+    if (!summary) return;
+    onLibraryChanged();
+    if (summary.audioWithOtherVoice === 0) return;
+    try {
+      if (await switchToExportedVoice(summary)) onLibraryChanged();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
   }
 
   return (

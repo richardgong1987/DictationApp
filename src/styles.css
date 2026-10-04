@@ -185,29 +185,27 @@ button.toggle.on {
   gap: 10px;
 }
 
+/* Title, then counts, then buttons, each on its own row, so a long title
+   gets the card's whole width instead of being squeezed beside the buttons. */
 .lesson-card {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 12px;
-  align-items: center;
+  gap: 4px;
 }
 
 .lesson-card .lesson-title {
+  justify-self: start;
   font-size: 1.1rem;
   font-weight: 600;
   text-align: left;
-  grid-column: 1;
 }
 
 .lesson-card .title-input {
-  grid-column: 1;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .lesson-card .actions {
-  grid-column: 2;
-  grid-row: 1 / span 2;
+  margin-top: 6px;
 }
 
 .item-row {
@@ -748,8 +746,8 @@ button.text-toggle {
   margin: 0;
 }
 
-/* Phones: less padding, and the text gets the card's whole width. The item
-   number shares the first row with the player; everything below spans the card. */
+/* Phones: less padding, and content gets the card's whole width instead of
+   sharing it with a side column. */
 
 @media (max-width: 600px) {
   .page {
@@ -760,6 +758,8 @@ button.text-toggle {
     padding: 12px;
   }
 
+  /* The item number shares the first row with the player; everything below
+     spans the card. */
   .practice-card {
     gap: 8px 10px;
   }
