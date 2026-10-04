@@ -7,11 +7,9 @@ Use **Dictation** to type what you hear and spot missed words. Use **Shadowing**
 passage until it feels natural, then read along with the whole article. One lesson, two separate
 practice modes, shared audio.
 
-**英语听写 + 跟读练习应用**：把文章、学习笔记或面试回答变成练习材料。听写时边听边打、逐词纠错；
-跟读时先反复练习不顺的句子，再整篇连贯朗读。一份材料，同时练听力和口语，也复习你想记住的知识。
-
 [Download](https://github.com/richardgong1987/DictationApp/releases/latest) ·
-[Quick start](#quick-start) · [中文使用说明](docs/USER_GUIDE.zh-CN.md) ·
+[Quick start](#quick-start) · [User guide](docs/USER_GUIDE.md) ·
+[Transfer lessons and audio](#transfer-lessons-and-audio-between-devices) ·
 [Build from source](docs/DEVELOPMENT.md)
 
 ## Two ways to practice
@@ -27,6 +25,9 @@ practice modes, shared audio.
 Both modes use the same locally cached MP3s. Switching modes does not require a second set of audio.
 
 ## Screenshots
+
+These screenshots illustrate the practice modes. The current interface uses a more compact,
+full-width card layout; see the [screen guide](docs/USER_GUIDE.md#find-your-way-around) for current controls.
 
 ### Lesson library — choose Dictation or Shadowing
 
@@ -62,6 +63,10 @@ The repository also includes iOS build/install scripts for use with a Mac and Xc
 separate [source-build route](docs/DEVELOPMENT.md#build-an-installer), not an App Store download or a desktop installer for iPhone.
 
 ## Quick start
+
+If you already have a DictationApp lesson ZIP with ready audio, you can
+[import it first](#transfer-lessons-and-audio-between-devices) and practice without configuring API keys.
+Keys are needed only when generating missing audio or replacing existing clips.
 
 ### 1. Set up a voice
 
@@ -124,7 +129,9 @@ These are separate buttons, so you can choose listening/typing or reading aloud 
 
 Answers save automatically after a brief typing pause. Reopening **Dictation** resumes around your
 last answered item. **Clear answers** starts a fresh attempt at the lesson; previous attempt statistics
-are retained. The active card is the one controlled by keyboard shortcuts.
+are retained. The active card is the one controlled by keyboard shortcuts. Untouched inactive cards keep their
+answer boxes collapsed; click **Play** to activate one. Activating an item loads and starts its audio.
+Dictation speed and loop choices are saved and shared across its cards.
 
 ### Dictation keyboard shortcuts
 
@@ -170,6 +177,37 @@ practice with or without the transcript.
 Shadowing is self-directed speaking practice: it does not record your voice or score pronunciation.
 Its speed and pause choices last for the current visit; it does not change your dictation answers or statistics.
 
+## Transfer lessons and audio between devices
+
+On **Lessons**, scroll to **Your other devices**. Use **Export all lessons** to save every lesson
+and its existing per-passage MP3s in one `.zip`, then send it to another device and choose
+**Import lessons** there. Select the ZIP directly; do not unzip it before importing.
+
+- **Desktop:** choose a destination in the save dialog.
+- **iPhone/iPad:** the export is saved in the app's Documents folder. On iPhone, find it in
+  **Files → On My iPhone → DictationApp** and share it from there, for example with AirDrop.
+- **Import:** new lessons are added. Existing lessons are recognized by their ID and retain their
+  title, text, audio, answers and statistics; only missing audio with matching passage text is filled in.
+  Importing the same ZIP again adds only anything still missing. Import does not generate audio.
+
+| Included in the ZIP | Kept on the device; not exported |
+|---|---|
+| Lesson IDs, titles, creation dates, source text and passage text/order | Typed answers, checked answers, attempt history and practice statistics |
+| Existing MP3s and their audio cache keys | API keys, Azure region and environment variables |
+| Exporting device's provider, voices, ElevenLabs model, speaking rate and pitch | Dictation player speed and loop preference |
+
+**To reuse audio without another synthesis request, match its voice settings.** If newly imported
+clips differ from this device's settings, **Different voice settings** offers **Switch** or
+**Keep current settings**. Switching applies the exported voice settings across the app; clips
+already on this device may then show **Voice changed**. Keeping the current settings can cause
+imported clips to be regenerated when you practice. A ZIP can contain older clips made with several
+settings, so switching does not guarantee that every clip becomes ready.
+
+Exports include the audio that exists, even if some passages are missing audio or show **Voice changed**.
+Generate missing audio before export if you want a complete pack. This is a lesson/audio transfer,
+not a full backup of practice progress. It does not import arbitrary MP3/WAV recordings or transcribe them.
+See the [full transfer guide](docs/USER_GUIDE.md#transfer-lessons-and-audio) for detailed steps and troubleshooting.
+
 ## Audio, data and common questions
 
 - **Can I practice offline?** Yes, with already-generated, current audio. Generate all clips before
@@ -183,14 +221,8 @@ Its speed and pause choices last for the current visit; it does not change your 
 - **Where is my work?** Lessons, MP3s, answers and progress are stored in the app's local data folder,
   with SQLite holding the records. There are no app accounts or automatic cloud synchronization.
   Lesson text is sent to your selected provider when audio is synthesized.
-- **Can I use the same lessons on my Mac and my iPhone?** Yes, without generating the audio twice.
-  On the device that has them, choose **Export all lessons** at the bottom of the library. It writes
-  every lesson and its audio to one `.zip` file: on a Mac you choose where, on an iPhone it goes to the
-  Files app under **On My iPhone › DictationApp**. Send the file to the other device, for example with
-  AirDrop, choose **Import lessons** there and pick the `.zip` as it is, without unzipping it.
-  Importing only adds: lessons already on that device keep their text, audio and progress, and only
-  missing audio is filled in. If the audio was made with other voice settings, the app offers to
-  switch to them, so that practicing does not generate it again.
+- **Can I use the same lessons on another device?** Yes. Transfer the lesson ZIP described
+  [above](#transfer-lessons-and-audio-between-devices). Answers and practice statistics stay on each device.
 - **How are keys stored?** Keys entered in Settings are stored unencrypted in local app data.
   Environment variables can override them; see [credential setup](docs/DEVELOPMENT.md#run).
 - **Can I rename or delete a lesson?** Use **Rename** or **Delete** on its library card.
