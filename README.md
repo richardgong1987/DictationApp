@@ -1,4 +1,4 @@
-# DictationApp — English Dictation & Shadowing
+# DictationApp — Dictation & Shadowing
 
 **Train your ears. Find your speaking rhythm. Learn with text you care about.**
 
@@ -37,6 +37,23 @@ Once individual passages feel familiar, read along with the whole article to bui
 
 The goal is simple: **first learn to follow a sentence, then learn to say it with confidence.**
 This is my personal learning philosophy and the reason for this project.
+
+## English by default, practice in many languages
+
+English is the default, not a restriction. You can use the same deliberately simple method for
+French, Spanish, Japanese, German and many other languages supported by your speech provider:
+**listen to one sentence, say it back, and repeat until you can follow it.** Bring your own text
+in the language you want to learn and select a suitable voice/model in Settings. There is no
+separate lesson-language selector; the app's interface remains in English.
+
+Azure users enter a voice name for the target language; ElevenLabs users choose a model that
+supports that language and a suitable voice. See the [multilingual setup examples](docs/TTS_SETUP.md#practice-in-other-languages).
+Shadowing, replay, speed controls and lesson/audio transfer use the same workflow.
+
+Dictation's current word counts and comparison split on whitespace. For languages normally written
+without spaces, such as Japanese, feedback may treat a whole passage as one token rather than
+identify individual missed words. Listening and shadowing still work; the score is not a
+language-aware assessment.
 
 ## Two ways to practice
 

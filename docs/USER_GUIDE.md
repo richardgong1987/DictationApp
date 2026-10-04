@@ -36,6 +36,25 @@ The layout uses the available window width, wraps controls on smaller screens, a
 system's light/dark appearance. Original text and typed answers use distinct green backgrounds.
 Their position, labels and controls identify them in either theme.
 
+## Practice a language other than English
+
+English is the default voice and the focus of the examples, but lesson text is not restricted to
+English. French, Spanish, Japanese, German and many other provider-supported languages can use the
+same basic method: listen to a sentence and repeat it until you can keep up.
+
+Paste or import UTF-8 text in your target language, with blank lines between passages. In Settings,
+choose an Azure voice for that language or an ElevenLabs multilingual model and suitable voice.
+Save, then generate the audio. See the [voice examples and setup steps](TTS_SETUP.md#practice-in-other-languages).
+There is no lesson-language dropdown and changing the voice does not translate text or localize the
+English interface. Voice settings apply across the app, so changing them can make other lessons'
+audio outdated.
+
+Playback, passage looping, repeat pauses and article playback work as usual. Dictation accepts the
+text, but its word counts, long-passage warning and word-level diff use whitespace-separated tokens.
+Japanese and other languages without word spaces therefore do not receive meaningful per-word
+segmentation. Use shadowing for listening/speaking practice and interpret dictation scores with that
+limitation in mind.
+
 ## Add a lesson
 
 Choose **Paste text**, enter your text and an optional title, then **Create lesson**. A blank title

@@ -135,6 +135,37 @@ Start with the default before changing models. Check ElevenLabs'
 A model change affects cache matching and can cause regeneration. If a model rejects a speech
 setting, retry a short test at normal speaking rate with a compatible model.
 
+## Practice in other languages
+
+English is only the default. French, Spanish, Japanese, German and many other languages can use
+the same listen-and-repeat workflow, provided your selected provider/model supports the language.
+The app has no separate language field: supply text in that language and configure its voice/model.
+
+For **Azure Speech**, replace **Voice name** with a voice for the language you want:
+
+| Language | Example voice name |
+|---|---|
+| French (France) | `fr-FR-DeniseNeural` |
+| Spanish (Spain) | `es-ES-ElviraNeural` |
+| Japanese (Japan) | `ja-JP-NanamiNeural` |
+| German (Germany) | `de-DE-KatjaNeural` |
+
+These identifiers are listed in Microsoft's
+[voice support reference](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts).
+Keep the Region matched to your Speech resource; choosing a French voice does not mean changing
+Region to France. Save and test one short passage in the target language before generating a lesson.
+
+For **ElevenLabs**, the app's default `eleven_multilingual_v2` supports French, Spanish, Japanese
+and German. Choose a suitable voice and supply text in the target language; the app passes the text
+to the model without an explicit language code. Check the current
+[model language list](https://elevenlabs.io/docs/overview/models) for other languages and models.
+
+The method stays simple in every language: hear a sentence, say it back, and keep repeating the
+parts you cannot yet follow. Changing synthesis settings can make other lessons' cached audio
+outdated. The interface remains English, and dictation scoring currently splits words on whitespace;
+it does not segment Japanese into individual words. See the
+[user guide](USER_GUIDE.md#practice-a-language-other-than-english) for that distinction.
+
 ## Test your configuration with one sentence
 
 1. On **Lessons**, choose **Paste text**.
