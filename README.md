@@ -83,6 +83,28 @@ Once individual passages feel familiar, read along with the whole article to bui
 The goal is simple: **first learn to follow a sentence, then learn to say it with confidence.**
 This is my personal learning philosophy and the reason for this project.
 
+## If you are an ordinary learner, you are one of us
+
+**I'm ordinary at learning languages. Admitting that takes a huge weight off my shoulders.**
+I no longer have to pretend I catch every word, remember every phrase, or speak confidently
+before I am ready. I can say, “I didn't get that. Let me hear it again.”
+
+If you admit you are ordinary at this too, **I'm with you. We're on the same team.**
+You do not have to impress me. You do not have to hide how many times you need to repeat a
+sentence. Ten times? A hundred? Take the time you need. There is no audience to judge you,
+and no performance to put on.
+
+**Ordinary is where we start. It does not decide how far we can go.** We can stop spending our
+energy proving we are talented and use it to practice the sentence in front of us. Hear it.
+Follow it. Say it back. Come back tomorrow and do it again.
+
+This is the little rebellion behind DictationApp: let ordinary people learn in an ordinary way.
+No glamorous promise. No need to buy the feeling of progress. Just our own material, a patient
+voice, and another attempt.
+
+**If you're tired of pretending language learning comes easily, pull up a chair. You're one of us.
+Let's be slow, stubborn learners together—one sentence at a time.**
+
 ## Personal practice without financial or social pressure
 
 I find many English-learning apps disappointing because they are built around the broadest problems
