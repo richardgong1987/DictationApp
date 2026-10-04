@@ -11,7 +11,8 @@ practice modes, shared audio.
 [Quick start](#quick-start) · [User guide](docs/USER_GUIDE.md) ·
 [Azure / ElevenLabs setup](docs/TTS_SETUP.md) ·
 [Transfer lessons and audio](#transfer-lessons-and-audio-between-devices) ·
-[Build from source](docs/DEVELOPMENT.md)
+[Build from source](docs/DEVELOPMENT.md) ·
+[Search discovery and Pages setup](docs/SEARCH_DISCOVERY.md)
 
 ## Practice without paying a penny
 
