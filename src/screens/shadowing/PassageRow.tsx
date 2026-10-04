@@ -42,72 +42,70 @@ export default function PassageRow({ item, playback, knownDuration, isTextShown,
   return (
     <li ref={rowRef} className={`card practice-card passage-card ${playback ? "active" : ""}`}>
       <span className="item-number">{item.position}</span>
-      <div className="practice-card-body">
-        <div className="player-bar" role="group" aria-label={`Passage ${item.position}`}>
-          <div className="transport">
-            <button
-              type="button"
-              className="primary play"
-              onClick={commands.togglePlay}
-              title={isPractising ? "Play / Pause" : "Practice this passage on its own"}
-            >
-              {isLoading ? "Loading…" : isPlaying ? "❚❚ Pause" : "▶ Play"}
-            </button>
-            <button
-              type="button"
-              onClick={commands.replay}
-              title="Replay from the beginning"
-              aria-label="Replay from the beginning"
-            >
-              ↺
-            </button>
-          </div>
-
-          {playback?.phase === "yourTurn" ? (
-            <YourTurn
-              remainingMs={playback.turnRemainingMs}
-              totalMs={playback.turnTotalMs}
-              isPaused={playback.isPaused}
-            />
-          ) : (
-            <div className="timeline">
-              <span className="time">{formatTime(currentTime)}</span>
-              <input
-                type="range"
-                min={0}
-                max={length}
-                step={0.05}
-                value={Math.min(currentTime, length)}
-                onChange={(e) => commands.seek(Number(e.target.value))}
-                disabled={!canSeek}
-                aria-label={`Position in passage ${item.position}`}
-              />
-              <span className="time">{length > 0 ? formatTime(length) : "--:--.-"}</span>
-            </div>
-          )}
-
+      <div className="player-bar" role="group" aria-label={`Passage ${item.position}`}>
+        <div className="transport">
           <button
             type="button"
-            className={isLooping ? "toggle on" : "toggle"}
-            onClick={commands.toggleLoop}
-            aria-pressed={isLooping}
-            title="Repeat this passage, with time to repeat it aloud in between"
+            className="primary play"
+            onClick={commands.togglePlay}
+            title={isPractising ? "Play / Pause" : "Practice this passage on its own"}
           >
-            ⟳ Loop passage
+            {isLoading ? "Loading…" : isPlaying ? "❚❚ Pause" : "▶ Play"}
+          </button>
+          <button
+            type="button"
+            onClick={commands.replay}
+            title="Replay from the beginning"
+            aria-label="Replay from the beginning"
+          >
+            ↺
           </button>
         </div>
 
-        {isTextShown && <p className="original-text">{item.text}</p>}
-
-        {isPractising && playback.phase === "failed" && (
-          <div className="banner error" role="alert">
-            <span>{playback.error}</span>
-            <button type="button" onClick={commands.retry}>
-              Retry
-            </button>
+        {playback?.phase === "yourTurn" ? (
+          <YourTurn
+            remainingMs={playback.turnRemainingMs}
+            totalMs={playback.turnTotalMs}
+            isPaused={playback.isPaused}
+          />
+        ) : (
+          <div className="timeline">
+            <span className="time">{formatTime(currentTime)}</span>
+            <input
+              type="range"
+              min={0}
+              max={length}
+              step={0.05}
+              value={Math.min(currentTime, length)}
+              onChange={(e) => commands.seek(Number(e.target.value))}
+              disabled={!canSeek}
+              aria-label={`Position in passage ${item.position}`}
+            />
+            <span className="time">{length > 0 ? formatTime(length) : "--:--.-"}</span>
           </div>
         )}
+
+        <button
+          type="button"
+          className={isLooping ? "toggle on" : "toggle"}
+          onClick={commands.toggleLoop}
+          aria-pressed={isLooping}
+          title="Repeat this passage, with time to repeat it aloud in between"
+        >
+          ⟳ Loop passage
+        </button>
       </div>
+
+      {isTextShown && <p className="original-text">{item.text}</p>}
+
+      {isPractising && playback.phase === "failed" && (
+        <div className="banner error" role="alert">
+          <span>{playback.error}</span>
+          <button type="button" onClick={commands.retry}>
+            Retry
+          </button>
+        </div>
+      )}
     </li>
   );
 }

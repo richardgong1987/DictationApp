@@ -53,46 +53,44 @@ export default function PracticeItemCard({
   return (
     <li ref={cardRef} className={`card practice-card ${isActive ? "active" : ""}`}>
       <span className="item-number">{item.position}</span>
-      <div className="practice-card-body">
-        {playerPanel}
+      {playerPanel}
 
-        <ControlButton
-          className="reveal-toggle"
-          onClick={isRevealed ? actions.hide : actions.reveal}
-          disabled={isChecking}
-          aria-expanded={isRevealed}
-          title={isRevealed ? "Hide the original text to edit your answer" : "Check your answer (Enter)"}
-        >
-          {isRevealed ? <EyeOffIcon /> : <EyeIcon />}
-          {isChecking ? "Checking…" : isRevealed ? "Hide original text" : "Show original text"}
-          {item.attemptCount > 0 && (
-            <span className="muted small best">best {formatPercent(item.bestAccuracy)}</span>
-          )}
-        </ControlButton>
-
-        {isRevealed && result && <p className="original-text">{result.sourceText}</p>}
-
-        {showsAnswer && (
-          <textarea
-            ref={answerRef}
-            className="typing-area"
-            rows={2}
-            value={progress.answer}
-            onChange={(e) => actions.changeAnswer(e.target.value)}
-            onFocus={actions.activate}
-            readOnly={isRevealed}
-            spellCheck={false}
-            autoCorrect="off"
-            autoCapitalize="off"
-            autoComplete="off"
-            placeholder="Type what you hear…"
-            aria-label={`Answer for item ${item.position}`}
-          />
+      <ControlButton
+        className="reveal-toggle"
+        onClick={isRevealed ? actions.hide : actions.reveal}
+        disabled={isChecking}
+        aria-expanded={isRevealed}
+        title={isRevealed ? "Hide the original text to edit your answer" : "Check your answer (Enter)"}
+      >
+        {isRevealed ? <EyeOffIcon /> : <EyeIcon />}
+        {isChecking ? "Checking…" : isRevealed ? "Hide original text" : "Show original text"}
+        {item.attemptCount > 0 && (
+          <span className="muted small best">best {formatPercent(item.bestAccuracy)}</span>
         )}
+      </ControlButton>
 
-        {isRevealed && result && <AnswerResult result={result} replayCount={progress.replayCount} />}
-        <ErrorBanner message={error} onDismiss={actions.dismissError} />
-      </div>
+      {isRevealed && result && <p className="original-text">{result.sourceText}</p>}
+
+      {showsAnswer && (
+        <textarea
+          ref={answerRef}
+          className="typing-area"
+          rows={2}
+          value={progress.answer}
+          onChange={(e) => actions.changeAnswer(e.target.value)}
+          onFocus={actions.activate}
+          readOnly={isRevealed}
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="off"
+          autoComplete="off"
+          placeholder="Type what you hear…"
+          aria-label={`Answer for item ${item.position}`}
+        />
+      )}
+
+      {isRevealed && result && <AnswerResult result={result} replayCount={progress.replayCount} />}
+      <ErrorBanner message={error} onDismiss={actions.dismissError} />
     </li>
   );
 }
