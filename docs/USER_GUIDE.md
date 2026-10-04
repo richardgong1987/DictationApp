@@ -10,6 +10,11 @@ and **Shadowing** for listening and speaking. Both use the same per-passage MP3s
 **I just want to learn English the dumbest, most basic way: listen and repeat.
 I don't need anything fancy.**
 
+The author's blunt personal view is that most of us are “dumb” at foreign-language learning,
+while only a relatively small number become outstanding learners who master it. That belief
+motivates a method ordinary people can use even when they feel slow or incapable: hear a sentence,
+say it back, and repeat. The project should not require you to be an exceptional learner.
+
 The author built DictationApp around a simple belief: learn as a child does with their mother—she
 says a sentence, and the child follows by saying it back. Being able to keep up with a sentence is,
 in the author's words, “half the battle.” If speech passes before a learner can catch its words

@@ -17,6 +17,12 @@ practice modes, shared audio.
 **I just want to learn English the dumbest, most basic way: listen and repeat.
 I don't need anything fancy.**
 
+My blunt view is that most of us are “dumb” at learning a foreign language: we struggle to follow,
+forget what we hear, and fail to turn years of study into speech. Only a relatively small number
+become the outstanding learners who really master it. I want a way to learn that works for ordinary
+people, even when we feel slow or incapable. We should not need to be exceptional to make progress.
+A method can be as basic as hearing one sentence and saying it back, again and again.
+
 I believe language learning should begin like a child learning from their mother: the mother says
 one sentence, and the child tries to say it back. Listen, follow, repeat. Before expecting fluent
 conversation, we need to be able to stay with a spoken sentence from beginning to end.
