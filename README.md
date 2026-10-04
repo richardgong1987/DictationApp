@@ -37,6 +37,33 @@ Once individual passages feel familiar, read along with the whole article to bui
 The goal is simple: **first learn to follow a sentence, then learn to say it with confidence.**
 This is my personal learning philosophy and the reason for this project.
 
+## Personal practice without financial or social pressure
+
+I find many English-learning apps disappointing because they are built around the broadest problems
+shared by the largest audience. But a general course may never reach the particular sentence,
+sound or rhythm that is holding *you* back. An expensive subscription or an AI conversation feature
+can feel like progress while leaving you unable to say the things you actually need to say.
+Spending money and seeing little improvement adds frustration to an already difficult task.
+
+I do not believe learners should have to keep paying for that promise. When money is tight, a simple
+way to practice matters even more. Much of the practice we need does not require someone to teach
+us every step: we need a clear spoken example, material that matters to us, and enough repetition
+to become comfortable with it. DictationApp lets you bring your own articles, study notes or interview
+answers and work directly on the passages you find difficult. Generate the audio, keep it, and reuse
+it instead of paying for fresh synthesis every time you practice. Provider generation costs still
+apply, but DictationApp itself has no subscription or paid lesson library.
+
+Learning should also feel safe. You should be able to stumble, miss words and repeat a sentence
+many times without worrying that someone will think you are stupid or incapable. Here, you can
+practice privately, at your own pace, with a voice that never becomes impatient.
+
+For me, this comes back to the child and the mother: she says a sentence, the child follows, and
+little by little the child learns to say it. I believe that, for many learners, being able to follow
+and reproduce the sentences they need is the biggest practical bottleneck. Getting past it is
+already a large part of learning to speak. That is the experience I want this project to make
+accessible: **practice what you need, repeat without embarrassment, and build confidence without
+unnecessary expense.**
+
 ## Two ways to practice
 
 | | Dictation — listening and typing | Shadowing — listening and speaking |

@@ -22,6 +22,21 @@ Use dictation to identify missed words and article playback to connect the passa
 reading. This personal learning philosophy is the reason the project puts listening and
 repeating one passage at a time at the center of the experience.
 
+### Make the practice yours
+
+The author's motivation also comes from dissatisfaction with expensive learning apps that address
+general needs while missing an individual's bottleneck. Paying for a course or AI feature can add
+financial pressure without giving you enough practice with the sentences you actually need.
+
+Choose your own material and focus on the parts you cannot yet follow or say. Practice privately,
+repeat without embarrassment, and move at your own pace. The aim is to make useful practice simple
+and affordable, without the fear of being judged as slow or incapable. DictationApp has no app
+subscription; generating audio uses your provider's allowance, while ready cached clips can be
+replayed without another synthesis request.
+
+As in the child-and-mother analogy, the author sees learning to follow and reproduce a sentence as
+a major step toward being able to speak it. Use the app to work on that step as often as you need.
+
 ## Find your way around
 
 | Screen | What you can do |
