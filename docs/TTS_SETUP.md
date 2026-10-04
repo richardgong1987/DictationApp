@@ -10,6 +10,18 @@ Python, Node.js or Rust to configure speech.
 If you already imported a DictationApp ZIP with audio matching your current voice settings, you
 can play those clips without a provider key. Follow this guide when you need to generate new audio.
 
+## You can start without paying
+
+**No paid learning subscription is required.** Azure Speech's **Free (F0) Neural TTS** allowance
+is **500,000 characters per month**. ElevenLabs' **Free** plan supplies **10,000 credits per month**,
+equivalent to **10,000 characters with Multilingual v2** when spent entirely on that model.
+Use those free plans within their allowances and practice without spending a penny. Generate once,
+then replay the cached clips as many times as you need without using more synthesis allowance.
+
+The author expects Azure to cover most of his everyday material, with ElevenLabs reserved for
+selected passages. Follow the free-plan setup below and read the
+[monthly allowance details](#monthly-free-allowances) for sources and conditions.
+
 ## Choose a setup path
 
 | | Microsoft Azure Speech | ElevenLabs |

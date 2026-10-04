@@ -5,6 +5,16 @@
 Turn a text lesson into two kinds of practice: **Dictation** for listening and typing,
 and **Shadowing** for listening and speaking. Both use the same per-passage MP3s.
 
+## Start with the free allowances
+
+**You can practice without spending a penny by using the providers' free plans within their limits.**
+Azure Speech **F0 Neural TTS** offers **500,000 characters per month**. ElevenLabs **Free** offers
+**10,000 credits per month**, equivalent to **10,000 characters with Multilingual v2** if all are
+used for that model. DictationApp has no app fee. Generate your material once, then replay the
+cached audio as often as needed without another synthesis request.
+
+See the [free-plan setup and allowance details](TTS_SETUP.md#you-can-start-without-paying).
+
 ## The idea behind the practice
 
 The author puts it self-deprecatingly: **“I admit it: I'm one of the dumb ones.”** He wants a method
