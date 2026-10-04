@@ -63,6 +63,9 @@ import does not update the stored lesson. The app supports renaming, but has no 
 
 ## Configure and prepare audio
 
+For account creation, getting keys/Voice IDs, a first audio test, and provider troubleshooting,
+follow the [Azure Speech and ElevenLabs setup guide](TTS_SETUP.md).
+
 If you imported a ZIP whose audio matches your voice settings, you can replay it without API keys.
 For new audio, open **Settings → Text-to-speech → Provider** and configure one provider:
 

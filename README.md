@@ -9,6 +9,7 @@ practice modes, shared audio.
 
 [Download](https://github.com/richardgong1987/DictationApp/releases/latest) ·
 [Quick start](#quick-start) · [User guide](docs/USER_GUIDE.md) ·
+[Azure / ElevenLabs setup](docs/TTS_SETUP.md) ·
 [Transfer lessons and audio](#transfer-lessons-and-audio-between-devices) ·
 [Build from source](docs/DEVELOPMENT.md)
 
@@ -94,6 +95,9 @@ If you already have a DictationApp lesson ZIP with ready audio, you can
 Keys are needed only when generating missing audio or replacing existing clips.
 
 ### 1. Set up a voice
+
+New to either provider? Follow the [Azure Speech and ElevenLabs setup guide](docs/TTS_SETUP.md)
+to create credentials, find a voice, and test one sentence.
 
 Open **Settings → Text-to-speech → Provider** and choose one provider:
 
