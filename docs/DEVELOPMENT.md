@@ -17,6 +17,8 @@ These instructions are for building from source. Installer users can follow the 
 
 ### Run
 
+For provider account and voice configuration, see the [TTS setup guide](TTS_SETUP.md).
+
 ```bash
 pnpm install
 cp .env.example .env        # then put your Azure key/region or ElevenLabs key in .env
