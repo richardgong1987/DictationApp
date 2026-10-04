@@ -23,6 +23,12 @@ second language struggle at this first step: the speech moves on before they can
 words, sounds and rhythm. When they cannot follow the sentence, it becomes difficult to catch
 what was said and learn from it.
 
+In the AI era, creating a natural spoken model for the material we want to learn is no longer the
+obstacle it once was. We do not have to ask someone to say the same sentence over and over: the
+app can replay it patiently, as many times as we need. Once a clip is generated and cached, those
+repetitions reuse the same audio. That lets us focus on exactly what we cannot yet follow or say,
+and keep working on it until we get past the bottleneck.
+
 I built DictationApp to make that practice possible at your own pace. Take one short passage,
 listen to it, slow it down if needed, and repeat it aloud until you can keep up. Shadowing gives
 you the model voice and time to answer it; dictation helps you notice the words you missed.
