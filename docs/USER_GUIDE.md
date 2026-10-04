@@ -5,6 +5,19 @@
 Turn a text lesson into two kinds of practice: **Dictation** for listening and typing,
 and **Shadowing** for listening and speaking. Both use the same per-passage MP3s.
 
+## The idea behind the practice
+
+The author built DictationApp around a simple belief: learn as a child does with their mother—she
+says a sentence, and the child follows by saying it back. Being able to keep up with a sentence is,
+in the author's words, “half the battle.” If speech passes before a learner can catch its words
+and rhythm, it is hard to retain anything useful from it.
+
+Start with a short passage. Listen, repeat aloud, and use a slower speed or a repeat pause when
+needed. Keep practicing until you can follow the whole sentence; then move to the next passage.
+Use dictation to identify missed words and article playback to connect the passages into fluent
+reading. This personal learning philosophy is the reason the project puts listening and
+repeating one passage at a time at the center of the experience.
+
 ## Find your way around
 
 | Screen | What you can do |
