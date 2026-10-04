@@ -1,4 +1,4 @@
-# DictationApp — English Dictation & Shadowing
+# DictationApp — Dictation & Shadowing
 
 **Train your ears. Find your speaking rhythm. Learn with text you care about.**
 
@@ -9,10 +9,14 @@ practice modes, shared audio.
 
 [Download](https://github.com/richardgong1987/DictationApp/releases/latest) ·
 [Quick start](#quick-start) · [User guide](docs/USER_GUIDE.md) ·
+[Azure / ElevenLabs setup](docs/TTS_SETUP.md) ·
 [Transfer lessons and audio](#transfer-lessons-and-audio-between-devices) ·
 [Build from source](docs/DEVELOPMENT.md)
 
 ## Why I built DictationApp
+
+**I admit it: I'm one of the dumb ones.** I want a way to learn that does not depend on being
+exceptionally talented—just on having the patience to listen and repeat, one sentence at a time.
 
 **I just want to learn English the dumbest, most basic way: listen and repeat.
 I don't need anything fancy.**
@@ -73,6 +77,23 @@ already a large part of learning to speak. That is the experience I want this pr
 accessible: **practice what you need, repeat without embarrassment, and build confidence without
 unnecessary expense.**
 
+## English by default, practice in many languages
+
+English is the default, not a restriction. You can use the same deliberately simple method for
+French, Spanish, Japanese, German and many other languages supported by your speech provider:
+**listen to one sentence, say it back, and repeat until you can follow it.** Bring your own text
+in the language you want to learn and select a suitable voice/model in Settings. There is no
+separate lesson-language selector; the app's interface remains in English.
+
+Azure users enter a voice name for the target language; ElevenLabs users choose a model that
+supports that language and a suitable voice. See the [multilingual setup examples](docs/TTS_SETUP.md#practice-in-other-languages).
+Shadowing, replay, speed controls and lesson/audio transfer use the same workflow.
+
+Dictation's current word counts and comparison split on whitespace. For languages normally written
+without spaces, such as Japanese, feedback may treat a whole passage as one token rather than
+identify individual missed words. Listening and shadowing still work; the score is not a
+language-aware assessment.
+
 ## Two ways to practice
 
 | | Dictation — listening and typing | Shadowing — listening and speaking |
@@ -130,6 +151,9 @@ If you already have a DictationApp lesson ZIP with ready audio, you can
 Keys are needed only when generating missing audio or replacing existing clips.
 
 ### 1. Set up a voice
+
+New to either provider? Follow the [Azure Speech and ElevenLabs setup guide](docs/TTS_SETUP.md)
+to create credentials, find a voice, and test one sentence.
 
 Open **Settings → Text-to-speech → Provider** and choose one provider:
 
@@ -268,6 +292,22 @@ Exports include the audio that exists, even if some passages are missing audio o
 Generate missing audio before export if you want a complete pack. This is a lesson/audio transfer,
 not a full backup of practice progress. It does not import arbitrary MP3/WAV recordings or transcribe them.
 See the [full transfer guide](docs/USER_GUIDE.md#transfer-lessons-and-audio) for detailed steps and troubleshooting.
+
+## Keep everyday practice affordable
+
+As checked on 4 October 2026, [Azure Speech's Free (F0) tier](https://azure.microsoft.com/en-us/pricing/details/speech/)
+includes **500,000 Neural TTS characters per month**. [ElevenLabs' Free plan](https://elevenlabs.io/pricing)
+includes **10,000 credits per month**—equivalent to 10,000 characters with the app's default
+`eleven_multilingual_v2` model if all credits are used for that synthesis.
+
+My approach is to use Azure for most material and ElevenLabs for selected passages where I especially
+value the voice. I personally find ElevenLabs the best-sounding option for my needs. Generate once,
+keep the clip, and repeat it as often as needed; cached replay uses no further synthesis allowance.
+I expect this combination to cover much of my practice without a paid learning subscription.
+
+Check your resource's tier and account allowance. Switching providers changes global voice settings
+and can trigger regeneration, so select a lesson's original settings before replaying it.
+See the [free allowance and combined-use guide](docs/TTS_SETUP.md#monthly-free-allowances).
 
 ## Audio, data and common questions
 

@@ -7,6 +7,9 @@ and **Shadowing** for listening and speaking. Both use the same per-passage MP3s
 
 ## The idea behind the practice
 
+The author puts it self-deprecatingly: **“I admit it: I'm one of the dumb ones.”** He wants a method
+that relies on patient listening and repetition rather than exceptional talent.
+
 **I just want to learn English the dumbest, most basic way: listen and repeat.
 I don't need anything fancy.**
 
@@ -59,6 +62,25 @@ The layout uses the available window width, wraps controls on smaller screens, a
 system's light/dark appearance. Original text and typed answers use distinct green backgrounds.
 Their position, labels and controls identify them in either theme.
 
+## Practice a language other than English
+
+English is the default voice and the focus of the examples, but lesson text is not restricted to
+English. French, Spanish, Japanese, German and many other provider-supported languages can use the
+same basic method: listen to a sentence and repeat it until you can keep up.
+
+Paste or import UTF-8 text in your target language, with blank lines between passages. In Settings,
+choose an Azure voice for that language or an ElevenLabs multilingual model and suitable voice.
+Save, then generate the audio. See the [voice examples and setup steps](TTS_SETUP.md#practice-in-other-languages).
+There is no lesson-language dropdown and changing the voice does not translate text or localize the
+English interface. Voice settings apply across the app, so changing them can make other lessons'
+audio outdated.
+
+Playback, passage looping, repeat pauses and article playback work as usual. Dictation accepts the
+text, but its word counts, long-passage warning and word-level diff use whitespace-separated tokens.
+Japanese and other languages without word spaces therefore do not receive meaningful per-word
+segmentation. Use shadowing for listening/speaking practice and interpret dictation scores with that
+limitation in mind.
+
 ## Add a lesson
 
 Choose **Paste text**, enter your text and an optional title, then **Create lesson**. A blank title
@@ -85,6 +107,9 @@ You can add text without credentials and prepare the audio later. Editing the or
 import does not update the stored lesson. The app supports renaming, but has no passage text editor.
 
 ## Configure and prepare audio
+
+For account creation, getting keys/Voice IDs, a first audio test, and provider troubleshooting,
+follow the [Azure Speech and ElevenLabs setup guide](TTS_SETUP.md).
 
 If you imported a ZIP whose audio matches your voice settings, you can replay it without API keys.
 For new audio, open **Settings → Text-to-speech → Provider** and configure one provider:
