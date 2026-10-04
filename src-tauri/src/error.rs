@@ -29,6 +29,8 @@ pub enum AppError {
     InvalidLessonExport,
     #[error("This file was exported by a newer version of DictationApp. Update the app on this device, then import it again.")]
     LessonExportTooNew,
+    #[error("Cannot open {0}: it is not a file on this device.")]
+    NotALocalFile(String),
     #[error("Could not save audio: {0}")]
     AudioNotSaved(std::io::Error),
     #[error("File error: {0}")]

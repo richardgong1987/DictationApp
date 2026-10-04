@@ -635,6 +635,43 @@ fn audio_made_with_another_voice_is_reported_until_the_voice_is_adopted() {
     );
 }
 
+/// The iOS open dialog hands over a `file://` URL instead of a path.
+#[test]
+fn files_picked_on_an_iphone_import_from_their_url() {
+    let mac = Harness::new();
+    let lesson = mac.paste_lesson("A", "One.\n\nTwo.");
+    mac.fake_generated_audio(
+        lesson["lesson"]["id"].as_str().unwrap(),
+        &lesson["items"][0],
+    );
+    let exports = tempfile::tempdir().unwrap();
+    let export = exports.path().join("DictationApp lessons 2026-10-04.zip");
+    mac.call("export_lessons", json!({ "path": export }))
+        .unwrap();
+
+    let phone = Harness::new();
+    let summary = phone.import(&file_url(&export));
+    assert_eq!(summary["addedLessons"], 1);
+    assert_eq!(summary["addedAudio"], 1);
+    assert_eq!(
+        phone.lesson(&lesson["lesson"]["id"])["items"][0]["audioStatus"],
+        "ready"
+    );
+
+    let text_file = phone.write_lesson_file("lesson 01.txt", LESSON);
+    let detail = phone
+        .call(
+            "import_lesson",
+            json!({ "path": file_url(text_file.as_ref()) }),
+        )
+        .unwrap();
+    assert_eq!(detail["lesson"]["title"], "lesson 01");
+}
+
+fn file_url(path: &std::path::Path) -> String {
+    tauri::Url::from_file_path(path).unwrap().to_string()
+}
+
 #[test]
 fn importing_something_else_is_a_clear_error() {
     let h = Harness::new();

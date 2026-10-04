@@ -187,9 +187,10 @@ Its speed and pause choices last for the current visit; it does not change your 
   On the device that has them, choose **Export all lessons** at the bottom of the library. It writes
   every lesson and its audio to one `.zip` file: on a Mac you choose where, on an iPhone it goes to the
   Files app under **On My iPhone › DictationApp**. Send the file to the other device, for example with
-  AirDrop, and choose **Import lessons** there. Importing only adds: lessons already on that device keep
-  their text, audio and progress, and only missing audio is filled in. If the audio was made with other
-  voice settings, the app offers to switch to them, so that practicing does not generate it again.
+  AirDrop, choose **Import lessons** there and pick the `.zip` as it is, without unzipping it.
+  Importing only adds: lessons already on that device keep their text, audio and progress, and only
+  missing audio is filled in. If the audio was made with other voice settings, the app offers to
+  switch to them, so that practicing does not generate it again.
 - **How are keys stored?** Keys entered in Settings are stored unencrypted in local app data.
   Environment variables can override them; see [credential setup](docs/DEVELOPMENT.md#run).
 - **Can I rename or delete a lesson?** Use **Rename** or **Delete** on its library card.

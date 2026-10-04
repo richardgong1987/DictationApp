@@ -135,6 +135,9 @@ Decisions made while implementing V1, where the specification left room:
   sandbox that needs security-scoped access to write to. The frontend knows it runs on iOS from
   `import.meta.env.TAURI_ENV_PLATFORM`, which the Tauri CLI sets when it builds the frontend (`envPrefix`
   in `vite.config.ts`).
+- **Imports on iOS**: the dialog plugin's iOS open dialog copies the chosen file into the app's sandbox
+  and returns a percent-encoded `file://` URL rather than a path, so the import commands accept both
+  (`picked_file_path` in `commands.rs`).
 
 ### Code layout
 

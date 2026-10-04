@@ -153,7 +153,7 @@ If I had known about the problem, I would have called you.
 
 **能在 Mac 和 iPhone 上用同一批课程吗？**
 
-可以，而且不用重新生成音频。在已有课程的设备上，点击课程列表底部的 **Export all lessons**，所有课程和音频会导出为一个 `.zip` 文件：Mac 上由你选择保存位置，iPhone 上会保存到“文件” App 的 **我的 iPhone › DictationApp**。把文件传到另一台设备（例如用 AirDrop），再在那里点击 **Import lessons**。
+可以，而且不用重新生成音频。在已有课程的设备上，点击课程列表底部的 **Export all lessons**，所有课程和音频会导出为一个 `.zip` 文件：Mac 上由你选择保存位置，iPhone 上会保存到“文件” App 的 **我的 iPhone › DictationApp**。把文件传到另一台设备（例如用 AirDrop），再在那里点击 **Import lessons**，直接选择这个 `.zip` 文件即可，不需要先解压。
 
 导入只会添加，不会替换：另一台设备上已有的课程保留原来的文本、音频和练习记录，只补上缺少的音频。比如手机上有 A、B，Mac 上有 C，把手机导出的文件导入 Mac 后，Mac 上就是 A、B、C。如果这些音频的语音设置和本机不同，应用会询问是否切换到导出设备的语音设置，以免练习时重新生成。
 

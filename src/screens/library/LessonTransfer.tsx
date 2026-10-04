@@ -79,9 +79,9 @@ export default function LessonTransfer({ hasLessons, onLibraryChanged }: Props) 
     <section className="card lesson-transfer">
       <h2>Your other devices</h2>
       <p className="muted small">
-        Export every lesson with its audio to one file, then import that file on your other
-        device, so the audio is not generated and paid for again. Importing only adds what that
-        device is missing; nothing on it is replaced.
+        Export every lesson with its audio to one .zip file, then import that .zip as it is on
+        your other device, so the audio is not generated and paid for again. Importing only adds
+        what that device is missing; nothing on it is replaced.
       </p>
       <div className="actions">
         <button onClick={exportLessons} disabled={activity !== null || !hasLessons}>
