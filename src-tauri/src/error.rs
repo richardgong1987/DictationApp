@@ -25,6 +25,10 @@ pub enum AppError {
     MissingSpeechCredentials(TtsProviderKind),
     #[error("{0}")]
     Tts(#[from] TtsError),
+    #[error("This file is not a lesson export from DictationApp, or it is damaged.")]
+    InvalidLessonExport,
+    #[error("This file was exported by a newer version of DictationApp. Update the app on this device, then import it again.")]
+    LessonExportTooNew,
     #[error("Could not save audio: {0}")]
     AudioNotSaved(std::io::Error),
     #[error("File error: {0}")]

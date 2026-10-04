@@ -101,6 +101,28 @@ export interface Settings {
   loopEnabled: boolean;
 }
 
+/** `settings::VoiceSettings`: the settings that decide how generated audio sounds. */
+export type VoiceSettings = Pick<
+  Settings,
+  "ttsProvider" | "azureVoice" | "elevenlabsVoiceId" | "elevenlabsModel" | "speakingRate" | "pitch"
+>;
+
+export interface ExportSummary {
+  lessonCount: number;
+  audioCount: number;
+}
+
+export interface ImportSummary {
+  /** Lessons this device did not have. */
+  addedLessons: number;
+  /** Lessons already here; nothing of theirs was replaced. */
+  existingLessons: number;
+  addedAudio: number;
+  /** Of `addedAudio`, files made with other voice settings than this device's. */
+  audioWithOtherVoice: number;
+  exportedVoice: VoiceSettings;
+}
+
 export interface SettingsDetail {
   settings: Settings;
   azureKeyFromEnv: boolean;

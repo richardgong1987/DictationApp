@@ -44,6 +44,11 @@ impl LessonFiles {
         std::fs::write(dir.join("source.txt"), source_text)
     }
 
+    /// The lesson's own copy of its text.
+    pub fn read_lesson_text(&self, lesson_id: &str) -> io::Result<String> {
+        std::fs::read_to_string(self.lesson_dir(lesson_id).join("source.txt"))
+    }
+
     /// A folder that is already gone counts as deleted.
     pub fn delete_lesson_folder(&self, lesson_id: &str) -> io::Result<()> {
         match std::fs::remove_dir_all(self.lesson_dir(lesson_id)) {

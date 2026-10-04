@@ -89,12 +89,19 @@ impl AudioCache {
     }
 
     pub fn status(&self, item: &DictationItem, settings: &Settings) -> AudioStatus {
-        let file_exists = item
-            .audio_path
-            .as_deref()
-            .is_some_and(|path| self.files.audio_exists(path));
         let expected_key = cache_key(&settings.tts_request(&item.text));
-        AudioStatus::evaluate(file_exists, item.audio_cache_key.as_deref(), &expected_key)
+        AudioStatus::evaluate(
+            self.has_file(item),
+            item.audio_cache_key.as_deref(),
+            &expected_key,
+        )
+    }
+
+    /// Whether the item has an audio file, whatever voice made it.
+    pub fn has_file(&self, item: &DictationItem) -> bool {
+        item.audio_path
+            .as_deref()
+            .is_some_and(|path| self.files.audio_exists(path))
     }
 
     /// Reuses the item's audio if it matches `settings`, otherwise synthesizes

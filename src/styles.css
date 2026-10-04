@@ -236,6 +236,19 @@ button.toggle.on {
   padding: 48px 0;
 }
 
+.lesson-transfer {
+  margin-top: 24px;
+}
+
+.lesson-transfer h2 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.lesson-transfer .banner {
+  margin-bottom: 0;
+}
+
 /* Renaming in place. The input and the clickable heading share padding,
    border and offset, so the text stays put when editing starts. */
 
@@ -733,4 +746,38 @@ button.text-toggle {
 
 .settings .banner {
   margin: 0;
+}
+
+/* Phones: less padding, and the text gets the card's whole width. The item
+   number shares the first row with the player; everything below spans the card. */
+
+@media (max-width: 600px) {
+  .page {
+    padding: 12px 12px 32px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .practice-card {
+    gap: 8px 10px;
+  }
+
+  .practice-card-body {
+    display: contents;
+  }
+
+  .practice-card-body > * {
+    grid-column: 1 / -1;
+  }
+
+  .practice-card-body > .player-bar:first-child {
+    grid-column: 2;
+  }
+
+  .original-text,
+  .typing-area {
+    padding: 8px 12px;
+  }
 }

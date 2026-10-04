@@ -26,6 +26,8 @@ uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 thiserror = "2"
 dotenvy = "0.15"
+# Lesson exports. MP3s are already compressed, so storing entries uncompressed is enough.
+zip = { version = "8", default-features = false }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }

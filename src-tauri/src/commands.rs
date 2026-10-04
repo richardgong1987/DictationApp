@@ -12,6 +12,7 @@ use crate::error::AppResult;
 use crate::lesson::{ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::{CheckResult, PracticeProgress};
 use crate::settings::{Settings, SettingsDetail};
+use crate::transfer::{ExportSummary, ImportSummary};
 
 // ---------------------------------------------------------------------------
 // Lessons
@@ -53,6 +54,21 @@ pub fn rename_lesson(
 #[tauri::command]
 pub fn delete_lesson(state: State<'_, AppState>, lesson_id: String) -> AppResult<()> {
     state.lessons.delete(&lesson_id)
+}
+
+// ---------------------------------------------------------------------------
+// Moving lessons between devices. Async so that copying many MP3s runs off
+// the main thread.
+
+#[tauri::command]
+pub async fn export_lessons(state: State<'_, AppState>, path: String) -> AppResult<ExportSummary> {
+    state.transfer.export(Path::new(&path))
+}
+
+/// Adds lessons and audio this device lacks; nothing here is replaced.
+#[tauri::command]
+pub async fn import_lessons(state: State<'_, AppState>, path: String) -> AppResult<ImportSummary> {
+    state.transfer.import(Path::new(&path))
 }
 
 // ---------------------------------------------------------------------------

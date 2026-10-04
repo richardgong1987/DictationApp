@@ -4,6 +4,8 @@ import type {
   AudioGenerationProgress,
   AudioGenerationSummary,
   CheckResult,
+  ExportSummary,
+  ImportSummary,
   ItemDetail,
   Lesson,
   LessonDetail,
@@ -25,6 +27,11 @@ export const api = {
   renameLesson: (lessonId: string, title: string) =>
     invoke<Lesson>("rename_lesson", { lessonId, title }),
   deleteLesson: (lessonId: string) => invoke<void>("delete_lesson", { lessonId }),
+
+  /** Writes every lesson and its audio to one file at `path`. */
+  exportLessons: (path: string) => invoke<ExportSummary>("export_lessons", { path }),
+  /** Adds the lessons and audio this device lacks; nothing here is replaced. */
+  importLessons: (path: string) => invoke<ImportSummary>("import_lessons", { path }),
 
   generateLessonAudio: (lessonId: string, force = false) =>
     invoke<AudioGenerationSummary>("generate_lesson_audio", { lessonId, force }),

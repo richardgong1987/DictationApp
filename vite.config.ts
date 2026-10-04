@@ -7,6 +7,8 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
+  // Exposes the Tauri CLI's build target, e.g. import.meta.env.TAURI_ENV_PLATFORM.
+  envPrefix: ["VITE_", "TAURI_ENV_"],
   server: {
     port: 1420,
     strictPort: true,

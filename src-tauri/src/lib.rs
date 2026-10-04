@@ -1,6 +1,7 @@
 //! DictationApp backend.
 //!
-//! Code is grouped by feature (`lesson`, `audio`, `practice`, `settings`).
+//! Code is grouped by feature (`lesson`, `audio`, `practice`, `settings`,
+//! `transfer`).
 //! Inside each feature, `mod.rs` holds its types and rules, `repository.rs`
 //! its SQL and `service.rs` its workflows. `commands` exposes the services to
 //! the frontend; `app_state` wires everything together.
@@ -13,6 +14,7 @@ mod error;
 mod lesson;
 mod practice;
 mod settings;
+mod transfer;
 mod tts;
 
 use tauri::{Manager, Runtime};
@@ -64,6 +66,8 @@ fn with_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
         commands::get_lesson,
         commands::rename_lesson,
         commands::delete_lesson,
+        commands::export_lessons,
+        commands::import_lessons,
         commands::generate_lesson_audio,
         commands::generate_item_audio,
         commands::get_item_audio,

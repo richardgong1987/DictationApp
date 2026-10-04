@@ -68,7 +68,7 @@ tag, which must look like `v1.2.3`. A new release gets the download instructions
 ### Tests and checks
 
 ```bash
-cargo test --manifest-path src-tauri/Cargo.toml     # parsing, cache keys, TTS requests, answer comparison, database, IPC commands
+cargo test --manifest-path src-tauri/Cargo.toml     # parsing, cache keys, TTS requests, answer comparison, database, export/import, IPC commands
 pnpm build                     # TypeScript type check + frontend build
 pnpm test                      # shadowing player: modes, repeat pause, switching, cleanup
 ```
@@ -119,6 +119,22 @@ Decisions made while implementing V1, where the specification left room:
 - **Schema upgrades** run at startup, in order, recorded in `PRAGMA user_version` (`database.rs`).
 - **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` / `ELEVENLABS_API_KEY` are read once
   at startup and passed to the settings service; no business code reads environment variables.
+- **Moving lessons between devices** (`transfer/`): **Export all lessons** writes one `.zip` holding
+  `manifest.json` (format, version, the exporting device's voice settings, every lesson with its text
+  and items) and `audio/<lesson-id>/NNN.mp3` for each item that has audio, with the cache key it was
+  made with. Entries are stored uncompressed. Import recognizes lessons by id and only adds: a lesson
+  already present keeps everything and only gets audio for items that have none, matched by position
+  *and* text. Importing a file twice therefore adds nothing, and importing it again completes an import
+  that failed halfway. Imported lessons keep their creation time and have no `source_path`. Imported
+  audio whose cache key does not fit this device's settings is counted (`audioWithOtherVoice`), and the
+  library offers to apply the exporting device's `VoiceSettings`, whose field names match `Settings`.
+  Lesson ids in the manifest must be UUIDs, since they name folders.
+- **Exports on iOS** go to the app's Documents folder, which `src-tauri/Info.ios.plist`
+  (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`) shows in the Files app. The dialog
+  plugin's iOS save dialog only exports an empty placeholder and returns a location outside the
+  sandbox that needs security-scoped access to write to. The frontend knows it runs on iOS from
+  `import.meta.env.TAURI_ENV_PLATFORM`, which the Tauri CLI sets when it builds the frontend (`envPrefix`
+  in `vite.config.ts`).
 
 ### Code layout
 
@@ -137,7 +153,7 @@ src-tauri/src/
 │   ├── parser.rs       blank-line splitting (the lesson text format)
 │   ├── files.rs        lessons/<id>/{source.txt, metadata.json, audio/NNN.mp3}
 │   ├── repository.rs   lessons + dictation_items tables
-│   └── service.rs      import, list, detail, delete
+│   └── service.rs      add (from a file, pasted text or another device), list, detail, delete
 ├── audio/            generation summary/progress types
 │   ├── cache.rs        cache key, Ready/Stale/Missing, reuse-or-synthesize
 │   └── service.rs      lesson/item generation, one run per lesson at a time
@@ -145,9 +161,12 @@ src-tauri/src/
 │   ├── comparison.rs   normalization + LCS word diff
 │   ├── repository.rs   attempts table + per-item stats
 │   └── service.rs      check an answer and record the attempt
-├── settings/         Settings, sanitizing, credential precedence
+├── settings/         Settings, VoiceSettings, sanitizing, credential precedence
 │   ├── repository.rs   settings stored as one JSON row
 │   └── service.rs      load/save, player preferences, credentials
+├── transfer/         ExportSummary, ImportSummary
+│   ├── archive.rs      the export file: manifest.json and audio/<lesson-id>/NNN.mp3 in a zip
+│   └── service.rs      export every lesson; import only what this device lacks
 └── tts/              TtsProvider trait, TtsRequest, provider choice (TtsProviderKind, TtsClient)
     ├── azure.rs        Azure REST client, SSML
     ├── elevenlabs.rs   ElevenLabs REST client
@@ -166,7 +185,7 @@ src/
 ├── components/       ErrorBanner, LoadingPage, EyeIcons
 ├── format.ts         time/speed/percent formatting
 └── screens/
-    ├── LibraryScreen.tsx
+    ├── library/      LibraryScreen, LessonTransfer (export and import between devices)
     ├── SettingsScreen.tsx
     ├── lesson/       LessonScreen, item row, audio generation hook and status
     ├── shadowing/

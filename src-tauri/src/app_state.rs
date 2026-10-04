@@ -13,6 +13,7 @@ use crate::practice::service::PracticeService;
 use crate::settings::repository::SettingsRepository;
 use crate::settings::service::SettingsService;
 use crate::settings::EnvCredentials;
+use crate::transfer::service::TransferService;
 
 /// Managed by Tauri; commands reach the services through it.
 pub struct AppState {
@@ -20,6 +21,7 @@ pub struct AppState {
     pub audio: AudioService,
     pub practice: PracticeService,
     pub settings: SettingsService,
+    pub transfer: TransferService,
 }
 
 impl AppState {
@@ -29,15 +31,23 @@ impl AppState {
         let settings = SettingsService::new(SettingsRepository::new(database), env_credentials);
         let files = LessonFiles::new(data_dir);
         let audio_cache = AudioCache::new(files.clone());
+        let lessons = LessonService::new(
+            lesson_repository.clone(),
+            practice_repository.clone(),
+            settings.clone(),
+            files.clone(),
+            audio_cache.clone(),
+        );
 
         Self {
-            lessons: LessonService::new(
+            transfer: TransferService::new(
+                lessons.clone(),
                 lesson_repository.clone(),
-                practice_repository.clone(),
                 settings.clone(),
                 files.clone(),
                 audio_cache.clone(),
             ),
+            lessons,
             audio: AudioService::new(
                 lesson_repository.clone(),
                 settings.clone(),

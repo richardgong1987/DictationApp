@@ -6,8 +6,10 @@ pub mod repository;
 pub mod service;
 
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::audio::cache::AudioStatus;
+use crate::database::timestamp_now;
 use crate::practice::ItemStats;
 
 /// Passages longer than this trigger a warning (but are still accepted).
@@ -18,11 +20,33 @@ pub const MAX_RECOMMENDED_WORDS: usize = 30;
 pub struct Lesson {
     pub id: String,
     pub title: String,
-    /// Where the file was imported from; `None` when the text was pasted. The
-    /// lesson keeps its own copy of the text either way.
+    /// Where the file was imported from; `None` when the text was pasted or
+    /// copied from another device. The lesson keeps its own copy of the text
+    /// either way.
     pub source_path: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+}
+
+/// A lesson about to be added, apart from its text.
+pub struct LessonHeader {
+    pub id: String,
+    pub title: String,
+    /// See [`Lesson::source_path`].
+    pub source_path: Option<String>,
+    pub created_at: String,
+}
+
+impl LessonHeader {
+    /// A lesson created on this device, now.
+    pub fn new(title: String, source_path: Option<String>) -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            title,
+            source_path,
+            created_at: timestamp_now(),
+        }
+    }
 }
 
 /// One passage of a lesson: the unit that is spoken, typed and checked.

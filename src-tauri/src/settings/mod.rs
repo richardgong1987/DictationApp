@@ -91,6 +91,17 @@ impl Settings {
         self
     }
 
+    pub fn voice(&self) -> VoiceSettings {
+        VoiceSettings {
+            tts_provider: self.tts_provider,
+            azure_voice: self.azure_voice.clone(),
+            elevenlabs_voice_id: self.elevenlabs_voice_id.clone(),
+            elevenlabs_model: self.elevenlabs_model.clone(),
+            speaking_rate: self.speaking_rate,
+            pitch: self.pitch,
+        }
+    }
+
     /// The TTS request for one item under the current provider and voice settings.
     pub fn tts_request(&self, text: &str) -> TtsRequest {
         match self.tts_provider {
@@ -134,6 +145,19 @@ impl Settings {
             .clone()
             .or_else(|| non_empty(&self.elevenlabs_key))
     }
+}
+
+/// The settings that decide how generated audio sounds, and so its cache key.
+/// Field names match [`Settings`], so the frontend can apply them to it as they are.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VoiceSettings {
+    pub tts_provider: TtsProviderKind,
+    pub azure_voice: String,
+    pub elevenlabs_voice_id: String,
+    pub elevenlabs_model: String,
+    pub speaking_rate: i32,
+    pub pitch: i32,
 }
 
 /// Credentials from `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` and

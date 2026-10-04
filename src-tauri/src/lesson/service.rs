@@ -2,19 +2,20 @@
 
 use std::path::Path;
 
-use uuid::Uuid;
-
 use crate::audio::cache::{AudioCache, AudioStatus};
 use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
 use crate::lesson::parser::{parse_lesson, title_from_path, title_from_text};
 use crate::lesson::repository::{LessonRepository, NewItem, NewLesson};
-use crate::lesson::{is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonSummary};
+use crate::lesson::{
+    is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonHeader, LessonSummary,
+};
 use crate::practice::repository::PracticeRepository;
 use crate::practice::ItemStats;
 use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 
+#[derive(Clone)]
 pub struct LessonService {
     lessons: LessonRepository,
     practice: PracticeRepository,
@@ -54,7 +55,7 @@ impl LessonService {
         let content = LessonFiles::read_source(source_path)?;
         let title = title_from_path(source_path);
         let source_path = source_path.to_string_lossy().into_owned();
-        self.create(title, Some(source_path), &content)
+        self.add_and_show(LessonHeader::new(title, Some(source_path)), &content)
     }
 
     /// Creates a lesson from pasted text. A blank title is replaced by the
@@ -64,23 +65,18 @@ impl LessonService {
             "" => title_from_text(content),
             title => title.to_string(),
         };
-        self.create(title, None, content)
+        self.add_and_show(LessonHeader::new(title, None), content)
     }
 
     /// Every passage between blank lines becomes one dictation item. Audio is
     /// generated separately.
-    fn create(
-        &self,
-        title: String,
-        source_path: Option<String>,
-        content: &str,
-    ) -> AppResult<LessonDetail> {
+    pub fn add(&self, header: LessonHeader, content: &str) -> AppResult<()> {
         let passages = parse_lesson(content);
         if passages.is_empty() {
             return Err(AppError::LessonHasNoItems);
         }
 
-        let lesson_id = Uuid::new_v4().to_string();
+        let lesson_id = header.id;
         let items = passages
             .into_iter()
             .map(|passage| NewItem {
@@ -91,8 +87,9 @@ impl LessonService {
             .collect();
         let lesson = NewLesson {
             id: lesson_id.clone(),
-            title,
-            source_path,
+            title: header.title,
+            source_path: header.source_path,
+            created_at: header.created_at,
             items,
         };
 
@@ -102,7 +99,12 @@ impl LessonService {
             let _ = self.files.delete_lesson_folder(&lesson_id);
             return Err(error);
         }
-        self.write_metadata(&lesson_id)?;
+        self.write_metadata(&lesson_id)
+    }
+
+    fn add_and_show(&self, header: LessonHeader, content: &str) -> AppResult<LessonDetail> {
+        let lesson_id = header.id.clone();
+        self.add(header, content)?;
         self.detail(&lesson_id)
     }
 
@@ -176,7 +178,8 @@ impl LessonService {
         ItemDetail::new(item, audio_status, stats)
     }
 
-    fn write_metadata(&self, lesson_id: &str) -> AppResult<()> {
+    /// Rewrites `metadata.json` from the database.
+    pub fn write_metadata(&self, lesson_id: &str) -> AppResult<()> {
         let lesson = self.lessons.get(lesson_id)?;
         let items = self.lessons.items(lesson_id)?;
         self.files.write_metadata(&lesson, &items)

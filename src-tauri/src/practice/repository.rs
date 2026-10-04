@@ -174,6 +174,7 @@ mod tests {
                 id: "a".into(),
                 title: "Lesson".into(),
                 source_path: Some("/tmp/a.txt".into()),
+                created_at: timestamp_now(),
                 items: (1..=item_count)
                     .map(|position| NewItem {
                         position,
@@ -282,6 +283,7 @@ mod tests {
                 id: "b".into(),
                 title: "Other".into(),
                 source_path: Some("/tmp/b.txt".into()),
+                created_at: timestamp_now(),
                 items: vec![NewItem {
                     position: 1,
                     text: "Other.".into(),

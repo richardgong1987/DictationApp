@@ -86,14 +86,60 @@ impl Harness {
     /// Stores an MP3 for the item as if it had been generated earlier with
     /// the default voice settings.
     fn fake_generated_audio(&self, lesson_id: &str, item: &Value) {
-        let id = item["id"].as_i64().unwrap();
+        let audio = format!("mp3 {}", item["id"]);
+        self.fake_audio_made_with(&Settings::default(), lesson_id, item, &audio);
+    }
+
+    fn fake_audio_made_with(
+        &self,
+        settings: &Settings,
+        lesson_id: &str,
+        item: &Value,
+        audio: &str,
+    ) {
         let text = item["text"].as_str().unwrap();
         let path = LessonFiles::audio_path(lesson_id, item["position"].as_i64().unwrap());
-        std::fs::write(self.dir.path().join(&path), format!("mp3 {id}")).unwrap();
-        let key = cache_key(&Settings::default().tts_request(text));
+        std::fs::write(self.dir.path().join(&path), audio).unwrap();
+        let key = cache_key(&settings.tts_request(text));
         LessonRepository::new(self.database.clone())
-            .set_item_audio(id, &path, &key)
+            .set_item_audio(item["id"].as_i64().unwrap(), &path, &key)
             .unwrap();
+    }
+
+    fn paste_lesson(&self, title: &str, text: &str) -> Value {
+        self.call(
+            "import_lesson_text",
+            json!({ "title": title, "text": text }),
+        )
+        .unwrap()
+    }
+
+    fn lesson(&self, lesson_id: &Value) -> Value {
+        self.call("get_lesson", json!({ "lessonId": lesson_id }))
+            .unwrap()
+    }
+
+    fn item_audio(&self, item_id: &Value) -> Vec<u8> {
+        match self
+            .call_raw("get_item_audio", json!({ "itemId": item_id }))
+            .unwrap()
+        {
+            InvokeResponseBody::Raw(bytes) => bytes,
+            other => panic!("expected raw bytes, got {other:?}"),
+        }
+    }
+
+    /// Exports every lesson to a file outside the data directory and returns its path.
+    fn export_to(&self, dir: &tempfile::TempDir) -> String {
+        let path = dir.path().join("lessons.zip");
+        self.call("export_lessons", json!({ "path": path }))
+            .unwrap();
+        path.to_string_lossy().into_owned()
+    }
+
+    fn import(&self, path: &str) -> Value {
+        self.call("import_lessons", json!({ "path": path }))
+            .unwrap()
     }
 }
 
@@ -451,4 +497,154 @@ fn answers_are_kept_and_practice_resumes_where_it_stopped() {
         .call("clear_answers", json!({ "lessonId": "no-such-lesson" }))
         .unwrap_err();
     assert_eq!(err, "Lesson not found");
+}
+
+#[test]
+fn lessons_move_between_devices_and_importing_only_adds() {
+    let phone = Harness::new();
+    let a = phone.paste_lesson("A", LESSON);
+    let b = phone.paste_lesson("B", "One.\n\nTwo.");
+    for item in a["items"].as_array().unwrap() {
+        phone.fake_generated_audio(a["lesson"]["id"].as_str().unwrap(), item);
+    }
+    let b_id = b["lesson"]["id"].as_str().unwrap();
+    phone.fake_generated_audio(b_id, &b["items"][0]);
+
+    let mac = Harness::new();
+    let c = mac.paste_lesson("C", "Three.");
+    let c_item = &c["items"][0]["id"];
+    mac.call(
+        "check_answer",
+        json!({ "itemId": c_item, "answer": "three", "replayCount": 0 }),
+    )
+    .unwrap();
+
+    let exports = tempfile::tempdir().unwrap();
+    let summary = mac.import(&phone.export_to(&exports));
+    assert_eq!(summary["addedLessons"], 2);
+    assert_eq!(summary["existingLessons"], 0);
+    assert_eq!(summary["addedAudio"], 4);
+    assert_eq!(summary["audioWithOtherVoice"], 0);
+
+    // The phone's A and B join the Mac's C, keeping when they were created.
+    let lessons = mac.call("list_lessons", json!({})).unwrap();
+    let mut titles: Vec<&str> = lessons
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|lesson| lesson["title"].as_str().unwrap())
+        .collect();
+    titles.sort();
+    assert_eq!(titles, ["A", "B", "C"]);
+    let imported_a = mac.lesson(&a["lesson"]["id"]);
+    assert_eq!(imported_a["lesson"]["createdAt"], a["lesson"]["createdAt"]);
+    assert_eq!(
+        imported_a["items"][2]["text"],
+        "Would you mind closing the window?"
+    );
+    assert_eq!(imported_a["items"][0]["audioStatus"], "ready");
+    assert_eq!(
+        mac.item_audio(&imported_a["items"][0]["id"]),
+        phone.item_audio(&a["items"][0]["id"])
+    );
+    let imported_b = mac.lesson(&b["lesson"]["id"]);
+    assert_eq!(imported_b["items"][1]["audioStatus"], "missing");
+    assert_eq!(
+        mac.lesson(&c["lesson"]["id"])["items"][0]["attemptCount"],
+        1
+    );
+
+    // Importing the same file again adds nothing.
+    let again = mac.import(&phone.export_to(&exports));
+    assert_eq!(again["addedLessons"], 0);
+    assert_eq!(again["existingLessons"], 2);
+    assert_eq!(again["addedAudio"], 0);
+
+    // Audio the Mac lacks is filled in later; audio it has is never replaced.
+    phone.fake_audio_made_with(&Settings::default(), b_id, &b["items"][1], "phone two");
+    phone.fake_audio_made_with(
+        &Settings::default(),
+        b_id,
+        &b["items"][0],
+        "phone one, redone",
+    );
+    let later = mac.import(&phone.export_to(&exports));
+    assert_eq!(later["addedAudio"], 1);
+    let imported_b = mac.lesson(&b["lesson"]["id"]);
+    assert_eq!(mac.item_audio(&imported_b["items"][1]["id"]), b"phone two");
+    assert_eq!(
+        mac.item_audio(&imported_b["items"][0]["id"]),
+        format!("mp3 {}", b["items"][0]["id"]).into_bytes()
+    );
+
+    // And it all works the other way round.
+    let phone = phone.restart();
+    let back = phone.import(&mac.export_to(&exports));
+    assert_eq!(back["addedLessons"], 1);
+    assert_eq!(back["existingLessons"], 2);
+    assert_eq!(
+        phone
+            .call("list_lessons", json!({}))
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        3
+    );
+}
+
+#[test]
+fn audio_made_with_another_voice_is_reported_until_the_voice_is_adopted() {
+    let elevenlabs = Settings {
+        tts_provider: crate::tts::TtsProviderKind::ElevenLabs,
+        ..Settings::default()
+    };
+    let phone = Harness::new();
+    let mut phone_settings = phone.call("get_settings", json!({})).unwrap()["settings"].clone();
+    phone_settings["ttsProvider"] = json!("elevenlabs");
+    phone
+        .call("save_settings", json!({ "settings": phone_settings }))
+        .unwrap();
+    let lesson = phone.paste_lesson("A", "One.\n\nTwo.");
+    let lesson_id = lesson["lesson"]["id"].as_str().unwrap();
+    for item in lesson["items"].as_array().unwrap() {
+        phone.fake_audio_made_with(&elevenlabs, lesson_id, item, "george");
+    }
+
+    let mac = Harness::new();
+    let exports = tempfile::tempdir().unwrap();
+    let summary = mac.import(&phone.export_to(&exports));
+    assert_eq!(summary["addedAudio"], 2);
+    assert_eq!(summary["audioWithOtherVoice"], 2);
+    assert_eq!(summary["exportedVoice"]["ttsProvider"], "elevenlabs");
+    assert_eq!(
+        mac.lesson(&lesson["lesson"]["id"])["items"][0]["audioStatus"],
+        "stale"
+    );
+
+    // Field names match Settings, so the voice applies to them as it is.
+    let mut mac_settings = mac.call("get_settings", json!({})).unwrap()["settings"].clone();
+    for (field, value) in summary["exportedVoice"].as_object().unwrap() {
+        mac_settings[field] = value.clone();
+    }
+    mac.call("save_settings", json!({ "settings": mac_settings }))
+        .unwrap();
+    assert_eq!(
+        mac.lesson(&lesson["lesson"]["id"])["items"][0]["audioStatus"],
+        "ready"
+    );
+}
+
+#[test]
+fn importing_something_else_is_a_clear_error() {
+    let h = Harness::new();
+    let path = h.write_lesson_file("lesson01.txt", LESSON);
+    let err = h
+        .call("import_lessons", json!({ "path": path }))
+        .unwrap_err();
+    assert_eq!(
+        err,
+        "This file is not a lesson export from DictationApp, or it is damaged."
+    );
+    assert_eq!(h.call("list_lessons", json!({})).unwrap(), json!([]));
 }

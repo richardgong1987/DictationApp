@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
-import { api, errorMessage } from "../api/client";
-import { MAX_RECOMMENDED_WORDS } from "../api/constants";
-import type { LessonDetail, LessonSummary, TtsProvider } from "../api/types";
-import type { Navigate, Route } from "../navigation";
-import ErrorBanner from "../components/ErrorBanner";
-import TitleInput from "../components/TitleInput";
-import { formatTtsProvider } from "../format";
+import { api, errorMessage } from "../../api/client";
+import { MAX_RECOMMENDED_WORDS } from "../../api/constants";
+import type { LessonDetail, LessonSummary, TtsProvider } from "../../api/types";
+import type { Navigate, Route } from "../../navigation";
+import ErrorBanner from "../../components/ErrorBanner";
+import TitleInput from "../../components/TitleInput";
+import { formatTtsProvider } from "../../format";
+import LessonTransfer from "./LessonTransfer";
 
 const SETTINGS_ROUTE: Route = { name: "settings", back: { name: "library" } };
 
@@ -205,6 +206,8 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
           })}
         </ul>
       )}
+
+      <LessonTransfer hasLessons={!!lessons?.length} onLibraryChanged={refresh} />
     </main>
   );
 }

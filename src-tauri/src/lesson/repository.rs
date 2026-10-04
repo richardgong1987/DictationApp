@@ -12,6 +12,8 @@ pub struct NewLesson {
     pub title: String,
     /// `None` for pasted text.
     pub source_path: Option<String>,
+    /// Kept from the original when the lesson is copied from another device.
+    pub created_at: String,
     pub items: Vec<NewItem>,
 }
 
@@ -37,8 +39,8 @@ impl LessonRepository {
         let mut connection = self.database.connection();
         let transaction = connection.transaction()?;
         transaction.execute(
-            "INSERT INTO lessons (id, title, source_path, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?4)",
-            params![lesson.id, lesson.title, lesson.source_path, now],
+            "INSERT INTO lessons (id, title, source_path, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![lesson.id, lesson.title, lesson.source_path, lesson.created_at, now],
         )?;
         for item in &lesson.items {
             transaction.execute(
@@ -72,6 +74,15 @@ impl LessonRepository {
             )
             .optional()?
             .ok_or(AppError::LessonNotFound)
+    }
+
+    pub fn exists(&self, id: &str) -> AppResult<bool> {
+        let found = self
+            .database
+            .connection()
+            .query_row("SELECT 1 FROM lessons WHERE id = ?1", [id], |_| Ok(()))
+            .optional()?;
+        Ok(found.is_some())
     }
 
     pub fn rename(&self, id: &str, title: &str) -> AppResult<()> {
@@ -170,6 +181,7 @@ mod tests {
             id: id.into(),
             title: "Daily English 01".into(),
             source_path: Some("/tmp/daily.txt".into()),
+            created_at: timestamp_now(),
             items: texts
                 .iter()
                 .zip(1..)
@@ -190,6 +202,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(repository.list().unwrap().len(), 1);
+        assert!(repository.exists("a").unwrap());
+        assert!(!repository.exists("b").unwrap());
         let items = repository.items("a").unwrap();
         assert_eq!(items.len(), 2);
         assert_eq!(items[1].text, "Two.");

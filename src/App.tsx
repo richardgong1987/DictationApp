@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Route } from "./navigation";
-import LibraryScreen from "./screens/LibraryScreen";
+import LibraryScreen from "./screens/library/LibraryScreen";
 import LessonScreen from "./screens/lesson/LessonScreen";
 import PracticeScreen from "./screens/practice/PracticeScreen";
 import SettingsScreen from "./screens/SettingsScreen";
