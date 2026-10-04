@@ -12,6 +12,25 @@ practice modes, shared audio.
 [Transfer lessons and audio](#transfer-lessons-and-audio-between-devices) ·
 [Build from source](docs/DEVELOPMENT.md)
 
+## Why I built DictationApp
+
+I believe language learning should begin like a child learning from their mother: the mother says
+one sentence, and the child tries to say it back. Listen, follow, repeat. Before expecting fluent
+conversation, we need to be able to stay with a spoken sentence from beginning to end.
+
+To me, being able to keep up and repeat a sentence is already half the battle. Many learners of a
+second language struggle at this first step: the speech moves on before they can hold on to its
+words, sounds and rhythm. When they cannot follow the sentence, it becomes difficult to catch
+what was said and learn from it.
+
+I built DictationApp to make that practice possible at your own pace. Take one short passage,
+listen to it, slow it down if needed, and repeat it aloud until you can keep up. Shadowing gives
+you the model voice and time to answer it; dictation helps you notice the words you missed.
+Once individual passages feel familiar, read along with the whole article to build continuity.
+
+The goal is simple: **first learn to follow a sentence, then learn to say it with confidence.**
+This is my personal learning philosophy and the reason for this project.
+
 ## Two ways to practice
 
 | | Dictation — listening and typing | Shadowing — listening and speaking |
