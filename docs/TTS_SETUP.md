@@ -203,6 +203,10 @@ It updates an outdated clip. **Regenerate** forces a fresh request even if a cli
 
 ### Monthly free allowances
 
+The author believes 500,000 characters per month is more than enough practice material to learn
+a foreign language through patient repetition. He thanks **Microsoft for its generous free allowance**
+and **ElevenLabs for its generous free plan**, which together make this approach more accessible.
+
 As checked on **4 October 2026**:
 
 | Provider/plan | Monthly allowance | Meaning for this app |

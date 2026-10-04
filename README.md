@@ -32,6 +32,12 @@ My approach is to use Azure for everyday material and reserve ElevenLabs for sel
 where I especially value the voice. I personally find ElevenLabs the best-sounding option for my
 needs. With repeated use of cached audio, I expect these allowances to cover my own practice.
 
+I believe **500,000 characters every month is more than enough material to learn a foreign language**
+when we use it for patient, repeated practice. The point is to learn from the sentences we already
+have, rather than constantly generate more. **Thank you, Microsoft, for this generous free allowance,
+and thank you, ElevenLabs, for making your voices available through a free plan.** Both help make
+this simple way of learning accessible without a paid subscription.
+
 Figures checked on 4 October 2026: [Azure free-tier pricing](https://azure.microsoft.com/en-us/pricing/details/speech/)
 and [ElevenLabs free-plan pricing](https://elevenlabs.io/pricing). Choose Azure's **F0** tier;
 the allowance above is not a promise that a paid resource is free. ElevenLabs credits are shared
