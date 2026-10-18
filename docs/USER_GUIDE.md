@@ -65,7 +65,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 | **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, rename/delete lessons, or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
 | **Lesson detail** | Click a lesson title in the library. Read passages, inspect word counts and audio badges, generate audio, and see attempt counts/best accuracy. Click the heading to rename; click a passage's **▶** to start dictation at that item. |
 | **Dictation** | Listen, type, reveal/check, and review word differences. All items appear as cards; the active card has an accent border and highlighted number. Untouched inactive cards keep their answer boxes collapsed. |
-| **Shadowing** | Use the article player at the top or a passage's own player. Show/hide all text, choose playback speed, and leave time to repeat a looping passage aloud. |
+| **Shadowing** | Use the article player at the top or a passage's own player. Practice a passage whole, sentence by sentence or phrase by phrase. Show/hide all text, choose playback speed, and leave time to repeat aloud. |
 | **Settings** | Choose the TTS provider and its credentials, voice and synthesis settings. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
 
 The layout uses the available window width, wraps controls on smaller screens, and follows the
@@ -228,27 +228,46 @@ Dictation shortcuts; Shadowing uses its visible player controls.
 Text starts visible. Click a passage's **Play** to practice it alone, or its replay icon to restart.
 Enable **Loop passage** and choose **Time to repeat aloud**:
 
-| Option | Between repetitions |
+| Option | After each repetition |
 |---|---|
-| **No pause** | The passage repeats immediately. |
+| **No pause** | The audio goes on immediately. |
 | **3 seconds** | Three seconds to speak. |
 | **5 seconds** | Five seconds to speak. |
-| **Match passage length** | Time based on the clip's duration at the selected playback speed. |
+| **Match the audio's length** | As long as what you just heard takes at the selected playback speed. |
 
 During the pause, **Your turn** replaces the timeline with a countdown. The passage's play/pause
 control also pauses/resumes this turn. Use the seek bar while audio is available, or replay to
 start over. **Speed** offers 0.60×, 0.75×, 0.90×, 1.00×, 1.10× and 1.25×, as in Dictation.
 
+### Long passages: one sentence or phrase at a time
+
+When a passage is too long to follow, change **Practice by** from **Whole passage** to:
+
+| Option | Each passage is cut |
+|---|---|
+| **Sentence** | at the end of every sentence. |
+| **Phrase** | also inside sentences, at commas, semicolons, colons and dashes. Very short pieces such as list items ("Three, Four, and Five") stay with their neighbors. |
+
+Dotted underlines show where the text is cut. Click a sentence or phrase to play it; **‹** and **›**
+move to the previous or next one, and work while the text is hidden. **Play** goes through the
+passage one piece at a time, with **Your turn** after each. **Loop sentence** (or **Loop phrase**)
+repeats the current piece until you turn it off or move to another; the loop stays on as you move.
+Replay starts the current piece again.
+
+The app finds each piece in the audio by the speaker's pauses, so it works with existing audio and
+any voice, without extra speech requests. Where the voice runs two pieces together without a pause,
+they stay one piece.
+
 For fluent continuous reading, choose **Play article**. It plays passages in order, scrolls to the
-current passage, and offers **Pause/Resume**, **Restart**, and **Loop article**. The deliberate
-repeat-aloud pause applies only to passage looping; article playback does not insert it.
+current passage, and offers **Pause/Resume**, **Restart**, and **Loop article**. Article playback
+always plays whole passages and does not insert the repeat-aloud pause.
 
 Starting a passage switches away from article playback and vice versa. They share one player and
 cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
 **Retry**. Leaving the screen stops playback and repeat timers.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation
-answers/statistics. Its speed, pause and loop choices last for the current visit.
+answers/statistics. Its speed, practice unit, pause and loop choices last for the current visit.
 
 ## Transfer lessons and audio
 

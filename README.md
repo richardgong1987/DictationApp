@@ -155,7 +155,7 @@ language-aware assessment.
 |---|---|---|
 | Open it | **Dictation** on a lesson card or lesson detail page | **Shadowing** on a lesson card or lesson detail page |
 | Practice | Listen, replay, type, then reveal the original | Read aloud with the audio or during the repeat pause |
-| Focus on a hard passage | Replay, loop, seek and slow it down | **Loop passage**, with time to repeat aloud |
+| Focus on a hard passage | Replay, loop, seek and slow it down | **Loop passage**, or practice a long one **sentence by sentence** or **phrase by phrase**, with time to repeat aloud |
 | Review | Word-by-word feedback and accuracy | Listen and judge your own fluency; no recording or pronunciation score |
 | Continue | Answers save automatically; resume your dictation | **Play article** for all passages in order; **Loop article** to repeat |
 

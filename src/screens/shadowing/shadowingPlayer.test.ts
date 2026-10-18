@@ -1,22 +1,56 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
+import type { Clip, SegmentUnit } from "./passageSegments.ts";
 import {
   repeatPauseMs,
   ShadowingPlayer,
   type AudioOutput,
   type RepeatPause,
+  type RepeatUnit,
   type Timers,
 } from "./shadowingPlayer.ts";
 
-/** Behaves like an HTMLAudioElement, with the browser's side driven by the test. */
+/**
+ * Behaves like an HTMLAudioElement, with the browser's side driven by the
+ * test. While playing, its position moves with the fake clock.
+ */
 class FakeAudio implements AudioOutput {
-  currentTime = 0;
   duration = NaN;
   paused = true;
-  playbackRate = 1;
   defaultPlaybackRate = 1;
+  /** How long the audio takes to start sounding after play(). */
+  startLatencyMs = 0;
+  private rate = 1;
+  /** The position at the clock's `positionAt`. */
+  private position = 0;
+  private positionAt = 0;
   private source = "";
   private readonly listeners = new Map<string, (() => void)[]>();
+  private readonly clock: { now(): number };
+
+  constructor(clock: { now(): number }) {
+    this.clock = clock;
+  }
+
+  get currentTime() {
+    if (this.paused) return this.position;
+    const played = (Math.max(0, this.clock.now() - this.positionAt) / 1000) * this.rate;
+    return Math.min(this.position + played, Number.isNaN(this.duration) ? Infinity : this.duration);
+  }
+
+  set currentTime(seconds: number) {
+    this.position = seconds;
+    this.positionAt = this.clock.now();
+  }
+
+  get playbackRate() {
+    return this.rate;
+  }
+
+  set playbackRate(rate: number) {
+    this.currentTime = this.currentTime;
+    this.rate = rate;
+  }
 
   get src() {
     return this.source;
@@ -34,11 +68,16 @@ class FakeAudio implements AudioOutput {
   }
 
   play() {
+    if (this.paused) {
+      this.position = this.currentTime;
+      this.positionAt = this.clock.now() + this.startLatencyMs;
+    }
     this.paused = false;
     return Promise.resolve();
   }
 
   pause() {
+    this.position = this.currentTime;
     this.paused = true;
   }
 
@@ -60,8 +99,8 @@ class FakeAudio implements AudioOutput {
 
   /** Playback reaches the end. */
   finish() {
-    this.currentTime = this.duration;
     this.paused = true;
+    this.currentTime = this.duration;
     this.emit("ended");
   }
 
@@ -113,6 +152,14 @@ class FakeTimers implements Timers {
 
 const PASSAGE_SECONDS = [2, 4, 3];
 const urlOf = (index: number) => `blob:passage-${index}`;
+/** Passage 2 has three sentences; passage 3's could not be measured. Times are exact in binary. */
+const SENTENCES_OF_PASSAGE_2: Clip[] = [
+  { start: 0, end: 1.25 },
+  { start: 1, end: 2.5 },
+  { start: 2.25, end: 4 },
+];
+const clipsOf = (index: number): Clip[] =>
+  index === 1 ? SENTENCES_OF_PASSAGE_2 : index === 2 ? [] : [{ start: 0, end: PASSAGE_SECONDS[index] }];
 
 /** Lets pending audio loads finish. */
 const settle = () => new Promise((resolve) => setImmediate(resolve));
@@ -120,9 +167,15 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 let audio: FakeAudio;
 let timers: FakeTimers;
 let failingPassages: Set<number>;
+let clipRequests: [number, SegmentUnit][];
 
 function createPlayer(
-  choices: { speed?: number; repeatPause?: RepeatPause; isArticleLooping?: boolean } = {},
+  choices: {
+    speed?: number;
+    repeatPause?: RepeatPause;
+    unit?: RepeatUnit;
+    isArticleLooping?: boolean;
+  } = {},
 ) {
   const player = new ShadowingPlayer({
     audio,
@@ -132,9 +185,14 @@ function createPlayer(
       failingPassages.has(index)
         ? Promise.reject("Azure Speech credentials are not configured.")
         : Promise.resolve(urlOf(index)),
+    passageClips: (index, unit) => {
+      clipRequests.push([index, unit]);
+      return Promise.resolve(clipsOf(index));
+    },
   });
   if (choices.speed) player.setSpeed(choices.speed);
   if (choices.repeatPause) player.setRepeatPause(choices.repeatPause);
+  if (choices.unit) player.setUnit(choices.unit);
   if (choices.isArticleLooping) player.setArticleLooping(true);
   return player;
 }
@@ -147,9 +205,10 @@ async function loadPassage(index: number) {
 }
 
 beforeEach(() => {
-  audio = new FakeAudio();
   timers = new FakeTimers();
+  audio = new FakeAudio(timers);
   failingPassages = new Set();
+  clipRequests = [];
 });
 
 describe("a single passage", () => {
@@ -211,7 +270,7 @@ describe("a single passage", () => {
   });
 
   it("gives as long as the passage takes at the current speed", async () => {
-    const player = createPlayer({ repeatPause: "passageLength", speed: 0.75 });
+    const player = createPlayer({ repeatPause: "clipLength", speed: 0.75 });
     player.togglePassageLoop(2);
     await loadPassage(2);
     audio.finish();
@@ -251,6 +310,164 @@ describe("a single passage", () => {
     player.togglePassage(1);
     assert.equal(audio.isPlaying, true);
     assert.equal(audio.currentTime, 1.5);
+  });
+});
+
+describe("a passage a sentence at a time", () => {
+  const state = (player: ShadowingPlayer) => {
+    const { phase, segment } = player.getState();
+    return { phase, segment };
+  };
+
+  it("plays each sentence with the learner's turn after it, then stops", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassage(1);
+    await loadPassage(1);
+    assert.deepEqual(clipRequests, [[1, "sentence"]]);
+    assert.deepEqual(state(player), { phase: "audio", segment: 0 });
+
+    timers.advance(1249);
+    assert.equal(audio.isPlaying, true);
+    timers.advance(1);
+    assert.deepEqual(state(player), { phase: "yourTurn", segment: 0 });
+    assert.equal(audio.isPlaying, false);
+
+    timers.advance(3000);
+    assert.deepEqual(state(player), { phase: "audio", segment: 1 });
+    assert.equal(audio.currentTime, 1);
+    assert.equal(audio.isPlaying, true);
+
+    timers.advance(1500 + 3000);
+    assert.deepEqual(state(player), { phase: "audio", segment: 2 });
+    audio.finish();
+    assert.deepEqual(state(player), { phase: "ended", segment: 0 }, "Play starts over");
+    assert.equal(timers.pendingCount, 0);
+  });
+
+  it("repeats one sentence while looping", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.playSegment(1, 1);
+    await loadPassage(1);
+    assert.equal(audio.currentTime, 1);
+    player.togglePassageLoop(1);
+
+    timers.advance(1500);
+    assert.deepEqual(state(player), { phase: "yourTurn", segment: 1 });
+    timers.advance(3000);
+    assert.deepEqual(state(player), { phase: "audio", segment: 1 });
+    assert.equal(audio.currentTime, 1);
+  });
+
+  it("keeps looping when moving to another sentence of the passage", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassageLoop(1);
+    await loadPassage(1);
+
+    player.playSegment(1, 2);
+
+    assert.deepEqual(state(player), { phase: "audio", segment: 2 });
+    assert.equal(player.getState().isPassageLooping, true);
+    assert.equal(audio.currentTime, 2.25);
+    assert.equal(audio.isPlaying, true);
+  });
+
+  it("goes on to the next sentence when looping is turned off during the learner's turn", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassageLoop(1);
+    await loadPassage(1);
+    timers.advance(1250);
+
+    player.togglePassageLoop(1);
+    assert.deepEqual(state(player), { phase: "yourTurn", segment: 0 });
+    timers.advance(3000);
+    assert.deepEqual(state(player), { phase: "audio", segment: 1 });
+  });
+
+  it("waits for audio that started late before ending a sentence", async () => {
+    audio.startLatencyMs = 100;
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassage(1);
+    await loadPassage(1);
+
+    timers.advance(1250);
+    assert.equal(player.getState().phase, "audio");
+    timers.advance(100);
+    assert.equal(player.getState().phase, "yourTurn");
+  });
+
+  it("ends a sentence on time after the speed changes", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassage(1);
+    await loadPassage(1);
+    timers.advance(750);
+
+    player.setSpeed(0.5);
+
+    timers.advance(999);
+    assert.equal(player.getState().phase, "audio");
+    timers.advance(1);
+    assert.equal(player.getState().phase, "yourTurn");
+  });
+
+  it("gives as long as the sentence takes at the current speed", async () => {
+    const player = createPlayer({ unit: "sentence", repeatPause: "clipLength", speed: 0.5 });
+    player.togglePassage(1);
+    await loadPassage(1);
+    timers.advance(2500);
+    assert.equal(player.getState().phase, "yourTurn");
+    assert.equal(player.getState().turnTotalMs, 2500);
+  });
+
+  it("moves to the sentence at the point the learner seeks to", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassage(1);
+    await loadPassage(1);
+
+    player.seek(2);
+
+    assert.deepEqual(state(player), { phase: "audio", segment: 1 });
+    timers.advance(500);
+    assert.deepEqual(state(player), { phase: "yourTurn", segment: 1 });
+  });
+
+  it("stops the passage when the unit changes, then plays its first sentence", async () => {
+    const player = createPlayer();
+    player.togglePassage(1);
+    await loadPassage(1);
+    audio.currentTime = 3;
+
+    player.setUnit("sentence");
+    assert.equal(player.getState().mode, "idle");
+    assert.equal(audio.isPlaying, false);
+
+    player.togglePassage(1);
+    await settle();
+    assert.deepEqual(clipRequests, [[1, "sentence"]]);
+    assert.deepEqual(state(player), { phase: "audio", segment: 0 });
+    assert.equal(audio.currentTime, 0);
+    assert.equal(audio.isPlaying, true);
+  });
+
+  it("plays a passage whole when its sentences are not known", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.togglePassage(2);
+    await loadPassage(2);
+    assert.equal(timers.pendingCount, 0);
+    audio.finish();
+    assert.equal(player.getState().phase, "ended");
+  });
+
+  it("leaves the article whole", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.toggleArticle();
+    await loadPassage(0);
+    audio.finish();
+    await loadPassage(1);
+
+    timers.advance(1250);
+    assert.equal(player.getState().phase, "audio");
+    assert.equal(timers.pendingCount, 0);
+    assert.deepEqual(clipRequests, []);
   });
 });
 
@@ -387,6 +604,7 @@ describe("switching between the article and single passages", () => {
         index === 0
           ? new Promise((resolve) => (resolveFirst = resolve))
           : Promise.resolve(urlOf(index)),
+      passageClips: (index) => Promise.resolve(clipsOf(index)),
     });
     player.togglePassage(0);
     player.togglePassage(1);
@@ -418,9 +636,9 @@ describe("leaving the screen", () => {
 });
 
 describe("repeatPauseMs", () => {
-  it("matches the passage at the playback speed", () => {
-    assert.equal(repeatPauseMs("passageLength", 3, 1), 3000);
-    assert.equal(repeatPauseMs("passageLength", 3, 1.25), 2400);
+  it("matches the clip at the playback speed", () => {
+    assert.equal(repeatPauseMs("clipLength", 3, 1), 3000);
+    assert.equal(repeatPauseMs("clipLength", 3, 1.25), 2400);
     assert.equal(repeatPauseMs("none", 3, 1), 0);
     assert.equal(repeatPauseMs("fiveSeconds", 3, 0.6), 5000);
   });

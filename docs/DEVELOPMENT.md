@@ -72,7 +72,7 @@ tag, which must look like `v1.2.3`. A new release gets the download instructions
 ```bash
 cargo test --manifest-path src-tauri/Cargo.toml     # parsing, cache keys, TTS requests, answer comparison, database, export/import, IPC commands
 pnpm build                     # TypeScript type check + frontend build
-pnpm test                      # shadowing player: modes, repeat pause, switching, cleanup
+pnpm test                      # shadowing: player modes, sentences and phrases, repeat pause, cleanup
 ```
 
 ## Implementation Notes
@@ -230,7 +230,9 @@ src/
     │   ├── ArticlePlayer.tsx         play the whole article, restart, loop
     │   ├── PassageRow.tsx            one passage: its player, "Your turn" countdown, text
     │   ├── shadowingPlayer.ts        the one player: article and passage modes, repeat pause
-    │   └── useShadowingPlayer.ts     creates it, renders its state, stops it on leaving
+    │   ├── useShadowingPlayer.ts     creates it, renders its state, stops it on leaving
+    │   ├── passageSegments.ts        cuts a passage into sentences or phrases at the audio's pauses
+    │   └── usePassageTimings.ts      decodes each passage's audio to find those pauses
     └── practice/     dictation
         ├── PracticeScreen.tsx        loads the lesson and player preferences
         ├── PracticeSession.tsx       all items as cards; wires player, answers and shortcuts
@@ -253,5 +255,15 @@ The shadowing screen uses the same items and cached audio but keeps nothing: no 
 statistics, and its speed and pause choices last for the visit only. One `ShadowingPlayer` owns its
 single audio element and the "Your turn" timer, so the article and a looping passage never overlap,
 and leaving the screen stops both.
+
+Practising by sentence or phrase needs no extra TTS requests and no timestamps from the provider.
+`usePassageTimings` decodes each passage's cached MP3 with Web Audio and `findPauses` lists its
+silences. `segmentPassage` splits the text at sentence ends (and, for phrases, at commas, semicolons,
+colons and dashes) and matches each boundary to a pause near where its share of the letters puts
+it. A pause must last as long as saying about 2.5 letters at that passage's measured speaking rate,
+so the closures inside words like "act" never count, at any speed. Boundaries without a pause are
+dropped, so a clip never starts or stops inside a word. The player then plays a passage as a list of
+clips (one clip when practised whole) and stops each one with a timer that it checks against the
+audio's position.
 
 ---

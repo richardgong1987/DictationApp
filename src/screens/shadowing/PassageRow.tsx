@@ -1,12 +1,14 @@
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, type KeyboardEvent } from "react";
 import type { ItemDetail } from "../../api/types";
 import { formatTime } from "../../format";
-import { isRunning, type ShadowingState } from "./shadowingPlayer";
+import type { Segment } from "./passageSegments";
+import { isRunning, type RepeatUnit, type ShadowingState } from "./shadowingPlayer";
 
 export interface PassageCommands {
   togglePlay: () => void;
   replay: () => void;
   toggleLoop: () => void;
+  playSegment: (segment: number) => void;
   seek: (seconds: number) => void;
   retry: () => void;
 }
@@ -15,6 +17,9 @@ interface Props {
   item: ItemDetail;
   /** The player's state while this passage is the one in it; null otherwise. */
   playback: ShadowingState | null;
+  unit: RepeatUnit;
+  /** Its sentences or phrases, once its audio has been measured; null when practised whole. */
+  segments: Segment[] | null;
   /** Length of this passage's audio, once known. */
   knownDuration: number | undefined;
   isTextShown: boolean;
@@ -22,7 +27,15 @@ interface Props {
 }
 
 /** One passage: its own player for repeated practice, and its original text. */
-export default function PassageRow({ item, playback, knownDuration, isTextShown, commands }: Props) {
+export default function PassageRow({
+  item,
+  playback,
+  unit,
+  segments,
+  knownDuration,
+  isTextShown,
+  commands,
+}: Props) {
   const rowRef = useRef<HTMLLIElement>(null);
   const isPractising = playback?.mode === "passage";
   const isInArticle = playback?.mode === "article";
@@ -33,6 +46,8 @@ export default function PassageRow({ item, playback, knownDuration, isTextShown,
   const currentTime = playback?.currentTime ?? 0;
   const canSeek =
     playback !== null && length > 0 && playback.phase !== "loading" && playback.phase !== "failed";
+  const hasParts = segments !== null && segments.length > 1;
+  const currentSegment = isPractising ? playback.segment : null;
 
   // Follow the article as it moves from passage to passage.
   useEffect(() => {
@@ -55,12 +70,21 @@ export default function PassageRow({ item, playback, knownDuration, isTextShown,
           <button
             type="button"
             onClick={commands.replay}
-            title="Replay from the beginning"
-            aria-label="Replay from the beginning"
+            title={`Replay this ${unit} from its beginning`}
+            aria-label={`Replay this ${unit} from its beginning`}
           >
             ↺
           </button>
         </div>
+
+        {hasParts && (
+          <SegmentStepper
+            unit={unit}
+            current={currentSegment ?? 0}
+            count={segments.length}
+            playSegment={commands.playSegment}
+          />
+        )}
 
         {playback?.phase === "yourTurn" ? (
           <YourTurn
@@ -90,13 +114,24 @@ export default function PassageRow({ item, playback, knownDuration, isTextShown,
           className={isLooping ? "toggle on" : "toggle"}
           onClick={commands.toggleLoop}
           aria-pressed={isLooping}
-          title="Repeat this passage, with time to repeat it aloud in between"
+          title={`Repeat this ${unit}, with time to repeat it aloud in between`}
         >
-          ⟳ Loop passage
+          ⟳ Loop {unit}
         </button>
       </div>
 
-      {isTextShown && <p className="original-text">{item.text}</p>}
+      {isTextShown &&
+        (hasParts ? (
+          <SegmentedText
+            text={item.text}
+            segments={segments}
+            current={currentSegment}
+            unit={unit}
+            playSegment={commands.playSegment}
+          />
+        ) : (
+          <p className="original-text">{item.text}</p>
+        ))}
 
       {isPractising && playback.phase === "failed" && (
         <div className="banner error" role="alert">
@@ -110,7 +145,88 @@ export default function PassageRow({ item, playback, knownDuration, isTextShown,
   );
 }
 
-/** Takes the timeline's place while the learner repeats the passage aloud. */
+/** Moves to the previous or next sentence or phrase; also usable while the text is hidden. */
+function SegmentStepper({
+  unit,
+  current,
+  count,
+  playSegment,
+}: {
+  unit: RepeatUnit;
+  current: number;
+  count: number;
+  playSegment: (segment: number) => void;
+}) {
+  return (
+    <div className="segment-stepper">
+      <button
+        type="button"
+        onClick={() => playSegment(current - 1)}
+        disabled={current === 0}
+        title={`Previous ${unit}`}
+        aria-label={`Previous ${unit}`}
+      >
+        ‹
+      </button>
+      <span className="segment-count" aria-label={`${unit} ${current + 1} of ${count}`}>
+        {current + 1}/{count}
+      </span>
+      <button
+        type="button"
+        onClick={() => playSegment(current + 1)}
+        disabled={current + 1 >= count}
+        title={`Next ${unit}`}
+        aria-label={`Next ${unit}`}
+      >
+        ›
+      </button>
+    </div>
+  );
+}
+
+/** The passage's text, where clicking a sentence or phrase plays it. */
+function SegmentedText({
+  text,
+  segments,
+  current,
+  unit,
+  playSegment,
+}: {
+  text: string;
+  segments: Segment[];
+  /** The one in the player, if this passage is. */
+  current: number | null;
+  unit: RepeatUnit;
+  playSegment: (segment: number) => void;
+}) {
+  const onKeyDown = (event: KeyboardEvent, segment: number) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    playSegment(segment);
+  };
+  return (
+    <p className="original-text">
+      {segments.map((segment, index) => (
+        <Fragment key={segment.from}>
+          {text.slice(index === 0 ? 0 : segments[index - 1].to, segment.from)}
+          <span
+            role="button"
+            tabIndex={0}
+            className={index === current ? "segment current" : "segment"}
+            onClick={() => playSegment(index)}
+            onKeyDown={(event) => onKeyDown(event, index)}
+            title={`Play this ${unit}`}
+          >
+            {text.slice(segment.from, segment.to)}
+          </span>
+        </Fragment>
+      ))}
+      {text.slice(segments[segments.length - 1].to)}
+    </p>
+  );
+}
+
+/** Takes the timeline's place while the learner repeats what they heard aloud. */
 function YourTurn({
   remainingMs,
   totalMs,

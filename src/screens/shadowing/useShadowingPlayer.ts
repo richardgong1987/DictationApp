@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ItemDetail } from "../../api/types";
 import type { AudioUrlFor } from "../../audio/itemAudio";
+import { segmentPassage } from "./passageSegments";
 import { isRunning, ShadowingPlayer, type Timers } from "./shadowingPlayer";
+import type { TimingFor } from "./usePassageTimings";
 
 const BROWSER_TIMERS: Timers = {
   now: () => performance.now(),
@@ -13,12 +15,16 @@ const BROWSER_TIMERS: Timers = {
  * The shadowing screen's one player, with its state for rendering. Leaving
  * the screen stops playback and cancels the countdown and pending loads.
  */
-export function useShadowingPlayer(items: ItemDetail[], audioUrlFor: AudioUrlFor) {
+export function useShadowingPlayer(
+  items: ItemDetail[],
+  audioUrlFor: AudioUrlFor,
+  timingFor: TimingFor,
+) {
   // The player asks for audio long after rendering; it should see the latest items.
-  const latest = useRef({ items, audioUrlFor });
+  const latest = useRef({ items, audioUrlFor, timingFor });
   useEffect(() => {
-    latest.current = { items, audioUrlFor };
-  }, [items, audioUrlFor]);
+    latest.current = { items, audioUrlFor, timingFor };
+  }, [items, audioUrlFor, timingFor]);
 
   const [player] = useState(
     () =>
@@ -27,6 +33,16 @@ export function useShadowingPlayer(items: ItemDetail[], audioUrlFor: AudioUrlFor
         timers: BROWSER_TIMERS,
         passageCount: items.length,
         passageUrl: (index) => latest.current.audioUrlFor(latest.current.items[index]),
+        passageClips: async (index, unit) => {
+          const item = latest.current.items[index];
+          try {
+            const timing = await latest.current.timingFor(item);
+            return segmentPassage(item.text, timing, unit).map((segment) => segment.clip);
+          } catch {
+            // Unmeasured audio plays whole; a failed load is reported through passageUrl.
+            return [];
+          }
+        },
       }),
   );
   const state = useSyncExternalStore(player.subscribe, player.getState);

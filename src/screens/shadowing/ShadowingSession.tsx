@@ -1,20 +1,28 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PLAYBACK_SPEEDS } from "../../api/constants";
 import type { ItemDetail, Lesson } from "../../api/types";
-import { useAudioDurations, useAudioUrls } from "../../audio/itemAudio";
+import { useAudioUrls } from "../../audio/itemAudio";
 import { EyeIcon, EyeOffIcon } from "../../components/EyeIcons";
 import { formatSpeed } from "../../format";
 import type { Navigate } from "../../navigation";
 import ArticlePlayer from "./ArticlePlayer";
 import PassageRow from "./PassageRow";
-import type { RepeatPause } from "./shadowingPlayer";
+import { segmentPassage, type Segment } from "./passageSegments";
+import type { RepeatPause, RepeatUnit } from "./shadowingPlayer";
+import { usePassageTimings } from "./usePassageTimings";
 import { useShadowingPlayer } from "./useShadowingPlayer";
+
+const REPEAT_UNITS: { value: RepeatUnit; label: string }[] = [
+  { value: "passage", label: "Whole passage" },
+  { value: "sentence", label: "Sentence" },
+  { value: "phrase", label: "Phrase" },
+];
 
 const REPEAT_PAUSES: { value: RepeatPause; label: string }[] = [
   { value: "none", label: "No pause" },
   { value: "threeSeconds", label: "3 seconds" },
   { value: "fiveSeconds", label: "5 seconds" },
-  { value: "passageLength", label: "Match passage length" },
+  { value: "clipLength", label: "Match the audio's length" },
 ];
 
 interface Props {
@@ -35,8 +43,20 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
     setItems((list) => list.map((i) => (i.id === updated.id ? updated : i)));
   }, []);
   const audioUrlFor = useAudioUrls(updateItem);
-  const durations = useAudioDurations(items, audioUrlFor);
-  const { state, player } = useShadowingPlayer(items, audioUrlFor);
+  const { timings, timingFor } = usePassageTimings(items, audioUrlFor);
+  const { state, player } = useShadowingPlayer(items, audioUrlFor, timingFor);
+
+  const { unit } = state;
+  // Kept between renders: the player re-renders the screen on every frame while audio plays.
+  const segmentsById = useMemo(() => {
+    const byId = new Map<number, Segment[]>();
+    if (unit === "passage") return byId;
+    for (const item of items) {
+      const timing = timings.get(item.id);
+      if (timing) byId.set(item.id, segmentPassage(item.text, timing, unit));
+    }
+    return byId;
+  }, [items, timings, unit]);
 
   return (
     <main className="page shadowing">
@@ -81,19 +101,37 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
 
       <div className="passages-heading">
         <h2>Passages</h2>
-        <label className="inline-field" title="Pause between repetitions while a passage loops">
-          Time to repeat aloud
-          <select
-            value={state.repeatPause}
-            onChange={(e) => player.setRepeatPause(e.target.value as RepeatPause)}
+        <div className="actions">
+          <label
+            className="inline-field"
+            title="Practice a passage whole, one sentence at a time, or in short phrases split at commas"
           >
-            {REPEAT_PAUSES.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+            Practice by
+            <select value={unit} onChange={(e) => player.setUnit(e.target.value as RepeatUnit)}>
+              {REPEAT_UNITS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label
+            className="inline-field"
+            title="Pause after each sentence or phrase, and between repetitions while looping"
+          >
+            Time to repeat aloud
+            <select
+              value={state.repeatPause}
+              onChange={(e) => player.setRepeatPause(e.target.value as RepeatPause)}
+            >
+              {REPEAT_PAUSES.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       <ol className="practice-list">
@@ -102,12 +140,15 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
             key={item.id}
             item={item}
             playback={state.mode !== "idle" && state.index === index ? state : null}
-            knownDuration={durations.get(item.id)}
+            unit={unit}
+            segments={segmentsById.get(item.id) ?? null}
+            knownDuration={timings.get(item.id)?.duration}
             isTextShown={isTextShown}
             commands={{
               togglePlay: () => player.togglePassage(index),
               replay: () => player.replayPassage(index),
               toggleLoop: () => player.togglePassageLoop(index),
+              playSegment: (segment) => player.playSegment(index, segment),
               seek: (seconds) => player.seek(seconds),
               retry: () => player.retry(),
             }}

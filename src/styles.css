@@ -707,6 +707,44 @@ button.text-toggle {
   margin: 0;
 }
 
+.segment-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.segment-count {
+  min-width: 3.2em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* A sentence or phrase of the text; clicking it plays it. The underline
+   stops at the space between two of them, which shows where they split. */
+.segment {
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: underline dotted var(--muted);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.segment:hover,
+.segment:focus-visible {
+  background: var(--info-bg);
+  outline: none;
+}
+
+/* The one in the player. */
+.segment.current {
+  background: var(--info-bg);
+  text-decoration: none;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
 .your-turn {
   color: var(--accent);
 }
