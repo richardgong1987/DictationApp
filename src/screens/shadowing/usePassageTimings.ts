@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { api } from "../../api/client";
 import type { ItemDetail } from "../../api/types";
 import type { AudioUrlFor } from "../../audio/itemAudio";
 import { findPauses, type PassageTiming } from "./passageSegments";
@@ -23,7 +24,16 @@ export function usePassageTimings(items: ItemDetail[], audioUrlFor: AudioUrlFor)
     (item) => {
       const known = requested.current.get(item.id);
       if (known) return known;
-      const timing = audioUrlFor(item).then(measureTiming);
+      // audioUrlFor generates the audio first if needed. The bytes are then read
+      // again rather than fetched from the Blob URL: the app's CSP refuses that fetch.
+      const timing = audioUrlFor(item)
+        .then(() => api.getItemAudio(item.id))
+        .then(measureTiming)
+        .catch((error: unknown) => {
+          // The passage still plays, only whole; say why it could not be split.
+          console.error(`Could not find the pauses in passage ${item.position}:`, error);
+          throw error;
+        });
       requested.current.set(item.id, timing);
       timing.then(
         (measured) => setTimings((all) => new Map(all).set(item.id, measured)),
@@ -58,10 +68,9 @@ export function usePassageTimings(items: ItemDetail[], audioUrlFor: AudioUrlFor)
   return { timings, timingFor };
 }
 
-async function measureTiming(url: string): Promise<PassageTiming> {
-  const response = await fetch(url);
+async function measureTiming(mp3: ArrayBuffer): Promise<PassageTiming> {
   const context = new OfflineAudioContext(1, 1, ANALYSIS_SAMPLE_RATE);
-  const audio = await context.decodeAudioData(await response.arrayBuffer());
+  const audio = await context.decodeAudioData(mp3);
   return {
     duration: audio.duration,
     pauses: findPauses(audio.getChannelData(0), audio.sampleRate),
