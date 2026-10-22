@@ -113,7 +113,7 @@ const INITIAL_STATE: ShadowingState = {
   ...STOPPED,
   isArticleLooping: false,
   speed: 1,
-  repeatPause: "threeSeconds",
+  repeatPause: "none",
   unit: "passage",
 };
 
