@@ -11,8 +11,9 @@ const UNTITLED: &str = "Untitled lesson";
 /// A title derived from pasted text keeps at most this many opening words.
 const TITLE_WORDS: usize = 8;
 
+/// One block of lesson text, about to become a dictation item.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ParsedItem {
+pub struct Passage {
     /// 1-based position inside the lesson.
     pub position: i64,
     pub text: String,
@@ -27,14 +28,14 @@ pub struct ParsedItem {
 ///   with a single space so the passage reads (and is spoken) as one block;
 /// - empty items are ignored;
 /// - punctuation is preserved.
-pub fn parse_lesson(content: &str) -> Vec<ParsedItem> {
+pub fn parse_lesson(content: &str) -> Vec<Passage> {
     let content = content.strip_prefix('\u{feff}').unwrap_or(content);
     let lines: Vec<&str> = content.lines().map(str::trim).collect();
     lines
         .split(|line| line.is_empty())
         .filter(|passage| !passage.is_empty())
         .zip(1..)
-        .map(|(passage, position)| ParsedItem {
+        .map(|(passage, position)| Passage {
             position,
             text: passage.join(" "),
         })

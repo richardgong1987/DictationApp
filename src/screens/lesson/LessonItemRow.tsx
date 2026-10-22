@@ -9,16 +9,21 @@ interface Props {
   isBusy: boolean;
   /** The whole lesson's audio is being generated. */
   isLessonGenerating: boolean;
+  /** The lesson's only passage cannot be deleted. */
+  canDelete: boolean;
   onRegenerate: () => void;
   onPractice: () => void;
+  onDelete: () => void;
 }
 
 export default function LessonItemRow({
   item,
   isBusy,
   isLessonGenerating,
+  canDelete,
   onRegenerate,
   onPractice,
+  onDelete,
 }: Props) {
   return (
     <li className="card item-row">
@@ -47,6 +52,15 @@ export default function LessonItemRow({
         </button>
         <button onClick={onPractice} title="Start dictation from this item">
           ▶
+        </button>
+        <button
+          onClick={onDelete}
+          disabled={!canDelete || isLessonGenerating || isBusy}
+          title={
+            canDelete ? "Remove this passage from the lesson" : "A lesson keeps at least one passage"
+          }
+        >
+          Delete
         </button>
       </div>
     </li>

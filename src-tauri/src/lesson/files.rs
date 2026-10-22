@@ -79,6 +79,14 @@ impl LessonFiles {
         std::fs::read(self.data_dir.join(audio_path))
     }
 
+    /// Audio that was never generated counts as deleted.
+    pub fn delete_audio(&self, audio_path: &str) -> io::Result<()> {
+        match std::fs::remove_file(self.data_dir.join(audio_path)) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+            result => result,
+        }
+    }
+
     /// Writes through a temporary file so a failed or interrupted write never
     /// leaves a truncated MP3 behind.
     pub fn write_audio(&self, audio_path: &str, audio: &[u8]) -> io::Result<()> {

@@ -148,10 +148,16 @@ the corresponding credential fields; overridden inputs are disabled. See
 | **Generate missing audio** | Reuses ready clips and generates missing or outdated clips. |
 | **Regenerate** on a passage | Forces fresh synthesis for that passage, even if it is ready. |
 | **Regenerate all** | After confirmation, forces fresh synthesis for every passage. |
+| **Delete** on a passage | After confirmation, removes that passage with its audio and practice history. |
 
 Generation shows progress and then counts of generated, cached and failed clips. If some fail,
 fix the credentials, connection or quota problem and run **Generate missing audio** again; ready
 clips are reused. Clips are generated sequentially.
+
+A passage that is only symbols, such as a `---` divider copied from formatted text, may never
+generate audio. **Delete** it instead. The other passages keep their numbers, so the list skips the
+deleted one's number. A lesson keeps at least one passage. Lessons exported afterwards arrive on
+other devices without the deleted passages; a copy already on another device keeps them.
 
 **Player Speed** changes local playback without provider requests. **Speaking rate**, voice,
 provider, ElevenLabs model, and Azure pitch affect synthesis/cache matching. There is one stored
@@ -325,7 +331,7 @@ but there is no combined whole-article audio export.
 | Situation | What to check |
 |---|---|
 | Text-to-speech is not configured | Configure the selected provider if new audio is needed. A matching imported/cached MP3 can still play. |
-| Audio count is lower than the passage count | Inspect **No audio** and **Voice changed** in lesson detail. Generate missing audio or align the voice settings. |
+| Audio count is lower than the passage count | Inspect **No audio** and **Voice changed** in lesson detail. Generate missing audio or align the voice settings. A passage of only symbols that keeps failing can be deleted. |
 | No sound or playback failure | Check system volume/output, then **Retry**. For missing/outdated audio, also check credentials, internet and provider quota. |
 | ZIP import is rejected | Select an intact DictationApp export ZIP, not its extracted directory or another kind of archive. If it was made by a newer export format, update the receiving app. |
 | Import stopped halfway | Resolve the reported error and import the same ZIP again. Already added lessons/audio are kept. |

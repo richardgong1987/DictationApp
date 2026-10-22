@@ -160,6 +160,18 @@ impl LessonRepository {
             .ok_or(AppError::ItemNotFound)
     }
 
+    /// The item's attempts and saved answer go with it (`ON DELETE CASCADE`).
+    pub fn delete_item(&self, id: i64) -> AppResult<()> {
+        let deleted = self
+            .database
+            .connection()
+            .execute("DELETE FROM dictation_items WHERE id = ?1", [id])?;
+        if deleted == 0 {
+            return Err(AppError::ItemNotFound);
+        }
+        Ok(())
+    }
+
     pub fn set_item_audio(&self, id: i64, audio_path: &str, cache_key: &str) -> AppResult<()> {
         self.database.connection().execute(
             "UPDATE dictation_items SET audio_path = ?1, audio_cache_key = ?2 WHERE id = ?3",

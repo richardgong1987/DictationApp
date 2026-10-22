@@ -60,6 +60,8 @@ If I had known about the problem, I would have called you.
 
 **Regenerate all** 会重新生成所有音频，并消耗服务额度；不需要为了重复练习而点击它。
 
+如果某个段落只有符号（例如从排版文本复制来的 `---` 分隔线），可能一直无法生成音频。点击该段落的 **Delete**，确认后即可删除它及其音频和练习记录。其他段落保持原编号，所以列表会跳过被删段落的编号。每篇课程至少保留一个段落。
+
 ## 4. 听写：Dictation
 
 在课程卡片或课程详情中点击 **Dictation**。

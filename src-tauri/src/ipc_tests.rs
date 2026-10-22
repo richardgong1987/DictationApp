@@ -409,6 +409,74 @@ fn pinned_lesson_stays_on_top_after_restart() {
 }
 
 #[test]
+fn a_deleted_passage_stays_deleted_on_other_devices() {
+    fn numbered_passages(detail: &Value) -> Vec<(i64, String)> {
+        detail["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|item| {
+                let text = item["text"].as_str().unwrap().to_string();
+                (item["position"].as_i64().unwrap(), text)
+            })
+            .collect()
+    }
+    let phone = Harness::new();
+    let lesson = phone.paste_lesson("Chapter", "One.\n\n---\n\nThree.");
+    let lesson_id = lesson["lesson"]["id"].as_str().unwrap();
+    let items = lesson["items"].as_array().unwrap();
+    for item in items {
+        phone.fake_generated_audio(lesson_id, item);
+    }
+    let stray = &items[1]["id"];
+    phone
+        .call(
+            "check_answer",
+            json!({ "itemId": stray, "answer": "---", "replayCount": 0 }),
+        )
+        .unwrap();
+
+    phone
+        .call("delete_item", json!({ "itemId": stray }))
+        .unwrap();
+
+    let detail = phone.lesson(&lesson["lesson"]["id"]);
+    let kept = vec![(1, "One.".to_string()), (3, "Three.".to_string())];
+    assert_eq!(numbered_passages(&detail), kept);
+    assert_eq!(detail["items"][1]["audioStatus"], "ready");
+    let audio_dir = phone
+        .dir
+        .path()
+        .join("lessons")
+        .join(lesson_id)
+        .join("audio");
+    assert!(!audio_dir.join("002.mp3").exists());
+
+    let mac = Harness::new();
+    let exports = tempfile::tempdir().unwrap();
+    let summary = mac.import(&phone.export_to(&exports));
+    assert_eq!(summary["addedAudio"], 2);
+    let imported = mac.lesson(&lesson["lesson"]["id"]);
+    assert_eq!(numbered_passages(&imported), kept);
+    assert_eq!(imported["items"][1]["audioStatus"], "ready");
+
+    let err = phone
+        .call("delete_item", json!({ "itemId": stray }))
+        .unwrap_err();
+    assert_eq!(err, "Dictation item not found");
+    phone
+        .call("delete_item", json!({ "itemId": items[0]["id"] }))
+        .unwrap();
+    let err = phone
+        .call("delete_item", json!({ "itemId": items[2]["id"] }))
+        .unwrap_err();
+    assert_eq!(
+        err,
+        "This is the lesson's only passage. Delete the lesson instead."
+    );
+}
+
+#[test]
 fn missing_audio_without_credentials_is_a_clear_error() {
     let h = Harness::new();
     let path = h.write_lesson_file("l.txt", "One.\n\nTwo.");

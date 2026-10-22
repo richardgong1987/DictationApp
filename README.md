@@ -248,7 +248,8 @@ them, but are still allowed. Short blocks make replaying difficult sentences eas
 When credentials are configured, creating a lesson starts audio generation automatically.
 On the lesson detail page, **Generate missing audio** fills gaps and updates outdated clips.
 Wait for the audio count to reach the number of items before an uninterrupted practice session.
-If some clips fail, check Settings and your connection, then retry generation.
+If some clips fail, check Settings and your connection, then retry generation. A passage that cannot
+be spoken, such as a `---` divider, can be removed with its **Delete** button.
 
 Audio is saved locally and shared by both modes. **Regenerate all** forces new synthesis requests;
 use it when you deliberately want to replace the audio.

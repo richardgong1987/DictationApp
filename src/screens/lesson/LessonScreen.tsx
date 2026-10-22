@@ -114,6 +114,21 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
     }
   }
 
+  async function deleteItem(item: ItemDetail) {
+    const confirmed = await ask(
+      `Delete passage ${item.position} ("${item.text}")? Its audio and practice history are removed too.`,
+      { title: "Delete passage", kind: "warning", okLabel: "Delete", cancelLabel: "Cancel" },
+    );
+    if (!confirmed) return;
+    setError(null);
+    try {
+      await api.deleteItem(item.id);
+      setDetail((d) => d && { ...d, items: d.items.filter((i) => i.id !== item.id) });
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
+
   if (!detail) {
     return (
       <LoadingPage backLabel="Lessons" onBack={() => navigate({ name: "library" })} error={error} />
@@ -201,8 +216,10 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
             item={item}
             isBusy={busyItemIds.has(item.id)}
             isLessonGenerating={generation.isGenerating}
+            canDelete={items.length > 1}
             onRegenerate={() => regenerateItem(item.id)}
             onPractice={() => practiceFrom(index)}
+            onDelete={() => deleteItem(item)}
           />
         ))}
       </ol>

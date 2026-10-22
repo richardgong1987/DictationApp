@@ -76,6 +76,12 @@ pub fn delete_lesson(state: State<'_, AppState>, lesson_id: String) -> AppResult
     state.lessons.delete(&lesson_id)
 }
 
+/// Removes one passage with its audio and practice history.
+#[tauri::command]
+pub fn delete_item(state: State<'_, AppState>, item_id: i64) -> AppResult<()> {
+    state.lessons.delete_item(item_id)
+}
+
 // ---------------------------------------------------------------------------
 // Moving lessons between devices. Async so that copying many MP3s runs off
 // the main thread.

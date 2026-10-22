@@ -30,6 +30,8 @@ export const api = {
   setLessonPinned: (lessonId: string, pinned: boolean) =>
     invoke<Lesson>("set_lesson_pinned", { lessonId, pinned }),
   deleteLesson: (lessonId: string) => invoke<void>("delete_lesson", { lessonId }),
+  /** Removes one passage with its audio and practice history; the others keep their numbers. */
+  deleteItem: (itemId: number) => invoke<void>("delete_item", { itemId }),
 
   /** Writes every lesson and its audio to one file at `path`. */
   exportLessons: (path: string) => invoke<ExportSummary>("export_lessons", { path }),

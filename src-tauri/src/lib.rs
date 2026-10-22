@@ -67,6 +67,7 @@ fn with_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
         commands::rename_lesson,
         commands::set_lesson_pinned,
         commands::delete_lesson,
+        commands::delete_item,
         commands::export_lessons,
         commands::import_lessons,
         commands::generate_lesson_audio,

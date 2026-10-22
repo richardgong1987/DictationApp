@@ -55,6 +55,9 @@ pub struct ExportedLesson {
     pub created_at: String,
     /// The lesson's text, as imported or pasted.
     pub source_text: String,
+    /// The passages the importing device creates, numbered as on the
+    /// exporting device. Passages deleted there are left out of these but
+    /// remain in `source_text`.
     pub items: Vec<ExportedItem>,
 }
 

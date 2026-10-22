@@ -5,6 +5,7 @@ use std::path::Path;
 use crate::audio::cache::{AudioCache, AudioStatus};
 use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
+use crate::lesson::parser::Passage;
 use crate::lesson::repository::LessonRepository;
 use crate::lesson::service::LessonService;
 use crate::lesson::{DictationItem, Lesson, LessonHeader};
@@ -134,8 +135,9 @@ impl TransferService {
         })
     }
 
-    /// Keeps the lesson's id, so importing it again finds it, and its creation
-    /// time, so both devices list lessons in the same order.
+    /// Keeps the lesson's id, so importing it again finds it, its creation
+    /// time, so both devices list lessons in the same order, and its passages
+    /// as numbered there, so passages deleted there stay deleted.
     fn add_lesson(&self, lesson: &ExportedLesson) -> AppResult<()> {
         let header = LessonHeader {
             id: lesson.id.clone(),
@@ -143,7 +145,16 @@ impl TransferService {
             source_path: None,
             created_at: lesson.created_at.clone(),
         };
-        self.lesson_service.add(header, &lesson.source_text)
+        let passages = lesson
+            .items
+            .iter()
+            .map(|item| Passage {
+                position: item.position,
+                text: item.text.clone(),
+            })
+            .collect();
+        self.lesson_service
+            .add(header, &lesson.source_text, passages)
     }
 
     fn copy_missing_audio(

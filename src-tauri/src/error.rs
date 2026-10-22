@@ -17,6 +17,8 @@ pub enum AppError {
     LessonTitleEmpty,
     #[error("Dictation item not found")]
     ItemNotFound,
+    #[error("This is the lesson's only passage. Delete the lesson instead.")]
+    LastItemOfLesson,
     #[error("Audio for this item not found")]
     AudioNotFound,
     #[error("Audio for this lesson is already being generated.")]

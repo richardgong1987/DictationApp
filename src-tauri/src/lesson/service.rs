@@ -1,11 +1,12 @@
-//! Lesson workflows: import, browse, rename, pin and delete.
+//! Lesson workflows: import, browse, rename, pin and delete, and delete
+//! single passages.
 
 use std::path::Path;
 
 use crate::audio::cache::{AudioCache, AudioStatus};
 use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
-use crate::lesson::parser::{parse_lesson, title_from_path, title_from_text};
+use crate::lesson::parser::{parse_lesson, title_from_path, title_from_text, Passage};
 use crate::lesson::repository::{LessonRepository, NewItem, NewLesson};
 use crate::lesson::{
     is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonHeader, LessonSummary,
@@ -68,10 +69,14 @@ impl LessonService {
         self.add_and_show(LessonHeader::new(title, None), content)
     }
 
-    /// Every passage between blank lines becomes one dictation item. Audio is
-    /// generated separately.
-    pub fn add(&self, header: LessonHeader, content: &str) -> AppResult<()> {
-        let passages = parse_lesson(content);
+    /// Each passage becomes one dictation item; `source_text` is kept as the
+    /// lesson's own copy of its text. Audio is generated separately.
+    pub fn add(
+        &self,
+        header: LessonHeader,
+        source_text: &str,
+        passages: Vec<Passage>,
+    ) -> AppResult<()> {
         if passages.is_empty() {
             return Err(AppError::LessonHasNoItems);
         }
@@ -93,7 +98,7 @@ impl LessonService {
             items,
         };
 
-        self.files.create_lesson_folder(&lesson_id, content)?;
+        self.files.create_lesson_folder(&lesson_id, source_text)?;
         if let Err(error) = self.lessons.insert(&lesson) {
             // Best-effort cleanup; the database error is the one worth reporting.
             let _ = self.files.delete_lesson_folder(&lesson_id);
@@ -102,9 +107,10 @@ impl LessonService {
         self.write_metadata(&lesson_id)
     }
 
+    /// Every block of text between blank lines becomes one dictation item.
     fn add_and_show(&self, header: LessonHeader, content: &str) -> AppResult<LessonDetail> {
         let lesson_id = header.id.clone();
-        self.add(header, content)?;
+        self.add(header, content, parse_lesson(content))?;
         self.detail(&lesson_id)
     }
 
@@ -152,6 +158,23 @@ impl LessonService {
         self.lessons.set_pinned(lesson_id, pinned)?;
         self.write_metadata(lesson_id)?;
         self.lessons.get(lesson_id)
+    }
+
+    /// Removes a passage the learner does not want, such as a stray `---`
+    /// that cannot be spoken, with its audio and practice history. The other
+    /// passages keep their numbers, and with them their audio files. A
+    /// lesson keeps at least one passage; deleting the lesson removes the last.
+    pub fn delete_item(&self, item_id: i64) -> AppResult<()> {
+        let item = self.lessons.get_item(item_id)?;
+        if self.lessons.items(&item.lesson_id)?.len() == 1 {
+            return Err(AppError::LastItemOfLesson);
+        }
+        self.lessons.delete_item(item_id)?;
+        if let Some(audio_path) = &item.audio_path {
+            self.files.delete_audio(audio_path)?;
+        }
+        self.lessons.touch(&item.lesson_id)?;
+        self.write_metadata(&item.lesson_id)
     }
 
     /// Removes the lesson, its practice history and its folder. A text file the
