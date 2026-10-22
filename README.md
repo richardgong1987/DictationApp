@@ -367,6 +367,8 @@ See the [full transfer guide](docs/USER_GUIDE.md#transfer-lessons-and-audio) for
   Environment variables can override them; see [credential setup](docs/DEVELOPMENT.md#run).
 - **Can I rename or delete a lesson?** Use **Rename** or **Delete** on its library card.
   Deletion removes the lesson and its audio from the app; an imported original `.txt` file is untouched.
+- **Can I keep a lesson from being pushed down by new ones?** Use **Pin to top** on its library card.
+  Pinned lessons stay above newer ones until you **Unpin** them.
 
 ## For developers
 

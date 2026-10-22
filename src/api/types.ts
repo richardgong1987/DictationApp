@@ -7,6 +7,8 @@ export interface Lesson {
   title: string;
   /** The imported file; null when the text was pasted. */
   sourcePath: string | null;
+  /** When the lesson was pinned to the top of the library; null when it is not pinned. */
+  pinnedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

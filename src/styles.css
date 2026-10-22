@@ -207,6 +207,14 @@ button.toggle.on {
   margin-top: 6px;
 }
 
+.lesson-card.pinned {
+  border-color: var(--accent);
+}
+
+.lesson-card .badge.pinned {
+  margin-right: 6px;
+}
+
 /* Lesson items: the number starts the first line and the text wraps under
    it; the counts and buttons below span the card's whole width. Nothing
    keeps a column of its own. */
@@ -323,7 +331,8 @@ button.title-button {
   color: var(--bad);
 }
 
-.badge.busy {
+.badge.busy,
+.badge.pinned {
   background: var(--info-bg);
   color: var(--accent);
 }

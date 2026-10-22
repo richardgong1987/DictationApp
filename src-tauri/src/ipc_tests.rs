@@ -363,6 +363,52 @@ fn renamed_title_is_trimmed_and_survives_restart() {
 }
 
 #[test]
+fn pinned_lesson_stays_on_top_after_restart() {
+    fn listed_titles(h: &Harness) -> Vec<String> {
+        let lessons = h.call("list_lessons", json!({})).unwrap();
+        lessons
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|lesson| lesson["title"].as_str().unwrap().to_string())
+            .collect()
+    }
+    let h = Harness::new();
+    let kept_id = h.paste_lesson("Kept article", LESSON)["lesson"]["id"].clone();
+    // Newer, or created in the same second and first by title.
+    h.paste_lesson("Another article", LESSON);
+    assert_eq!(listed_titles(&h), ["Another article", "Kept article"]);
+
+    let lesson = h
+        .call(
+            "set_lesson_pinned",
+            json!({ "lessonId": kept_id, "pinned": true }),
+        )
+        .unwrap();
+    assert!(lesson["pinnedAt"].is_string());
+
+    let h = h.restart();
+    assert_eq!(listed_titles(&h), ["Kept article", "Another article"]);
+
+    let lesson = h
+        .call(
+            "set_lesson_pinned",
+            json!({ "lessonId": kept_id, "pinned": false }),
+        )
+        .unwrap();
+    assert_eq!(lesson["pinnedAt"], Value::Null);
+    assert_eq!(listed_titles(&h), ["Another article", "Kept article"]);
+
+    let err = h
+        .call(
+            "set_lesson_pinned",
+            json!({ "lessonId": "no-such-lesson", "pinned": true }),
+        )
+        .unwrap_err();
+    assert_eq!(err, "Lesson not found");
+}
+
+#[test]
 fn missing_audio_without_credentials_is_a_clear_error() {
     let h = Harness::new();
     let path = h.write_lesson_file("l.txt", "One.\n\nTwo.");

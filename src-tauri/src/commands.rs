@@ -63,6 +63,15 @@ pub fn rename_lesson(
 }
 
 #[tauri::command]
+pub fn set_lesson_pinned(
+    state: State<'_, AppState>,
+    lesson_id: String,
+    pinned: bool,
+) -> AppResult<Lesson> {
+    state.lessons.set_pinned(&lesson_id, pinned)
+}
+
+#[tauri::command]
 pub fn delete_lesson(state: State<'_, AppState>, lesson_id: String) -> AppResult<()> {
     state.lessons.delete(&lesson_id)
 }

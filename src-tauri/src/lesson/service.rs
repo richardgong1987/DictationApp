@@ -1,4 +1,4 @@
-//! Lesson workflows: import, browse, rename and delete.
+//! Lesson workflows: import, browse, rename, pin and delete.
 
 use std::path::Path;
 
@@ -142,6 +142,14 @@ impl LessonService {
             return Err(AppError::LessonTitleEmpty);
         }
         self.lessons.rename(lesson_id, title)?;
+        self.write_metadata(lesson_id)?;
+        self.lessons.get(lesson_id)
+    }
+
+    /// A pinned lesson stays at the top of the library however many lessons
+    /// are added after it.
+    pub fn set_pinned(&self, lesson_id: &str, pinned: bool) -> AppResult<Lesson> {
+        self.lessons.set_pinned(lesson_id, pinned)?;
         self.write_metadata(lesson_id)?;
         self.lessons.get(lesson_id)
     }

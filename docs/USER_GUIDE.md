@@ -62,7 +62,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 
 | Screen | What you can do |
 |---|---|
-| **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, rename/delete lessons, or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
+| **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, pin/rename/delete lessons, or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
 | **Lesson detail** | Click a lesson title in the library. Read passages, inspect word counts and audio badges, generate audio, and see attempt counts/best accuracy. Click the heading to rename; click a passage's **▶** to start dictation at that item. |
 | **Dictation** | Listen, type, reveal/check, and review word differences. All items appear as cards; the active card has an accent border and highlighted number. Untouched inactive cards keep their answer boxes collapsed. |
 | **Shadowing** | Use the article player at the top or a passage's own player. Practice a passage whole, sentence by sentence or phrase by phrase. Show/hide all text, choose playback speed, and leave time to repeat aloud. |
@@ -298,7 +298,8 @@ Import itself does not call a TTS provider. Lessons match by ID, not title or te
 text, audio, answers and statistics are retained. Missing audio is filled only when the passage
 position and text match. Reimporting the same ZIP adds only what is still missing, including after
 an interrupted import. Separately importing the same `.txt` creates another lesson with a new ID,
-so matching titles do not prevent duplicates. Renames and deletions do not synchronize between devices.
+so matching titles do not prevent duplicates. Renames, pins and deletions do not synchronize between
+devices.
 
 ### What travels in the ZIP
 
@@ -334,6 +335,9 @@ but there is no combined whole-article audio export.
 Lessons, MP3s, answers, settings and statistics live in this device's app data folder, with SQLite
 holding the records. There are no app accounts or automatic cloud synchronization. Synthesis sends
 passage text to the selected provider and uses its quota; replaying ready audio is local.
+
+Lessons are listed newest first. **Pin to top** keeps a lesson above newer ones until you
+**Unpin** it; the most recently pinned lesson comes first.
 
 **Rename** changes the app's title only. **Delete**, after confirmation, removes the lesson, its
 local audio, saved answers and practice history. It leaves the original imported `.txt` and any

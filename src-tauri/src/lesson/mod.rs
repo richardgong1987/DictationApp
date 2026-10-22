@@ -24,6 +24,9 @@ pub struct Lesson {
     /// copied from another device. The lesson keeps its own copy of the text
     /// either way.
     pub source_path: Option<String>,
+    /// When the lesson was pinned to the top of the library; `None` when it
+    /// is not pinned. Pins stay on this device: exports leave them out.
+    pub pinned_at: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }

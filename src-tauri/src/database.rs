@@ -72,8 +72,14 @@ DROP TABLE lessons;
 ALTER TABLE lessons_v3 RENAME TO lessons;
 ";
 
+/// Pinned lessons stay at the top of the library. `pinned_at` is NULL when the
+/// lesson is not pinned.
+const SCHEMA_V4: &str = "
+ALTER TABLE lessons ADD COLUMN pinned_at TEXT;
+";
+
 /// Applied in order; `PRAGMA user_version` counts how many already ran.
-const MIGRATIONS: [&str; 3] = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3];
+const MIGRATIONS: [&str; 4] = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4];
 
 /// Shared handle to the application database; cloning it is cheap.
 #[derive(Clone)]
@@ -158,6 +164,12 @@ mod tests {
             })
             .unwrap();
         assert_eq!(title, "Old lesson");
+        let pinned_at: Option<String> = connection
+            .query_row("SELECT pinned_at FROM lessons WHERE id = 'a'", [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert_eq!(pinned_at, None);
         let answers: i64 = connection
             .query_row("SELECT COUNT(*) FROM answers", [], |row| row.get(0))
             .unwrap();
@@ -215,7 +227,8 @@ mod tests {
         // Pasted lessons store no path, and items still belong to their lesson.
         connection
             .execute(
-                "INSERT INTO lessons VALUES ('b', 'Pasted', NULL, 't', 't')",
+                "INSERT INTO lessons (id, title, source_path, created_at, updated_at)
+                     VALUES ('b', 'Pasted', NULL, 't', 't')",
                 [],
             )
             .unwrap();

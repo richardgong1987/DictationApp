@@ -74,6 +74,17 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
     }
   }
 
+  async function togglePinned(lesson: LessonSummary) {
+    setError(null);
+    try {
+      await api.setLessonPinned(lesson.id, lesson.pinnedAt === null);
+      // The library puts the lesson in its new place.
+      await refresh();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
+
   async function deleteLesson(lesson: LessonSummary) {
     const fileNote = lesson.sourcePath ? " Your original text file is not touched." : "";
     const confirmed = await ask(
@@ -147,8 +158,12 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
           {lessons.map((lesson) => {
             const isAudioComplete = lesson.audioReadyCount === lesson.itemCount;
             const isRenaming = renamingLessonId === lesson.id;
+            const isPinned = lesson.pinnedAt !== null;
             return (
-              <li key={lesson.id} className="card lesson-card">
+              <li
+                key={lesson.id}
+                className={isPinned ? "card lesson-card pinned" : "card lesson-card"}
+              >
                 {isRenaming ? (
                   <TitleInput
                     initialTitle={lesson.title}
@@ -164,6 +179,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                   </button>
                 )}
                 <div className="muted small">
+                  {isPinned && <span className="badge pinned">Pinned</span>}
                   {lesson.itemCount} items · audio {lesson.audioReadyCount}/{lesson.itemCount}
                   {lesson.longItemCount > 0 && (
                     <span className="warn-text">
@@ -182,6 +198,12 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                       Generate missing audio
                     </button>
                   )}
+                  <button
+                    onClick={() => togglePinned(lesson)}
+                    title={isPinned ? undefined : "Keep this lesson at the top of the list"}
+                  >
+                    {isPinned ? "Unpin" : "Pin to top"}
+                  </button>
                   <button onClick={() => setRenamingLessonId(lesson.id)} disabled={isRenaming}>
                     Rename
                   </button>

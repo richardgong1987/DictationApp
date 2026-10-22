@@ -26,6 +26,9 @@ export const api = {
   /** The title is trimmed and must not be blank. */
   renameLesson: (lessonId: string, title: string) =>
     invoke<Lesson>("rename_lesson", { lessonId, title }),
+  /** A pinned lesson stays at the top of the library, on this device only. */
+  setLessonPinned: (lessonId: string, pinned: boolean) =>
+    invoke<Lesson>("set_lesson_pinned", { lessonId, pinned }),
   deleteLesson: (lessonId: string) => invoke<void>("delete_lesson", { lessonId }),
 
   /** Writes every lesson and its audio to one file at `path`. */

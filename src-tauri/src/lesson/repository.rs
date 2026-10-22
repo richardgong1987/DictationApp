@@ -23,6 +23,9 @@ pub struct NewItem {
     pub audio_path: String,
 }
 
+/// Read in this order by [`lesson_from_row`].
+const LESSON_COLUMNS: &str = "id, title, source_path, pinned_at, created_at, updated_at";
+
 #[derive(Clone)]
 pub struct LessonRepository {
     database: Database,
@@ -52,12 +55,14 @@ impl LessonRepository {
         Ok(())
     }
 
-    /// Newest first.
+    /// Pinned lessons first, the most recently pinned on top; then the rest,
+    /// newest first.
     pub fn list(&self) -> AppResult<Vec<Lesson>> {
         let connection = self.database.connection();
-        let mut statement = connection.prepare(
-            "SELECT id, title, source_path, created_at, updated_at FROM lessons ORDER BY created_at DESC, title",
-        )?;
+        let mut statement = connection.prepare(&format!(
+            "SELECT {LESSON_COLUMNS} FROM lessons
+             ORDER BY pinned_at IS NULL, pinned_at DESC, created_at DESC, title"
+        ))?;
         let lessons = statement
             .query_map([], lesson_from_row)?
             .collect::<Result<_, _>>()?;
@@ -68,7 +73,7 @@ impl LessonRepository {
         self.database
             .connection()
             .query_row(
-                "SELECT id, title, source_path, created_at, updated_at FROM lessons WHERE id = ?1",
+                &format!("SELECT {LESSON_COLUMNS} FROM lessons WHERE id = ?1"),
                 [id],
                 lesson_from_row,
             )
@@ -91,6 +96,19 @@ impl LessonRepository {
             params![title, timestamp_now(), id],
         )?;
         if renamed == 0 {
+            return Err(AppError::LessonNotFound);
+        }
+        Ok(())
+    }
+
+    pub fn set_pinned(&self, id: &str, pinned: bool) -> AppResult<()> {
+        let now = timestamp_now();
+        let pinned_at = pinned.then_some(&now);
+        let updated = self.database.connection().execute(
+            "UPDATE lessons SET pinned_at = ?1, updated_at = ?2 WHERE id = ?3",
+            params![pinned_at, now, id],
+        )?;
+        if updated == 0 {
             return Err(AppError::LessonNotFound);
         }
         Ok(())
@@ -156,8 +174,9 @@ fn lesson_from_row(row: &Row<'_>) -> rusqlite::Result<Lesson> {
         id: row.get(0)?,
         title: row.get(1)?,
         source_path: row.get(2)?,
-        created_at: row.get(3)?,
-        updated_at: row.get(4)?,
+        pinned_at: row.get(3)?,
+        created_at: row.get(4)?,
+        updated_at: row.get(5)?,
     })
 }
 
@@ -223,6 +242,52 @@ mod tests {
         ));
         assert!(matches!(
             repository.delete("a"),
+            Err(AppError::LessonNotFound)
+        ));
+    }
+
+    #[test]
+    fn pinned_lessons_stay_above_newer_ones() {
+        let repository = LessonRepository::new(Database::open_in_memory().unwrap());
+        for (id, day) in [("old", 1), ("middle", 2), ("new", 3)] {
+            let lesson = NewLesson {
+                created_at: format!("2026-10-0{day}T08:00:00Z"),
+                ..new_lesson(id, &[])
+            };
+            repository.insert(&lesson).unwrap();
+        }
+        let listed_ids = || -> Vec<String> {
+            repository
+                .list()
+                .unwrap()
+                .into_iter()
+                .map(|lesson| lesson.id)
+                .collect()
+        };
+        let pin_at = |id: &str, pinned_at: &str| {
+            repository
+                .database
+                .connection()
+                .execute(
+                    "UPDATE lessons SET pinned_at = ?1 WHERE id = ?2",
+                    [pinned_at, id],
+                )
+                .unwrap();
+        };
+
+        repository.set_pinned("old", true).unwrap();
+        assert!(repository.get("old").unwrap().pinned_at.is_some());
+        assert_eq!(listed_ids(), ["old", "new", "middle"]);
+
+        pin_at("old", "2026-10-04T09:00:00Z");
+        pin_at("middle", "2026-10-04T10:00:00Z");
+        assert_eq!(listed_ids(), ["middle", "old", "new"], "latest pin on top");
+
+        repository.set_pinned("middle", false).unwrap();
+        repository.set_pinned("old", false).unwrap();
+        assert_eq!(listed_ids(), ["new", "middle", "old"]);
+        assert!(matches!(
+            repository.set_pinned("missing", true),
             Err(AppError::LessonNotFound)
         ));
     }
