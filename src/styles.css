@@ -61,9 +61,13 @@ body {
   background: var(--bg);
 }
 
-/* Scrolling something into view stops below the sticky page header. */
+/* Scrolling something into view stops below the sticky page header.
+   No scroll anchoring: when the next current card grows and the last one
+   shrinks, WebKit on iOS would shift the page to hold the old card in place,
+   which cancels the smooth scroll to the new one and leaves it off screen. */
 html {
   scroll-padding-top: var(--page-header-height, 0px);
+  overflow-anchor: none;
 }
 
 h1 {
@@ -86,20 +90,28 @@ kbd {
 }
 
 /* No max width: on a wide window the content stretches rather than leaving
-   empty strips at the sides. */
+   empty strips at the sides.
+   On iPhone the page runs under the status bar, the camera cutout and the
+   home indicator (viewport-fit=cover in index.html), so the safe-area insets
+   are added to its space; elsewhere they are 0. */
 .page {
   --page-top-gap: 20px;
-  padding: var(--page-top-gap) var(--side-gap) 48px;
+  --page-bottom-gap: 48px;
+  --page-top: calc(var(--page-top-gap) + env(safe-area-inset-top, 0px));
+  padding: var(--page-top) calc(var(--side-gap) + env(safe-area-inset-right, 0px))
+    calc(var(--page-bottom-gap) + env(safe-area-inset-bottom, 0px))
+    calc(var(--side-gap) + env(safe-area-inset-left, 0px));
 }
 
 /* Stays at the top of the window while the page scrolls. It takes over the
-   page's top space, so it looks the same whether it is stuck or not. */
+   page's top space, so it looks the same whether it is stuck or not, and on
+   iPhone it covers the status bar so the list cannot show through above it. */
 .page-header {
   position: sticky;
   top: 0;
   z-index: 1;
-  margin-top: calc(-1 * var(--page-top-gap));
-  padding: var(--page-top-gap) 0 12px;
+  margin-top: calc(-1 * var(--page-top));
+  padding: var(--page-top) 0 12px;
   background: var(--bg);
 }
 
@@ -825,7 +837,7 @@ button.text-toggle {
 @media (max-width: 600px) {
   .page {
     --page-top-gap: 12px;
-    padding-bottom: 32px;
+    --page-bottom-gap: 32px;
   }
 
   .card {
