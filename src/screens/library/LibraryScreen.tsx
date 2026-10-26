@@ -5,6 +5,7 @@ import { MAX_RECOMMENDED_WORDS } from "../../api/constants";
 import type { LessonDetail, LessonSummary, TtsProvider } from "../../api/types";
 import type { Navigate, Route } from "../../navigation";
 import ErrorBanner from "../../components/ErrorBanner";
+import PageHeader from "../../components/PageHeader";
 import TitleInput from "../../components/TitleInput";
 import { formatTtsProvider } from "../../format";
 import LessonTransfer from "./LessonTransfer";
@@ -102,27 +103,29 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
 
   return (
     <main className="page">
-      <header className="topbar">
-        <div>
-          <h1>Lessons</h1>
-          {ttsProvider && (
-            <div className="muted small">TTS: {formatTtsProvider(ttsProvider)}</div>
-          )}
+      <PageHeader>
+        <div className="topbar">
+          <div>
+            <h1>Lessons</h1>
+            {ttsProvider && (
+              <div className="muted small">TTS: {formatTtsProvider(ttsProvider)}</div>
+            )}
+          </div>
+          <div className="actions">
+            <button onClick={() => navigate(SETTINGS_ROUTE)}>Settings</button>
+            <button
+              className="primary"
+              onClick={() => setIsPasting(true)}
+              disabled={isImporting || isPasting}
+            >
+              Paste text
+            </button>
+            <button className="primary" onClick={importFile} disabled={isImporting}>
+              {isImporting && !isPasting ? "Importing…" : "Import .txt lesson"}
+            </button>
+          </div>
         </div>
-        <div className="actions">
-          <button onClick={() => navigate(SETTINGS_ROUTE)}>Settings</button>
-          <button
-            className="primary"
-            onClick={() => setIsPasting(true)}
-            disabled={isImporting || isPasting}
-          >
-            Paste text
-          </button>
-          <button className="primary" onClick={importFile} disabled={isImporting}>
-            {isImporting && !isPasting ? "Importing…" : "Import .txt lesson"}
-          </button>
-        </div>
-      </header>
+      </PageHeader>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 

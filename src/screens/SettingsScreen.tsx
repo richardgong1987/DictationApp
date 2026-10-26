@@ -3,6 +3,7 @@ import { api, errorMessage } from "../api/client";
 import { SPEAKING_RATE_RANGE } from "../api/constants";
 import type { Settings, SettingsDetail, TtsProvider } from "../api/types";
 import ErrorBanner from "../components/ErrorBanner";
+import PageHeader from "../components/PageHeader";
 import { formatSignedPercent, formatTtsProvider } from "../format";
 
 /** Suggestions only; any Azure neural voice name can be typed in. */
@@ -88,10 +89,12 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
 
   return (
     <main className="page">
-      <button className="link" onClick={onClose}>
-        ← Back
-      </button>
-      <h1>Settings</h1>
+      <PageHeader>
+        <button className="link" onClick={onClose}>
+          ← Back
+        </button>
+        <h1>Settings</h1>
+      </PageHeader>
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {form && detail && (

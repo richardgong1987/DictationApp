@@ -6,6 +6,7 @@ import type { Navigate } from "../../navigation";
 import { formatPercent } from "../../format";
 import { useAudioDurations, useAudioUrls } from "../../audio/itemAudio";
 import ErrorBanner from "../../components/ErrorBanner";
+import PageHeader from "../../components/PageHeader";
 import ControlButton from "./ControlButton";
 import PlayerPanel, { type PlayerCommands } from "./PlayerPanel";
 import PracticeItemCard from "./PracticeItemCard";
@@ -156,31 +157,33 @@ export default function PracticeSession({
 
   return (
     <main className="page practice">
-      <header className="topbar">
-        <button
-          className="link"
-          onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}
-        >
-          ← {lesson.title}
-        </button>
-        <div className="practice-status">
-          <span className="muted">
-            Checked {progress.checkedCount} of {items.length}
-            {progress.averageAccuracy !== null &&
-              ` · average ${formatPercent(progress.averageAccuracy)}`}
-          </span>
-          <ControlButton
-            onClick={clearAnswers}
-            disabled={!progress.hasAnswers}
-            title="Delete all your answers in this lesson and start again"
+      <PageHeader>
+        <div className="topbar">
+          <button
+            className="link"
+            onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}
           >
-            Clear answers
-          </ControlButton>
-          <span className="counter">
-            {index + 1} / {items.length}
-          </span>
+            ← {lesson.title}
+          </button>
+          <div className="practice-status">
+            <span className="muted">
+              Checked {progress.checkedCount} of {items.length}
+              {progress.averageAccuracy !== null &&
+                ` · average ${formatPercent(progress.averageAccuracy)}`}
+            </span>
+            <ControlButton
+              onClick={clearAnswers}
+              disabled={!progress.hasAnswers}
+              title="Delete all your answers in this lesson and start again"
+            >
+              Clear answers
+            </ControlButton>
+            <span className="counter">
+              {index + 1} / {items.length}
+            </span>
+          </div>
         </div>
-      </header>
+      </PageHeader>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 

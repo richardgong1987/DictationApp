@@ -61,6 +61,11 @@ body {
   background: var(--bg);
 }
 
+/* Scrolling something into view stops below the sticky page header. */
+html {
+  scroll-padding-top: var(--page-header-height, 0px);
+}
+
 h1 {
   font-size: 1.5rem;
   margin: 0.2rem 0;
@@ -83,7 +88,19 @@ kbd {
 /* No max width: on a wide window the content stretches rather than leaving
    empty strips at the sides. */
 .page {
-  padding: 20px var(--side-gap) 48px;
+  --page-top-gap: 20px;
+  padding: var(--page-top-gap) var(--side-gap) 48px;
+}
+
+/* Stays at the top of the window while the page scrolls. It takes over the
+   page's top space, so it looks the same whether it is stuck or not. */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-top: calc(-1 * var(--page-top-gap));
+  padding: var(--page-top-gap) 0 12px;
+  background: var(--bg);
 }
 
 .topbar {
@@ -92,7 +109,6 @@ kbd {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
 }
 
 .actions {
@@ -808,7 +824,8 @@ button.text-toggle {
 
 @media (max-width: 600px) {
   .page {
-    padding: 12px var(--side-gap) 32px;
+    --page-top-gap: 12px;
+    padding-bottom: 32px;
   }
 
   .card {

@@ -6,6 +6,7 @@ import type { AudioStatus, ItemDetail, LessonDetail, TtsProvider } from "../../a
 import type { Navigate, Route } from "../../navigation";
 import ErrorBanner from "../../components/ErrorBanner";
 import LoadingPage from "../../components/LoadingPage";
+import PageHeader from "../../components/PageHeader";
 import TitleInput from "../../components/TitleInput";
 import { formatTtsProvider } from "../../format";
 import AudioGenerationStatus from "./AudioGenerationStatus";
@@ -144,60 +145,64 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
 
   return (
     <main className="page">
-      <button className="link" onClick={() => navigate({ name: "library" })}>
-        ← Lessons
-      </button>
-      <header className="topbar">
-        <div className="lesson-heading">
-          <h1>
-            {isRenaming ? (
-              <TitleInput
-                initialTitle={lesson.title}
-                onSave={renameLesson}
-                onCancel={() => setIsRenaming(false)}
-              />
-            ) : (
-              <button
-                className="title-button"
-                onClick={() => setIsRenaming(true)}
-                title="Click to rename"
-              >
-                {lesson.title}
-              </button>
-            )}
-          </h1>
-          <div className="muted small">
-            {items.length} items · audio {readyCount}/{items.length} ready
-            {ttsProvider && <> · TTS: {formatTtsProvider(ttsProvider)}</>}
+      <PageHeader>
+        <button className="link" onClick={() => navigate({ name: "library" })}>
+          ← Lessons
+        </button>
+        <div className="topbar">
+          <div className="lesson-heading">
+            <h1>
+              {isRenaming ? (
+                <TitleInput
+                  initialTitle={lesson.title}
+                  onSave={renameLesson}
+                  onCancel={() => setIsRenaming(false)}
+                />
+              ) : (
+                <button
+                  className="title-button"
+                  onClick={() => setIsRenaming(true)}
+                  title="Click to rename"
+                >
+                  {lesson.title}
+                </button>
+              )}
+            </h1>
+            <div className="muted small">
+              {items.length} items · audio {readyCount}/{items.length} ready
+              {ttsProvider && <> · TTS: {formatTtsProvider(ttsProvider)}</>}
+            </div>
+          </div>
+          <div className="actions">
+            <button onClick={() => navigate({ name: "settings", back: thisRoute })}>
+              Settings
+            </button>
+            <button
+              onClick={() => generateAudio(false)}
+              disabled={generation.isGenerating || readyCount === items.length}
+            >
+              Generate missing audio
+            </button>
+            <button onClick={regenerateAll} disabled={generation.isGenerating}>
+              Regenerate all
+            </button>
+            <button
+              className="primary"
+              onClick={() => navigate({ name: "practice", lessonId })}
+              title="Type what you hear, continuing where you stopped last time"
+            >
+              Dictation
+            </button>
+            <button
+              className="primary"
+              onClick={() => navigate({ name: "shadowing", lessonId })}
+              title="Listen and read aloud along with the audio"
+            >
+              Shadowing
+            </button>
           </div>
         </div>
-        <div className="actions">
-          <button onClick={() => navigate({ name: "settings", back: thisRoute })}>Settings</button>
-          <button
-            onClick={() => generateAudio(false)}
-            disabled={generation.isGenerating || readyCount === items.length}
-          >
-            Generate missing audio
-          </button>
-          <button onClick={regenerateAll} disabled={generation.isGenerating}>
-            Regenerate all
-          </button>
-          <button
-            className="primary"
-            onClick={() => navigate({ name: "practice", lessonId })}
-            title="Type what you hear, continuing where you stopped last time"
-          >
-            Dictation
-          </button>
-          <button
-            className="primary"
-            onClick={() => navigate({ name: "shadowing", lessonId })}
-            title="Listen and read aloud along with the audio"
-          >
-            Shadowing
-          </button>
-        </div>
-      </header>
+      </PageHeader>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
       <AudioGenerationStatus progress={generation.progress} summary={generation.summary} />

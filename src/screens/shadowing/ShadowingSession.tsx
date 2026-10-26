@@ -3,6 +3,7 @@ import { PLAYBACK_SPEEDS } from "../../api/constants";
 import type { ItemDetail, Lesson } from "../../api/types";
 import { useAudioUrls } from "../../audio/itemAudio";
 import { EyeIcon, EyeOffIcon } from "../../components/EyeIcons";
+import PageHeader from "../../components/PageHeader";
 import { formatSpeed } from "../../format";
 import type { Navigate } from "../../navigation";
 import ArticlePlayer from "./ArticlePlayer";
@@ -60,42 +61,44 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
 
   return (
     <main className="page shadowing">
-      <button className="link" onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}>
-        ← {lesson.title}
-      </button>
-      <header className="topbar">
-        <div>
-          <h1>Shadowing</h1>
-          <div className="muted small">
-            {items.length} passages · listen and read aloud along with the audio
+      <PageHeader>
+        <button className="link" onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}>
+          ← {lesson.title}
+        </button>
+        <div className="topbar">
+          <div>
+            <h1>Shadowing</h1>
+            <div className="muted small">
+              {items.length} passages · listen and read aloud along with the audio
+            </div>
+          </div>
+          <div className="actions">
+            <label className="inline-field">
+              Speed
+              <select
+                value={state.speed}
+                onChange={(e) => player.setSpeed(Number(e.target.value))}
+                aria-label="Playback speed"
+              >
+                {PLAYBACK_SPEEDS.map((speed) => (
+                  <option key={speed} value={speed}>
+                    {formatSpeed(speed)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="text-toggle"
+              onClick={() => setIsTextShown((shown) => !shown)}
+              aria-pressed={!isTextShown}
+            >
+              {isTextShown ? <EyeOffIcon /> : <EyeIcon />}
+              {isTextShown ? "Hide text" : "Show text"}
+            </button>
           </div>
         </div>
-        <div className="actions">
-          <label className="inline-field">
-            Speed
-            <select
-              value={state.speed}
-              onChange={(e) => player.setSpeed(Number(e.target.value))}
-              aria-label="Playback speed"
-            >
-              {PLAYBACK_SPEEDS.map((speed) => (
-                <option key={speed} value={speed}>
-                  {formatSpeed(speed)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            className="text-toggle"
-            onClick={() => setIsTextShown((shown) => !shown)}
-            aria-pressed={!isTextShown}
-          >
-            {isTextShown ? <EyeOffIcon /> : <EyeIcon />}
-            {isTextShown ? "Hide text" : "Show text"}
-          </button>
-        </div>
-      </header>
+      </PageHeader>
 
       <ArticlePlayer state={state} player={player} passageCount={items.length} />
 
