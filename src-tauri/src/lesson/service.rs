@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use crate::audio::cache::{AudioCache, AudioStatus};
+use crate::audio::cache::AudioCache;
 use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
 use crate::lesson::parser::{parse_lesson, title_from_path, title_from_text, Passage};
@@ -13,14 +13,11 @@ use crate::lesson::{
 };
 use crate::practice::repository::PracticeRepository;
 use crate::practice::ItemStats;
-use crate::settings::service::SettingsService;
-use crate::settings::Settings;
 
 #[derive(Clone)]
 pub struct LessonService {
     lessons: LessonRepository,
     practice: PracticeRepository,
-    settings: SettingsService,
     files: LessonFiles,
     audio_cache: AudioCache,
 }
@@ -29,25 +26,22 @@ impl LessonService {
     pub fn new(
         lessons: LessonRepository,
         practice: PracticeRepository,
-        settings: SettingsService,
         files: LessonFiles,
         audio_cache: AudioCache,
     ) -> Self {
         Self {
             lessons,
             practice,
-            settings,
             files,
             audio_cache,
         }
     }
 
     pub fn list(&self) -> AppResult<Vec<LessonSummary>> {
-        let settings = self.settings.load()?;
         self.lessons
             .list()?
             .into_iter()
-            .map(|lesson| self.summarize(lesson, &settings))
+            .map(|lesson| self.summarize(lesson))
             .collect()
     }
 
@@ -116,7 +110,6 @@ impl LessonService {
 
     pub fn detail(&self, lesson_id: &str) -> AppResult<LessonDetail> {
         let lesson = self.lessons.get(lesson_id)?;
-        let settings = self.settings.load()?;
         let mut stats = self.practice.stats_by_item(lesson_id)?;
         let items = self
             .lessons
@@ -124,7 +117,7 @@ impl LessonService {
             .into_iter()
             .map(|item| {
                 let item_stats = stats.remove(&item.id).unwrap_or_default();
-                self.item_detail_of(item, &settings, item_stats)
+                self.item_detail_of(item, item_stats)
             })
             .collect();
         Ok(LessonDetail { lesson, items })
@@ -132,13 +125,12 @@ impl LessonService {
 
     pub fn item_detail(&self, item_id: i64) -> AppResult<ItemDetail> {
         let item = self.lessons.get_item(item_id)?;
-        let settings = self.settings.load()?;
         let stats = self
             .practice
             .stats_by_item(&item.lesson_id)?
             .remove(&item.id)
             .unwrap_or_default();
-        Ok(self.item_detail_of(item, &settings, stats))
+        Ok(self.item_detail_of(item, stats))
     }
 
     /// Only the lesson's own title changes; the imported file keeps its name.
@@ -184,11 +176,11 @@ impl LessonService {
         Ok(self.files.delete_lesson_folder(lesson_id)?)
     }
 
-    fn summarize(&self, lesson: Lesson, settings: &Settings) -> AppResult<LessonSummary> {
+    fn summarize(&self, lesson: Lesson) -> AppResult<LessonSummary> {
         let items = self.lessons.items(&lesson.id)?;
         let audio_ready_count = items
             .iter()
-            .filter(|item| self.audio_cache.status(item, settings) == AudioStatus::Ready)
+            .filter(|item| self.audio_cache.has_file(item))
             .count();
         let long_item_count = items.iter().filter(|item| is_too_long(&item.text)).count();
         Ok(LessonSummary {
@@ -199,13 +191,8 @@ impl LessonService {
         })
     }
 
-    fn item_detail_of(
-        &self,
-        item: DictationItem,
-        settings: &Settings,
-        stats: ItemStats,
-    ) -> ItemDetail {
-        let audio_status = self.audio_cache.status(&item, settings);
+    fn item_detail_of(&self, item: DictationItem, stats: ItemStats) -> ItemDetail {
+        let audio_status = self.audio_cache.status(&item);
         ItemDetail::new(item, audio_status, stats)
     }
 

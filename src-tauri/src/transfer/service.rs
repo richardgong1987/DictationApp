@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use crate::audio::cache::{AudioCache, AudioStatus};
+use crate::audio::cache::AudioCache;
 use crate::error::{AppError, AppResult};
 use crate::lesson::files::LessonFiles;
 use crate::lesson::parser::Passage;
@@ -10,7 +10,6 @@ use crate::lesson::repository::LessonRepository;
 use crate::lesson::service::LessonService;
 use crate::lesson::{DictationItem, Lesson, LessonHeader};
 use crate::settings::service::SettingsService;
-use crate::settings::Settings;
 use crate::transfer::archive::{
     ArchiveReader, ArchiveWriter, ExportedItem, ExportedLesson, Manifest,
 };
@@ -69,14 +68,7 @@ impl TransferService {
     /// also completes an import that failed halfway.
     pub fn import(&self, path: &Path) -> AppResult<ImportSummary> {
         let (mut archive, manifest) = ArchiveReader::open(path)?;
-        let settings = self.settings.load()?;
-        let mut summary = ImportSummary {
-            added_lessons: 0,
-            existing_lessons: 0,
-            added_audio: 0,
-            audio_with_other_voice: 0,
-            exported_voice: manifest.voice,
-        };
+        let mut summary = ImportSummary::default();
         for lesson in &manifest.lessons {
             if self.lessons.exists(&lesson.id)? {
                 summary.existing_lessons += 1;
@@ -84,7 +76,7 @@ impl TransferService {
                 self.add_lesson(lesson)?;
                 summary.added_lessons += 1;
             }
-            self.copy_missing_audio(&mut archive, lesson, &settings, &mut summary)?;
+            summary.added_audio += self.copy_missing_audio(&mut archive, lesson)?;
         }
         Ok(summary)
     }
@@ -113,8 +105,7 @@ impl TransferService {
         })
     }
 
-    /// Audio goes along whatever voice made it; the importing device decides
-    /// whether it matches its own settings.
+    /// Audio goes along whatever voice made it, and is played as it is there.
     fn export_item(
         &self,
         archive: &mut ArchiveWriter,
@@ -157,13 +148,13 @@ impl TransferService {
             .add(header, &lesson.source_text, passages)
     }
 
+    /// Copies the archive's audio for the lesson's items that have none, and
+    /// returns how many files it copied.
     fn copy_missing_audio(
         &self,
         archive: &mut ArchiveReader,
         lesson: &ExportedLesson,
-        settings: &Settings,
-        summary: &mut ImportSummary,
-    ) -> AppResult<()> {
+    ) -> AppResult<usize> {
         let mut copied = 0;
         for item in self.lessons.items(&lesson.id)? {
             if self.audio_cache.has_file(&item) {
@@ -178,22 +169,12 @@ impl TransferService {
                 .write_audio(&path, &audio)
                 .map_err(AppError::AudioNotSaved)?;
             self.lessons.set_item_audio(item.id, &path, cache_key)?;
-
-            let stored = DictationItem {
-                audio_path: Some(path),
-                audio_cache_key: Some(cache_key.to_string()),
-                ..item
-            };
             copied += 1;
-            summary.added_audio += 1;
-            if self.audio_cache.status(&stored, settings) != AudioStatus::Ready {
-                summary.audio_with_other_voice += 1;
-            }
         }
         if copied > 0 {
             self.lesson_service.write_metadata(&lesson.id)?;
         }
-        Ok(())
+        Ok(copied)
     }
 }
 

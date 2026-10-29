@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { documentDir, join } from "@tauri-apps/api/path";
-import { ask, open, save } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../../api/client";
 import type { ExportSummary, ImportSummary } from "../../api/types";
 import ErrorBanner from "../../components/ErrorBanner";
-import { formatCount, formatVoice } from "../../format";
+import { formatCount } from "../../format";
 
 const EXPORT_FILE_FILTER = { name: "DictationApp lessons", extensions: ["zip"] };
 
@@ -17,7 +17,7 @@ const savesExportsInFilesApp = import.meta.env.TAURI_ENV_PLATFORM === "ios";
 
 interface Props {
   hasLessons: boolean;
-  /** Lessons were added, or the voice settings changed. */
+  /** Lessons or audio were imported. */
   onLibraryChanged: () => void;
 }
 
@@ -65,14 +65,7 @@ export default function LessonTransfer({ hasLessons, onLibraryChanged }: Props) 
     const path = await open({ multiple: false, directory: false, filters: [EXPORT_FILE_FILTER] });
     if (typeof path !== "string") return;
     const summary = await run("importing", () => api.importLessons(path), describeImport);
-    if (!summary) return;
-    onLibraryChanged();
-    if (summary.audioWithOtherVoice === 0) return;
-    try {
-      if (await switchToExportedVoice(summary)) onLibraryChanged();
-    } catch (e) {
-      setError(errorMessage(e));
-    }
+    if (summary) onLibraryChanged();
   }
 
   return (
@@ -117,31 +110,4 @@ function describeImport(summary: ImportSummary): string {
     return `Nothing new to import.${kept}`;
   }
   return `Imported ${formatCount(summary.addedLessons, "new lesson")} and ${formatCount(summary.addedAudio, "audio file")}.${kept}`;
-}
-
-/**
- * Audio made with other voice settings counts as outdated here, so practicing would generate
- * it again. Offers to switch this device to the exporting device's settings; returns whether it did.
- */
-async function switchToExportedVoice(summary: ImportSummary): Promise<boolean> {
-  const { settings } = await api.getSettings();
-  const count = summary.audioWithOtherVoice;
-  const shouldSwitch = await ask(
-    `${count === 1 ? "1 imported audio file was" : `${count} imported audio files were`} made ` +
-      "with other voice settings than this device's, so practicing here would generate " +
-      `${count === 1 ? "it" : "them"} again.\n\n` +
-      `The device they came from: ${formatVoice(summary.exportedVoice)}\n` +
-      `This device: ${formatVoice(settings)}\n\n` +
-      "Switch this device to the settings they came from? Audio made here with the current " +
-      "settings would then count as outdated instead.",
-    {
-      title: "Different voice settings",
-      kind: "warning",
-      okLabel: "Switch",
-      cancelLabel: "Keep current settings",
-    },
-  );
-  if (!shouldSwitch) return false;
-  await api.saveSettings({ ...settings, ...summary.exportedVoice });
-  return true;
 }

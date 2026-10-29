@@ -87,11 +87,14 @@ Decisions made while implementing V1, where the specification left room:
   which hands the MP3 over as an array of numbers instead of an `ArrayBuffer`, and installed builds
   play no audio (dev builds apply no CSP, so they still work).
 - **Cache key**: `SHA-256("v1", text, voice, rate, pitch, output_format)`, fields separated by `0x1F`;
-  ElevenLabs keys append `"elevenlabs", model`. Azure keys deliberately keep the original recipe so
-  audio generated before ElevenLabs support stays current. Audio is stored as
-  `lessons/<lesson-id>/audio/NNN.mp3` and the key is saved with the item. If the provider or voice
-  settings change, the item shows "Voice changed" and is regenerated on the next generation or
-  practice. There is one file per item, so switching providers back and forth means regenerating.
+  ElevenLabs keys append `"elevenlabs", model`. Azure keys keep the original recipe, because older
+  app versions still compare keys to decide whether imported audio is current. Audio is stored
+  as `lessons/<lesson-id>/audio/NNN.mp3`, and the key is saved with the item (`audio_cache_key`, also
+  in `metadata.json`) as a record of the settings that produced the clip. It is not compared with
+  the current settings: an item is ready when its MP3 exists, whatever made it, so changing the
+  provider or voice settings only affects audio generated afterwards. Only Regenerate / Regenerate
+  all replace an existing clip, using the current settings; there is one file per item, so
+  regenerating overwrites it.
 - **Azure**: REST endpoint `https://<region>.tts.speech.microsoft.com/cognitiveservices/v1`, output
   `audio-24khz-48kbitrate-mono-mp3`.
 - **ElevenLabs**: REST endpoint `https://api.elevenlabs.io/v1/text-to-speech/<voice-id>`, output
@@ -128,8 +131,7 @@ Decisions made while implementing V1, where the specification left room:
   already present keeps everything and only gets audio for items that have none, matched by position
   *and* text. Importing a file twice therefore adds nothing, and importing it again completes an import
   that failed halfway. Imported lessons keep their creation time and have no `source_path`. Imported
-  audio whose cache key does not fit this device's settings is counted (`audioWithOtherVoice`), and the
-  library offers to apply the exporting device's `VoiceSettings`, whose field names match `Settings`.
+  audio is used as it is, whatever voice made it; import never changes this device's settings.
   Lesson ids in the manifest must be UUIDs, since they name folders.
 - **Exports on iOS** go to the app's Documents folder, which `src-tauri/Info.ios.plist`
   (`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`) shows in the Files app. The dialog
@@ -151,24 +153,24 @@ The current archive format is `dictation-app-lessons`, version `1`, implemented 
 item was exported. API credentials, region, source paths, answers, attempts and player preferences
 are absent. This is not a database backup.
 
-Export copies every existing audio file, including stale clips. `voice` describes the exporting
-device's current synthesis settings; a cache key is a hash, not recoverable per-clip voice metadata.
-Consequently, applying `exportedVoice` may not make a pack with mixed voice settings fully ready.
-The import summary's `audioWithOtherVoice` counts newly copied stale clips, not all existing stale
-clips on the receiving device. The frontend offers the voice switch only when that count is nonzero.
-Import only matches IDs, and fills audio only where local audio is absent and position/text match;
-it never replaces an existing clip merely because that clip is stale.
+Export copies every existing audio file, whatever settings made it. `voice` holds the exporting
+device's current synthesis settings; it is still written because older app versions refuse a
+manifest without it, but the app no longer reads it. An item's `audioCacheKey` records the settings
+that produced its clip (a hash, not recoverable voice metadata); its presence marks that the
+archive carries that clip. Import only matches IDs, and fills audio only where local audio is
+absent and position/text match; it never replaces an existing clip, and imported clips are used
+as they are.
 
 Import is incremental across lessons/audio files rather than one transaction for the whole pack.
 An error can leave some content successfully imported; reimport fills the remaining gaps. The
 reader checks the format/header, rejects newer format versions and non-UUID lesson IDs, and reads
 named audio entries without extracting the ZIP as a directory.
 
-`src/audio/itemAudio.ts` attempts synthesis for missing/stale items before returning their bytes.
-If synthesis fails for a stale item, it falls back to its existing MP3; missing items fail instead.
-Ready clips require no credentials. `useCurrentItemAudio` loads and starts the active dictation
-item on entry/item change, so opening practice itself can trigger synthesis. Duration probes skip
-non-ready items, avoiding synthesis just to display a length.
+`src/audio/itemAudio.ts` synthesizes a missing item before returning its bytes, and fails if that
+synthesis fails. A ready item is returned as it is, whatever settings made it, and requires no
+credentials. `useCurrentItemAudio` loads and starts the active dictation item on entry/item change,
+so opening practice on a missing item can itself trigger synthesis. Duration probes skip missing
+items, avoiding synthesis just to display a length.
 
 See the [user transfer instructions](USER_GUIDE.md#transfer-lessons-and-audio) for the UI workflow.
 
@@ -191,7 +193,7 @@ src-tauri/src/
 │   ├── repository.rs   lessons + dictation_items tables
 │   └── service.rs      add (from a file, pasted text or another device), list, detail, delete
 ├── audio/            generation summary/progress types
-│   ├── cache.rs        cache key, Ready/Stale/Missing, reuse-or-synthesize
+│   ├── cache.rs        cache key, Ready/Missing, reuse-or-synthesize
 │   └── service.rs      lesson/item generation, one run per lesson at a time
 ├── practice/         ItemStats, CheckResult
 │   ├── comparison.rs   normalization + LCS word diff

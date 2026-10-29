@@ -1,6 +1,7 @@
 // Mirrors the response types the Rust commands serialize (src-tauri/src).
 
-export type AudioStatus = "ready" | "stale" | "missing";
+/** "ready" whatever voice made the audio; only regenerating replaces it. */
+export type AudioStatus = "ready" | "missing";
 
 export interface Lesson {
   id: string;
@@ -103,12 +104,6 @@ export interface Settings {
   loopEnabled: boolean;
 }
 
-/** `settings::VoiceSettings`: the settings that decide how generated audio sounds. */
-export type VoiceSettings = Pick<
-  Settings,
-  "ttsProvider" | "azureVoice" | "elevenlabsVoiceId" | "elevenlabsModel" | "speakingRate" | "pitch"
->;
-
 export interface ExportSummary {
   lessonCount: number;
   audioCount: number;
@@ -120,9 +115,6 @@ export interface ImportSummary {
   /** Lessons already here; nothing of theirs was replaced. */
   existingLessons: number;
   addedAudio: number;
-  /** Of `addedAudio`, files made with other voice settings than this device's. */
-  audioWithOtherVoice: number;
-  exportedVoice: VoiceSettings;
 }
 
 export interface SettingsDetail {

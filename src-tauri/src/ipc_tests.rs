@@ -227,7 +227,7 @@ fn import_practice_and_reopen_flow() {
     assert_eq!(detail["items"][0]["attemptCount"], 1);
     assert_eq!(detail["items"][0]["audioStatus"], "ready");
 
-    // A voice change marks audio as outdated rather than silently reusing it.
+    // A voice change only affects audio made from then on.
     let mut changed = h.call("get_settings", json!({})).unwrap()["settings"].clone();
     changed["azureVoice"] = json!("en-GB-SoniaNeural");
     h.call("save_settings", json!({ "settings": changed }))
@@ -235,7 +235,7 @@ fn import_practice_and_reopen_flow() {
     let detail = h
         .call("get_lesson", json!({ "lessonId": lesson_id }))
         .unwrap();
-    assert_eq!(detail["items"][0]["audioStatus"], "stale");
+    assert_eq!(detail["items"][0]["audioStatus"], "ready");
 
     // Player preferences don't clobber other settings.
     h.call(
@@ -501,7 +501,7 @@ fn missing_audio_without_credentials_is_a_clear_error() {
 }
 
 #[test]
-fn switching_provider_marks_audio_outdated_until_switched_back() {
+fn switching_provider_keeps_audio_until_it_is_regenerated() {
     let h = Harness::new();
     let path = h.write_lesson_file("l.txt", "One.\n\nTwo.");
     let detail = h.call("import_lesson", json!({ "path": path })).unwrap();
@@ -509,11 +509,7 @@ fn switching_provider_marks_audio_outdated_until_switched_back() {
     for item in detail["items"].as_array().unwrap() {
         h.fake_generated_audio(&lesson_id, item);
     }
-    let audio_status = || {
-        h.call("get_lesson", json!({ "lessonId": lesson_id }))
-            .unwrap()["items"][0]["audioStatus"]
-            .clone()
-    };
+    let first_id = detail["items"][0]["id"].clone();
 
     let mut settings = h.call("get_settings", json!({})).unwrap()["settings"].clone();
     settings["ttsProvider"] = json!("elevenlabs");
@@ -524,25 +520,39 @@ fn switching_provider_marks_audio_outdated_until_switched_back() {
     // ElevenLabs speaks at most 1.2x.
     assert_eq!(saved["settings"]["speakingRate"], 20);
     assert_eq!(saved["credentialsConfigured"], false);
-    assert_eq!(audio_status(), "stale");
 
-    let err = h
+    // The Azure audio stays, so nothing needs the missing ElevenLabs key.
+    let summary = h
         .call(
             "generate_lesson_audio",
             json!({ "lessonId": lesson_id, "force": false }),
+        )
+        .unwrap();
+    assert_eq!(summary["generated"], 0);
+    assert_eq!(summary["cached"], 2);
+    let item = h
+        .call(
+            "generate_item_audio",
+            json!({ "itemId": first_id, "force": false }),
+        )
+        .unwrap();
+    assert_eq!(item["audioStatus"], "ready");
+    assert_eq!(
+        h.item_audio(&first_id),
+        format!("mp3 {first_id}").into_bytes()
+    );
+
+    // Regenerating uses the provider selected now.
+    let err = h
+        .call(
+            "generate_item_audio",
+            json!({ "itemId": first_id, "force": true }),
         )
         .unwrap_err();
     assert!(err
         .as_str()
         .unwrap()
         .contains("ElevenLabs API key is not configured"));
-
-    // Nothing was regenerated, so the Azure audio is current again.
-    settings["ttsProvider"] = json!("azure");
-    settings["speakingRate"] = json!(0);
-    h.call("save_settings", json!({ "settings": settings }))
-        .unwrap();
-    assert_eq!(audio_status(), "ready");
 }
 
 #[test]
@@ -638,7 +648,6 @@ fn lessons_move_between_devices_and_importing_only_adds() {
     assert_eq!(summary["addedLessons"], 2);
     assert_eq!(summary["existingLessons"], 0);
     assert_eq!(summary["addedAudio"], 4);
-    assert_eq!(summary["audioWithOtherVoice"], 0);
 
     // The phone's A and B join the Mac's C, keeping when they were created.
     let lessons = mac.call("list_lessons", json!({})).unwrap();
@@ -708,7 +717,7 @@ fn lessons_move_between_devices_and_importing_only_adds() {
 }
 
 #[test]
-fn audio_made_with_another_voice_is_reported_until_the_voice_is_adopted() {
+fn imported_audio_made_with_another_voice_plays_as_it_is() {
     let elevenlabs = Settings {
         tts_provider: crate::tts::TtsProviderKind::ElevenLabs,
         ..Settings::default()
@@ -729,24 +738,11 @@ fn audio_made_with_another_voice_is_reported_until_the_voice_is_adopted() {
     let exports = tempfile::tempdir().unwrap();
     let summary = mac.import(&phone.export_to(&exports));
     assert_eq!(summary["addedAudio"], 2);
-    assert_eq!(summary["audioWithOtherVoice"], 2);
-    assert_eq!(summary["exportedVoice"]["ttsProvider"], "elevenlabs");
-    assert_eq!(
-        mac.lesson(&lesson["lesson"]["id"])["items"][0]["audioStatus"],
-        "stale"
-    );
 
-    // Field names match Settings, so the voice applies to them as it is.
-    let mut mac_settings = mac.call("get_settings", json!({})).unwrap()["settings"].clone();
-    for (field, value) in summary["exportedVoice"].as_object().unwrap() {
-        mac_settings[field] = value.clone();
-    }
-    mac.call("save_settings", json!({ "settings": mac_settings }))
-        .unwrap();
-    assert_eq!(
-        mac.lesson(&lesson["lesson"]["id"])["items"][0]["audioStatus"],
-        "ready"
-    );
+    // The Mac still uses Azure, yet the ElevenLabs audio is what plays.
+    let imported = mac.lesson(&lesson["lesson"]["id"]);
+    assert_eq!(imported["items"][0]["audioStatus"], "ready");
+    assert_eq!(mac.item_audio(&imported["items"][0]["id"]), b"george");
 }
 
 /// The iOS open dialog hands over a `file://` URL instead of a path.

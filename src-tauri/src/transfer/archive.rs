@@ -31,7 +31,8 @@ const MANIFEST_ENTRY: &str = "manifest.json";
 pub struct Manifest {
     format: String,
     version: u32,
-    /// The exporting device's voice settings.
+    /// The exporting device's voice settings. Imports no longer need them, but
+    /// older versions of the app refuse a manifest without them.
     pub voice: VoiceSettings,
     pub lessons: Vec<ExportedLesson>,
 }

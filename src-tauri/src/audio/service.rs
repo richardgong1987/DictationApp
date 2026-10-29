@@ -48,8 +48,8 @@ impl AudioService {
         }
     }
 
-    /// Generates audio for every item that lacks up-to-date audio (every item
-    /// when `force`), one at a time to stay within free-tier rate limits.
+    /// Generates audio for every item that has none (every item when
+    /// `force`), one at a time to stay within free-tier rate limits.
     /// Reports progress after each item and keeps going when one item fails.
     pub async fn generate_lesson(
         &self,
@@ -64,7 +64,7 @@ impl AudioService {
         let needs_synthesis = force
             || items
                 .iter()
-                .any(|item| self.cache.status(item, &settings) != AudioStatus::Ready);
+                .any(|item| self.cache.status(item) == AudioStatus::Missing);
         if needs_synthesis && client.is_none() {
             return Err(AppError::MissingSpeechCredentials(settings.tts_provider));
         }
@@ -81,7 +81,7 @@ impl AudioService {
                 item_id: item.id,
                 done: index + 1,
                 total: items.len(),
-                audio_status: self.cache.status(&updated, &settings),
+                audio_status: self.cache.status(&updated),
                 error,
             });
         }
@@ -91,7 +91,7 @@ impl AudioService {
         Ok(summary)
     }
 
-    /// Generates one item's audio if it is missing or outdated (always when `force`).
+    /// Generates one item's audio if it has none (always when `force`).
     pub async fn generate_item(&self, item_id: i64, force: bool) -> AppResult<()> {
         let settings = self.settings.load()?;
         let item = self.lessons.get_item(item_id)?;
@@ -106,7 +106,7 @@ impl AudioService {
         self.cache.read(&self.lessons.get_item(item_id)?)
     }
 
-    /// Makes sure the item has current audio and records where it is.
+    /// Makes sure the item has audio and records where new audio is.
     async fn ensure_item_audio(
         &self,
         client: Option<&TtsClient>,
@@ -114,14 +114,11 @@ impl AudioService {
         item: &DictationItem,
         force: bool,
     ) -> AppResult<AudioOutcome> {
-        let audio = self.cache.ensure(client, item, settings, force).await?;
-        let is_recorded = item.audio_path.as_deref() == Some(audio.path.as_str())
-            && item.audio_cache_key.as_deref() == Some(audio.cache_key.as_str());
-        if !is_recorded {
-            self.lessons
-                .set_item_audio(item.id, &audio.path, &audio.cache_key)?;
+        let outcome = self.cache.ensure(client, item, settings, force).await?;
+        if let AudioOutcome::Generated { path, cache_key } = &outcome {
+            self.lessons.set_item_audio(item.id, path, cache_key)?;
         }
-        Ok(audio.outcome)
+        Ok(outcome)
     }
 
     /// A client for the selected provider, or `None` when it has no

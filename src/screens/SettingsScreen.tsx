@@ -112,8 +112,8 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
               </select>
             </label>
             <p className="muted small">
-              New audio is generated with this provider. Audio you already have keeps playing until
-              it is regenerated.
+              New audio is generated with this provider. Audio you already have is kept, whichever
+              provider made it, until you regenerate it.
             </p>
           </fieldset>
 
@@ -150,8 +150,8 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
               </label>
             )}
             <p className="muted small">
-              Changing the provider, voice, rate or pitch marks existing audio as outdated. It is
-              regenerated the next time you generate a lesson's audio or practice an item.
+              Changing the provider, voice, rate or pitch only affects audio generated from now on.
+              To redo a lesson's existing audio with them, use Regenerate in that lesson.
             </p>
           </fieldset>
 

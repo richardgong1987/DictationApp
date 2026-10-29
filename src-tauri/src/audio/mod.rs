@@ -25,7 +25,7 @@ impl AudioGenerationSummary {
     /// Counts one item's result and returns its error message, if it failed.
     fn record(&mut self, position: i64, result: AppResult<AudioOutcome>) -> Option<String> {
         match result {
-            Ok(AudioOutcome::Generated) => {
+            Ok(AudioOutcome::Generated { .. }) => {
                 self.generated += 1;
                 None
             }

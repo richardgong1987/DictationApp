@@ -1,4 +1,4 @@
-import type { TtsProvider, VoiceSettings } from "./api/types";
+import type { TtsProvider } from "./api/types";
 
 const TTS_PROVIDER_NAMES: Record<TtsProvider, string> = {
   azure: "Microsoft Azure Speech",
@@ -8,19 +8,6 @@ const TTS_PROVIDER_NAMES: Record<TtsProvider, string> = {
 /** "elevenlabs" -> "ElevenLabs" */
 export function formatTtsProvider(provider: TtsProvider): string {
   return TTS_PROVIDER_NAMES[provider];
-}
-
-/** Every setting that changes the audio, e.g. "Microsoft Azure Speech, en-US-JennyNeural, rate +10%". */
-export function formatVoice(voice: VoiceSettings): string {
-  const parts = [formatTtsProvider(voice.ttsProvider)];
-  if (voice.ttsProvider === "azure") {
-    parts.push(voice.azureVoice);
-    if (voice.pitch !== 0) parts.push(`pitch ${formatSignedPercent(voice.pitch)}`);
-  } else {
-    parts.push(`voice ${voice.elevenlabsVoiceId}`, voice.elevenlabsModel);
-  }
-  if (voice.speakingRate !== 0) parts.push(`rate ${formatSignedPercent(voice.speakingRate)}`);
-  return parts.join(", ");
 }
 
 /** (1, "lesson") -> "1 lesson"; (3, "lesson") -> "3 lessons" */

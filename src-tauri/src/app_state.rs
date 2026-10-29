@@ -34,7 +34,6 @@ impl AppState {
         let lessons = LessonService::new(
             lesson_repository.clone(),
             practice_repository.clone(),
-            settings.clone(),
             files.clone(),
             audio_cache.clone(),
         );

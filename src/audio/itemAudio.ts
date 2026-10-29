@@ -9,7 +9,7 @@ export type AudioUrlFor = (item: ItemDetail) => Promise<string>;
 
 /**
  * Item audio as Blob URLs, fetched once per session and revoked on unmount.
- * Missing or outdated audio is generated first; cached audio never calls the TTS provider.
+ * Missing audio is generated first; existing audio never calls the TTS provider.
  */
 export function useAudioUrls(onItemUpdated: (item: ItemDetail) => void): AudioUrlFor {
   const urls = useRef(new Map<number, Promise<string>>());
@@ -83,13 +83,8 @@ async function fetchAudioUrl(
   item: ItemDetail,
   onItemUpdated: (item: ItemDetail) => void,
 ): Promise<string> {
-  if (item.audioStatus !== "ready") {
-    try {
-      onItemUpdated(await api.generateItemAudio(item.id, false));
-    } catch (error) {
-      // Audio made with an older voice is still worth playing.
-      if (item.audioStatus === "missing") throw error;
-    }
+  if (item.audioStatus === "missing") {
+    onItemUpdated(await api.generateItemAudio(item.id, false));
   }
   const bytes = await api.getItemAudio(item.id);
   return URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));

@@ -2,7 +2,6 @@ import type { AudioStatus } from "../../api/types";
 
 const LABELS: Record<AudioStatus, string> = {
   ready: "Audio ready",
-  stale: "Voice changed",
   missing: "No audio",
 };
 

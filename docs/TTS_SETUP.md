@@ -7,8 +7,8 @@ You only need **one** provider. The app uses your own credentials and provider a
 not supply a shared key or subscription. Desktop installer users do not need to install an SDK,
 Python, Node.js or Rust to configure speech.
 
-If you already imported a DictationApp ZIP with audio matching your current voice settings, you
-can play those clips without a provider key. Follow this guide when you need to generate new audio.
+If you already imported a DictationApp ZIP with audio, you can play those clips without a
+provider key, whatever voice made them. Follow this guide when you need to generate new audio.
 
 ## You can start without paying
 
@@ -32,8 +32,8 @@ selected passages. Follow the free-plan setup below and read the
 | App's default model | No model field | `eleven_multilingual_v2` |
 | Synthesis controls | Speaking rate and pitch | Speaking rate |
 
-Try one provider with a short sentence first. You can change providers later, but that can mark
-existing audio as outdated and cause fresh synthesis.
+Try one provider with a short sentence first. You can change providers later; that affects only
+audio generated afterwards, and existing clips are kept.
 
 ## Microsoft Azure Speech
 
@@ -144,8 +144,9 @@ Use the exact ID from the provider, not a marketing label such as `Multilingual 
 
 Start with the default before changing models. Check ElevenLabs'
 [model guide](https://elevenlabs.io/docs/eleven-api/choosing-the-right-model) for current options.
-A model change affects cache matching and can cause regeneration. If a model rejects a speech
-setting, retry a short test at normal speaking rate with a compatible model.
+A model change applies to audio generated afterwards; existing clips keep the model that made them
+until you regenerate them. If a model rejects a speech setting, retry a short test at normal
+speaking rate with a compatible model.
 
 ## Practice in other languages
 
@@ -173,9 +174,9 @@ to the model without an explicit language code. Check the current
 [model language list](https://elevenlabs.io/docs/overview/models) for other languages and models.
 
 The method stays simple in every language: hear a sentence, say it back, and keep repeating the
-parts you cannot yet follow. Changing synthesis settings can make other lessons' cached audio
-outdated. The interface remains English, and dictation scoring currently splits words on whitespace;
-it does not segment Japanese into individual words. See the
+parts you cannot yet follow. Changing synthesis settings affects only audio generated afterwards;
+other lessons keep their cached audio. The interface remains English, and dictation scoring
+currently splits words on whitespace; it does not segment Japanese into individual words. See the
 [user guide](USER_GUIDE.md#practice-a-language-other-than-english) for that distinction.
 
 ## Test your configuration with one sentence
@@ -196,8 +197,8 @@ it does not segment Japanese into individual words. See the
 present; it is not a successful provider authentication test. **Saved.** confirms a local settings
 save. Successful synthesis and playback are the practical check that your configuration works.
 
-If you change providers or voices while testing, use **Generate missing audio** on this test lesson.
-It updates an outdated clip. **Regenerate** forces a fresh request even if a clip is already ready.
+If you change providers or voices while testing, use **Regenerate** on the test passage to hear the
+new settings. **Generate missing audio** does not replace a clip that already exists.
 
 ## Quota, cost and repeated practice
 
@@ -225,20 +226,21 @@ to cover much of his own practice; your needs may differ. Repeating one clip man
 consume its text allowance again.
 
 You can configure both providers and choose which generates the next lesson. There is no automatic
-quota routing or fallback between providers. Voice settings are global: switching providers can
-make the other provider's clips stale and cause regeneration when you practice. To keep both sets
-without replacing them, select the settings that made the lesson's clips **before** opening practice,
-and avoid **Regenerate all** when you only want to replay.
+quota routing or fallback between providers. The selected provider and voice settings apply only
+to audio generated from then on; existing clips are never replaced automatically. One lesson can
+keep its ElevenLabs audio while another uses Azure, and switching back and forth costs nothing for
+audio you already have. Use **Regenerate** or **Regenerate all** only when you want to replace
+existing audio with the currently selected provider.
 
-Generating new audio uses your selected provider's allowance. Replaying a ready, unchanged cached
+Generating new audio uses your selected provider's allowance. Replaying a ready cached
 MP3—including loops and slower/faster player playback—does not request synthesis again.
 
 | Action | Synthesis behavior |
 |---|---|
 | Replay, loop, seek, or change player **Speed** for ready audio | Uses the local clip |
-| **Generate missing audio** | Reuses ready clips; synthesizes missing/outdated clips |
-| **Regenerate** / **Regenerate all** | Forces new synthesis |
-| Change provider, voice, model or applicable synthesis rate/pitch, then practice | May synthesize replacements |
+| **Generate missing audio** | Reuses existing clips; synthesizes only passages with no audio |
+| **Regenerate** / **Regenerate all** | Forces new synthesis with the current provider and settings, replacing the existing clip |
+| Change provider, voice, model or applicable synthesis rate/pitch, then practice | Plays existing clips; synthesizes only passages with no audio |
 | Import a lesson ZIP | Copies existing audio; no synthesis during import |
 
 Check your provider dashboard for remaining usage and renewal details. Free allowances, prices,
@@ -260,8 +262,7 @@ free generation. Reusing audio across devices is covered in the
 | ElevenLabs access denied / HTTP 403 | Check Text to Speech scope, account/voice access and any IP allowlist on the key. |
 | Too many requests / HTTP 429 | Let the provider's rate limit recover, then retry. The app retries transient failures with backoff and generates lesson clips sequentially. |
 | Network or provider server failure | Check connectivity and retry. Cached ready clips remain usable locally. |
-| **Voice changed** after editing Settings | The old clip exists but no longer matches. Generate missing audio to replace it, or return to the settings that created it. |
-| Old voice still plays after a failed update | The player can fall back to an existing stale MP3 when synthesis fails. Inspect lesson detail and resolve the generation error before expecting the new voice. |
+| Old voice still plays after editing Settings | Expected: new settings apply only to audio generated afterwards. Use **Regenerate** or **Regenerate all** to replace existing clips. |
 | A credential field is disabled | It is overridden by an environment variable. Update/remove that override and restart the app. |
 | Audio ready but silent | Check system volume, output device and playback controls; this may be a playback issue rather than a credential issue. |
 

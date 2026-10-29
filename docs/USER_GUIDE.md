@@ -82,8 +82,8 @@ Paste or import UTF-8 text in your target language, with blank lines between pas
 choose an Azure voice for that language or an ElevenLabs multilingual model and suitable voice.
 Save, then generate the audio. See the [voice examples and setup steps](TTS_SETUP.md#practice-in-other-languages).
 There is no lesson-language dropdown and changing the voice does not translate text or localize the
-English interface. Voice settings apply across the app, so changing them can make other lessons'
-audio outdated.
+English interface. Voice settings apply to all audio generated afterwards; other lessons keep the
+audio they already have.
 
 Playback, passage looping, repeat pauses and article playback work as usual. Dictation accepts the
 text, but its word counts, long-passage warning and word-level diff use whitespace-separated tokens.
@@ -121,7 +121,7 @@ import does not update the stored lesson. The app supports renaming, but has no 
 For account creation, getting keys/Voice IDs, a first audio test, and provider troubleshooting,
 follow the [Azure Speech and ElevenLabs setup guide](TTS_SETUP.md).
 
-If you imported a ZIP whose audio matches your voice settings, you can replay it without API keys.
+If you imported a ZIP with audio, you can replay that audio without API keys.
 For new audio, open **Settings → Text-to-speech → Provider** and configure one provider:
 
 | Provider | Required settings | Speech controls |
@@ -141,13 +141,12 @@ the corresponding credential fields; overridden inputs are disabled. See
 
 | Label or control | Meaning |
 |---|---|
-| **Audio ready** | A local MP3 exists and matches the current text and synthesis settings. |
-| **Voice changed** | A local MP3 exists, but its settings no longer match. It is excluded from the ready count. |
+| **Audio ready** | A local MP3 exists for this passage, whichever provider and settings made it. |
 | **No audio** | No audio file is available for this passage. |
 | **Generating…** | This passage's audio is being generated. |
-| **Generate missing audio** | Reuses ready clips and generates missing or outdated clips. |
-| **Regenerate** on a passage | Forces fresh synthesis for that passage, even if it is ready. |
-| **Regenerate all** | After confirmation, forces fresh synthesis for every passage. |
+| **Generate missing audio** | Generates only passages with no audio, using the current settings. Existing clips are kept. |
+| **Regenerate** on a passage | Replaces that passage's audio using the current provider and settings. |
+| **Regenerate all** | After confirmation, replaces every passage's audio using the current provider and settings. |
 | **Delete** on a passage | After confirmation, removes that passage with its audio and practice history. |
 
 Generation shows progress and then counts of generated, cached and failed clips. If some fail,
@@ -160,13 +159,15 @@ deleted one's number. A lesson keeps at least one passage. Lessons exported afte
 other devices without the deleted passages; a copy already on another device keeps them.
 
 **Player Speed** changes local playback without provider requests. **Speaking rate**, voice,
-provider, ElevenLabs model, and Azure pitch affect synthesis/cache matching. There is one stored
-MP3 per item; regenerating replaces that item's clip rather than keeping several voice versions.
+provider, ElevenLabs model, and Azure pitch apply only to audio generated from then on; changing
+them never replaces existing clips. Different lessons, or even passages, can therefore carry audio
+from different providers, and switching back and forth costs nothing for audio you already have.
+There is one stored MP3 per item; regenerating replaces that item's clip rather than keeping
+several voice versions.
 
-Opening Dictation loads and starts the active item's audio. Playing a missing or outdated clip
-can trigger synthesis. If updating an outdated clip fails, the player falls back to its existing
-MP3; a missing clip has no fallback. For predictable offline practice, prepare all clips with the
-settings you intend to keep before disconnecting.
+Opening Dictation loads and starts the active item's audio. Only a passage with no audio triggers
+synthesis before it plays; practicing never replaces an existing clip. For offline practice,
+generate all clips before disconnecting.
 
 ## Practice dictation
 
@@ -295,10 +296,8 @@ separate copy or rename an export if you want multiple snapshots from the same d
 1. Choose **Your other devices → Import lessons** and select the ZIP directly, without unzipping it.
 2. Read the result: new lessons, audio files added, and existing lessons kept. **Nothing new to import**
    means the archive supplied no missing lessons or audio.
-3. If **Different voice settings** appears, decide whether to **Switch** or **Keep current settings**.
-   Switching applies the source device's synthesis settings across this app, retaining your local
-   credentials and player preferences. Other local clips may become outdated as a result.
-4. Check the ready counts before practicing offline. Ready imported audio needs no API key to play.
+3. Check the ready counts before practicing offline. Imported audio is used as it is, whatever voice
+   made it, and needs no API key to play. Import does not change this device's Settings.
 
 Import itself does not call a TTS provider. Lessons match by ID, not title or text. Existing titles,
 text, audio, answers and statistics are retained. Missing audio is filled only when the passage
@@ -315,11 +314,9 @@ devices.
 | Passage positions/text and existing MP3s with cache keys | API keys, Azure region, environment variables and original file paths |
 | Source device's provider, both providers' voice choices, ElevenLabs model, speaking rate and pitch | Dictation playback speed and loop preference |
 
-The export includes existing clips regardless of whether they match the source device's current
-settings; passages with no audio remain text-only. The manifest carries the source device's current
-voice settings, not a separate voice description for each clip. A library with mixed or older voices
-may therefore still contain outdated clips after **Switch**. Ready counts are the check to use;
-regeneration uses the destination device's provider credentials and quota.
+The export includes every existing clip, whichever voice made it; passages with no audio remain
+text-only. The destination device plays imported clips as they are. Generating missing audio or
+regenerating there uses the destination device's selected provider, credentials and quota.
 
 This transfer is a portable lesson/audio pack, not a complete backup of your practice progress.
 It accepts DictationApp lesson ZIPs, not arbitrary audio recordings, generic ZIPs or standalone
@@ -330,13 +327,13 @@ but there is no combined whole-article audio export.
 
 | Situation | What to check |
 |---|---|
-| Text-to-speech is not configured | Configure the selected provider if new audio is needed. A matching imported/cached MP3 can still play. |
-| Audio count is lower than the passage count | Inspect **No audio** and **Voice changed** in lesson detail. Generate missing audio or align the voice settings. A passage of only symbols that keeps failing can be deleted. |
-| No sound or playback failure | Check system volume/output, then **Retry**. For missing/outdated audio, also check credentials, internet and provider quota. |
+| Text-to-speech is not configured | Configure the selected provider if new audio is needed. An existing imported/cached MP3 can still play. |
+| Audio count is lower than the passage count | Inspect **No audio** in lesson detail and run **Generate missing audio**. A passage of only symbols that keeps failing can be deleted. |
+| No sound or playback failure | Check system volume/output, then **Retry**. For missing audio, also check credentials, internet and provider quota. |
+| The old voice still plays after changing Settings | Expected: new settings apply only to audio generated afterwards. Use **Regenerate** or **Regenerate all** to replace existing clips. |
 | ZIP import is rejected | Select an intact DictationApp export ZIP, not its extracted directory or another kind of archive. If it was made by a newer export format, update the receiving app. |
 | Import stopped halfway | Resolve the reported error and import the same ZIP again. Already added lessons/audio are kept. |
 | Export contains fewer MP3s than passages | Only files already on the source device are exported. Generate missing audio there and export again. |
-| Imported audio still triggers synthesis | Check the selected provider/voice/model/rate/pitch and whether the source pack contained mixed voices. Switching settings may not make every clip ready. |
 
 Lessons, MP3s, answers, settings and statistics live in this device's app data folder, with SQLite
 holding the records. There are no app accounts or automatic cloud synchronization. Synthesis sends

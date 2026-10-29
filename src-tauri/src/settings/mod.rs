@@ -148,7 +148,6 @@ impl Settings {
 }
 
 /// The settings that decide how generated audio sounds, and so its cache key.
-/// Field names match [`Settings`], so the frontend can apply them to it as they are.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VoiceSettings {

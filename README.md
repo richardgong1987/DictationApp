@@ -44,7 +44,7 @@ and [ElevenLabs free-plan pricing](https://elevenlabs.io/pricing). Choose Azure'
 the allowance above is not a promise that a paid resource is free. ElevenLabs credits are shared
 with other products and model rates can differ. See the
 [free allowance and combined-use guide](docs/TTS_SETUP.md#monthly-free-allowances), including how
-to switch providers without unnecessarily regenerating cached clips.
+to use both providers side by side without replacing audio you already have.
 
 ## Why I built DictationApp
 
@@ -220,7 +220,7 @@ Open **Settings → Text-to-speech → Provider** and choose one provider:
 Click **Save**, then **Back**. Get your own credentials from
 [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) or
 [ElevenLabs](https://elevenlabs.io). Generating audio requires internet access and uses your provider's
-quota or credits; replaying an unchanged cached clip does not send another synthesis request.
+quota or credits; replaying a cached clip does not send another synthesis request.
 
 ### 2. Add your text
 
@@ -246,13 +246,17 @@ them, but are still allowed. Short blocks make replaying difficult sentences eas
 ### 3. Prepare the audio
 
 When credentials are configured, creating a lesson starts audio generation automatically.
-On the lesson detail page, **Generate missing audio** fills gaps and updates outdated clips.
+On the lesson detail page, **Generate missing audio** fills gaps with the current settings and
+leaves existing clips alone.
 Wait for the audio count to reach the number of items before an uninterrupted practice session.
 If some clips fail, check Settings and your connection, then retry generation. A passage that cannot
 be spoken, such as a `---` divider, can be removed with its **Delete** button.
 
-Audio is saved locally and shared by both modes. **Regenerate all** forces new synthesis requests;
-use it when you deliberately want to replace the audio.
+Audio is saved locally and shared by both modes. Changing the provider, voice, model, speaking rate
+or pitch in Settings affects only audio generated from then on; existing clips are never replaced
+automatically, so different lessons can use different providers. **Regenerate** (one passage) and
+**Regenerate all** replace existing audio with the currently selected provider and settings; use
+them when you deliberately want to replace it.
 
 ### 4. Choose your practice mode
 
@@ -337,26 +341,24 @@ and its existing per-passage MP3s in one `.zip`, then send it to another device 
 | Existing MP3s and their audio cache keys | API keys, Azure region and environment variables |
 | Exporting device's provider, voices, ElevenLabs model, speaking rate and pitch | Dictation player speed and loop preference |
 
-**To reuse audio without another synthesis request, match its voice settings.** If newly imported
-clips differ from this device's settings, **Different voice settings** offers **Switch** or
-**Keep current settings**. Switching applies the exported voice settings across the app; clips
-already on this device may then show **Voice changed**. Keeping the current settings can cause
-imported clips to be regenerated when you practice. A ZIP can contain older clips made with several
-settings, so switching does not guarantee that every clip becomes ready.
+**Imported clips are used as they are**, whatever provider or voice made them, so they play without
+another synthesis request or an API key. Import does not change this device's Settings.
 
-Exports include the audio that exists, even if some passages are missing audio or show **Voice changed**.
+Exports include the audio that exists, even if some passages are missing audio.
 Generate missing audio before export if you want a complete pack. This is a lesson/audio transfer,
 not a full backup of practice progress. It does not import arbitrary MP3/WAV recordings or transcribe them.
 See the [full transfer guide](docs/USER_GUIDE.md#transfer-lessons-and-audio) for detailed steps and troubleshooting.
 
 ## Audio, data and common questions
 
-- **Can I practice offline?** Yes, with already-generated, current audio. Generate all clips before
-  going offline and keep the same voice settings. Missing or outdated audio can trigger a provider request.
+- **Can I practice offline?** Yes, with already-generated audio. Generate all clips before going
+  offline; playing a passage with no audio triggers a provider request.
 - **Does slowing playback use credits?** No. The player's **Speed** changes local playback.
-  **Speaking rate** in Settings changes synthesis settings and can require fresh audio.
-- **Why does audio say “Voice changed”?** Changing the provider, voice, model or applicable speech
-  settings makes cached audio outdated. Generate it again with the new settings; this uses provider quota.
+  **Speaking rate** in Settings applies to audio generated afterwards; existing clips keep their rate
+  unless you regenerate them.
+- **Does changing the voice or provider replace my audio?** No. Provider, voice, model, speaking rate
+  and pitch apply only to audio generated from then on. Existing clips stay until you use
+  **Regenerate** or **Regenerate all**, so lessons can carry audio from different providers.
 - **No sound or generation failed?** Check system volume and the selected provider's credentials,
   region/voice/model, internet access and available quota. Retry the failed clip or **Generate missing audio**.
 - **Where is my work?** Lessons, MP3s, answers and progress are stored in the app's local data folder,

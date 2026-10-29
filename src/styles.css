@@ -349,11 +349,6 @@ button.title-button {
   color: var(--ok);
 }
 
-.badge.stale {
-  background: var(--warn-bg);
-  color: var(--warn);
-}
-
 .badge.missing {
   background: var(--bad-bg);
   color: var(--bad);
