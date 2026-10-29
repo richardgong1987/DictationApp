@@ -30,7 +30,10 @@ selected passages. Follow the free-plan setup below and read the
 | Fields in DictationApp | Region, Key, Voice name | API key, Voice ID, Model |
 | App's default voice | `en-US-JennyNeural` | George: `JBFqnCBsd6RMkjVDRZzb` |
 | App's default model | No model field | `eleven_multilingual_v2` |
-| Synthesis controls | Speaking rate and pitch | Speaking rate |
+
+Neither provider has a speaking rate or pitch setting in the app: new audio is synthesized at the
+voice's normal speed and pitch. The player's **Speed** control slows down or speeds up playback
+locally, without a provider request.
 
 Try one provider with a short sentence first. You can change providers later; that affects only
 audio generated afterwards, and existing clips are kept.
@@ -64,8 +67,6 @@ Open **Lessons → Settings → Text-to-speech → Provider → Microsoft Azure 
 | **Region** | Your Speech resource's region identifier, with no spaces or URL | `eastus` if the resource is in East US; `japaneast` if it is in Japan East |
 | **Key** | One of the resource keys you copied | Your private resource key |
 | **Voice name** | A supported voice's exact name | `en-US-JennyNeural` |
-| **Speaking rate** | Leave at normal for the first test | `0%` |
-| **Pitch** | Leave at normal for the first test | `0%` |
 
 Do not copy the example region unless it matches your resource. Enter `japaneast`, for example,
 rather than `Japan East` or an endpoint URL. DictationApp builds the regional endpoint itself;
@@ -87,7 +88,7 @@ These are examples already suggested by the app:
 The voice input is editable. For another voice, copy its exact identifier from Microsoft's
 [language and voice support list](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts).
 Use the [Voice Gallery](https://speech.microsoft.com/portal/voicegallery) to listen to samples.
-Check regional availability and speech-control support before trying a different voice type.
+Check regional availability before trying a different voice type.
 
 ### 4. Generate your first clip
 
@@ -131,10 +132,11 @@ Open **Lessons → Settings → Text-to-speech → Provider → ElevenLabs**.
 | **API key** | Your private key from the API Keys page | Your own key |
 | **Voice ID** | The identifier copied from your voices | `JBFqnCBsd6RMkjVDRZzb` for George |
 | **Model** | An exact text-to-speech model ID supported by your account | `eleven_multilingual_v2` |
-| **Speaking rate** | Leave at normal for the first test | `0%` |
 
 Click **Save**, wait for **Saved.**, then **Back**. ElevenLabs needs no Azure region or key.
 The app has no voice-cloning workflow; select a voice already available in your ElevenLabs account.
+The app sends no voice settings of its own, so the voice speaks with the settings saved with it in
+your ElevenLabs account.
 
 ### 4. Choose a model
 
@@ -145,8 +147,7 @@ Use the exact ID from the provider, not a marketing label such as `Multilingual 
 Start with the default before changing models. Check ElevenLabs'
 [model guide](https://elevenlabs.io/docs/eleven-api/choosing-the-right-model) for current options.
 A model change applies to audio generated afterwards; existing clips keep the model that made them
-until you regenerate them. If a model rejects a speech setting, retry a short test at normal
-speaking rate with a compatible model.
+until you regenerate them.
 
 ## Practice in other languages
 
@@ -174,7 +175,7 @@ to the model without an explicit language code. Check the current
 [model language list](https://elevenlabs.io/docs/overview/models) for other languages and models.
 
 The method stays simple in every language: hear a sentence, say it back, and keep repeating the
-parts you cannot yet follow. Changing synthesis settings affects only audio generated afterwards;
+parts you cannot yet follow. Changing the voice or model affects only audio generated afterwards;
 other lessons keep their cached audio. The interface remains English, and dictation scoring
 currently splits words on whitespace; it does not segment Japanese into individual words. See the
 [user guide](USER_GUIDE.md#practice-a-language-other-than-english) for that distinction.
@@ -240,7 +241,7 @@ MP3—including loops and slower/faster player playback—does not request synth
 | Replay, loop, seek, or change player **Speed** for ready audio | Uses the local clip |
 | **Generate missing audio** | Reuses existing clips; synthesizes only passages with no audio |
 | **Regenerate** / **Regenerate all** | Forces new synthesis with the current provider and settings, replacing the existing clip |
-| Change provider, voice, model or applicable synthesis rate/pitch, then practice | Plays existing clips; synthesizes only passages with no audio |
+| Change provider, voice or model, then practice | Plays existing clips; synthesizes only passages with no audio |
 | Import a lesson ZIP | Copies existing audio; no synthesis during import |
 
 Check your provider dashboard for remaining usage and renewal details. Free allowances, prices,
@@ -257,7 +258,7 @@ free generation. Reusing audio across devices is covered in the
 | **Text-to-speech is not configured** | Check the currently selected provider, fill in its credentials and click **Save**. Azure needs both Key and Region; ElevenLabs needs its API key. |
 | Azure unauthorized / HTTP 401 | Recopy a Speech resource key and its matching region. Check whether the key was rotated. |
 | Azure invalid region | Use the lowercase region identifier, not a friendly label or URL. |
-| Voice/model error | Check the exact identifier, account access, regional availability for Azure, and model compatibility for ElevenLabs. Try the app defaults at `0%` rate. |
+| Voice/model error | Check the exact identifier, account access, regional availability for Azure, and model compatibility for ElevenLabs. Try the app defaults. |
 | ElevenLabs quota exceeded | Read the provider's error message and check account/key allowance. A quota error can appear as 401, so a new key alone may not solve it. |
 | ElevenLabs access denied / HTTP 403 | Check Text to Speech scope, account/voice access and any IP allowlist on the key. |
 | Too many requests / HTTP 429 | Let the provider's rate limit recover, then retry. The app retries transient failures with backoff and generates lesson clips sequentially. |

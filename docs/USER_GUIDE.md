@@ -66,7 +66,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 | **Lesson detail** | Click a lesson title in the library. Read passages, inspect word counts and audio badges, generate audio, and see attempt counts/best accuracy. Click the heading to rename; click a passage's **▶** to start dictation at that item. |
 | **Dictation** | Listen, type, reveal/check, and review word differences. All items appear as cards; the active card has an accent border and highlighted number. Untouched inactive cards keep their answer boxes collapsed. |
 | **Shadowing** | Use the article player at the top or a passage's own player. Practice a passage whole, sentence by sentence or phrase by phrase. Show/hide all text, choose playback speed, and leave time to repeat aloud. |
-| **Settings** | Choose the TTS provider and its credentials, voice and synthesis settings. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
+| **Settings** | Choose the TTS provider and its credentials, voice and model. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
 
 The layout uses the available window width, wraps controls on smaller screens, and follows the
 system's light/dark appearance. Original text and typed answers use distinct green backgrounds.
@@ -124,14 +124,15 @@ follow the [Azure Speech and ElevenLabs setup guide](TTS_SETUP.md).
 If you imported a ZIP with audio, you can replay that audio without API keys.
 For new audio, open **Settings → Text-to-speech → Provider** and configure one provider:
 
-| Provider | Required settings | Speech controls |
-|---|---|---|
-| **Microsoft Azure Speech** | Speech resource **Key**, matching **Region**, **Voice name** (default `en-US-JennyNeural`) | Speaking rate −50% to +100%; pitch −50% to +50% |
-| **ElevenLabs** | **API key**, **Voice ID** (default George: `JBFqnCBsd6RMkjVDRZzb`), **Model** (default `eleven_multilingual_v2`) | Speaking rate −30% to +20%; no pitch control |
+| Provider | Required settings |
+|---|---|
+| **Microsoft Azure Speech** | Speech resource **Key**, matching **Region**, **Voice name** (default `en-US-JennyNeural`) |
+| **ElevenLabs** | **API key**, **Voice ID** (default George: `JBFqnCBsd6RMkjVDRZzb`), **Model** (default `eleven_multilingual_v2`) |
 
 Voice/model suggestions are editable inputs, not an exhaustive list or a guarantee of availability
-in your provider account. Enter a voice/model supported by that account. Switching providers clamps
-the speaking rate to the new provider's supported range. Click **Save** before leaving Settings.
+in your provider account. Enter a voice/model supported by that account. Click **Save** before
+leaving Settings. There are no speaking rate or pitch settings: new audio is always synthesized at
+the voice's normal speed and pitch. Use the player's **Speed** to slow down or speed up listening.
 
 Keys entered in Settings are stored unencrypted in local app data. Environment variables override
 the corresponding credential fields; overridden inputs are disabled. See
@@ -158,9 +159,10 @@ generate audio. **Delete** it instead. The other passages keep their numbers, so
 deleted one's number. A lesson keeps at least one passage. Lessons exported afterwards arrive on
 other devices without the deleted passages; a copy already on another device keeps them.
 
-**Player Speed** changes local playback without provider requests. **Speaking rate**, voice,
-provider, ElevenLabs model, and Azure pitch apply only to audio generated from then on; changing
-them never replaces existing clips. Different lessons, or even passages, can therefore carry audio
+**Player Speed** changes local playback without provider requests; it is the only speed control.
+Provider, voice and ElevenLabs model apply only to audio generated from then on; changing them
+never replaces existing clips. Clips made by an older app version with a different speaking rate or
+pitch also stay as they are until regenerated. Different lessons, or even passages, can carry audio
 from different providers, and switching back and forth costs nothing for audio you already have.
 There is one stored MP3 per item; regenerating replaces that item's clip rather than keeping
 several voice versions.
@@ -312,7 +314,7 @@ devices.
 |---|---|
 | Lesson IDs, titles, original creation dates and source text | Saved answers, attempts, replay history and practice statistics |
 | Passage positions/text and existing MP3s with cache keys | API keys, Azure region, environment variables and original file paths |
-| Source device's provider, both providers' voice choices, ElevenLabs model, speaking rate and pitch | Dictation playback speed and loop preference |
+| Source device's provider, both providers' voice choices and ElevenLabs model | Dictation playback speed and loop preference |
 
 The export includes every existing clip, whichever voice made it; passages with no audio remain
 text-only. The destination device plays imported clips as they are. Generating missing audio or

@@ -75,11 +75,9 @@ fn is_valid_region(region: &str) -> bool {
 
 fn build_ssml(request: &TtsRequest) -> String {
     format!(
-        "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"{lang}\"><voice name=\"{voice}\"><prosody rate=\"{rate:+}%\" pitch=\"{pitch:+}%\">{text}</prosody></voice></speak>",
+        "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"{lang}\"><voice name=\"{voice}\">{text}</voice></speak>",
         lang = escape_xml(&voice_locale(&request.voice)),
         voice = escape_xml(&request.voice),
-        rate = request.rate,
-        pitch = request.pitch,
         text = escape_xml(&request.text),
     )
 }
@@ -119,8 +117,6 @@ mod tests {
             text: text.into(),
             voice: "en-GB-SoniaNeural".into(),
             model: String::new(),
-            rate: -10,
-            pitch: 0,
             output_format: "audio-24khz-48kbitrate-mono-mp3".into(),
         }
     }
@@ -130,7 +126,6 @@ mod tests {
         let ssml = build_ssml(&request("Tom & Jerry <said> \"it's\""));
         assert!(ssml.contains("xml:lang=\"en-GB\""));
         assert!(ssml.contains("<voice name=\"en-GB-SoniaNeural\">"));
-        assert!(ssml.contains("rate=\"-10%\" pitch=\"+0%\""));
         assert!(ssml.contains("Tom &amp; Jerry &lt;said&gt; &quot;it&apos;s&quot;"));
     }
 

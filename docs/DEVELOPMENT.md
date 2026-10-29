@@ -86,8 +86,10 @@ Decisions made while implementing V1, where the specification left room:
   keep `connect-src ipc: http://ipc.localhost`: without it Tauri falls back to its postMessage IPC,
   which hands the MP3 over as an array of numbers instead of an `ArrayBuffer`, and installed builds
   play no audio (dev builds apply no CSP, so they still work).
-- **Cache key**: `SHA-256("v1", text, voice, rate, pitch, output_format)`, fields separated by `0x1F`;
-  ElevenLabs keys append `"elevenlabs", model`. Azure keys keep the original recipe, because older
+- **Cache key**: `SHA-256("v1", text, voice, "0", "0", output_format)`, fields separated by `0x1F`;
+  ElevenLabs keys append `"elevenlabs", model`. The two `"0"` fields are where speaking rate and
+  pitch used to go (`TtsRequest` no longer has either), so keys are identical to the ones older
+  versions compute for default settings. Azure keys keep the original recipe, because older
   app versions still compare keys to decide whether imported audio is current. Audio is stored
   as `lessons/<lesson-id>/audio/NNN.mp3`, and the key is saved with the item (`audio_cache_key`, also
   in `metadata.json`) as a record of the settings that produced the clip. It is not compared with
@@ -96,20 +98,23 @@ Decisions made while implementing V1, where the specification left room:
   all replace an existing clip, using the current settings; there is one file per item, so
   regenerating overwrites it.
 - **Azure**: REST endpoint `https://<region>.tts.speech.microsoft.com/cognitiveservices/v1`, output
-  `audio-24khz-48kbitrate-mono-mp3`.
+  `audio-24khz-48kbitrate-mono-mp3`. The SSML has no `<prosody>` element, so the voice speaks at its
+  normal rate and pitch.
 - **ElevenLabs**: REST endpoint `https://api.elevenlabs.io/v1/text-to-speech/<voice-id>`, output
-  `mp3_44100_128`, model `eleven_multilingual_v2` by default. The speaking rate maps to
-  `voice_settings.speed` (0.7–1.2, so −30% to +20%); pitch is not supported and ignored. At normal
-  speed `voice_settings` is left out so the voice keeps its own settings.
+  `mp3_44100_128`, model `eleven_multilingual_v2` by default. Requests send no `voice_settings`, so
+  the voice speaks with the settings saved with it in the ElevenLabs account.
+- **Speed**: the player's speed (0.6×–1.25×) is the only speed control; it changes local playback
+  and never calls the provider.
 - Both providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). Lesson generation
   runs one item at a time to stay within free-tier rate limits.
 - **Answer comparison** is implemented in Rust (`practice/comparison.rs`): case and surrounding punctuation are
   ignored, curly apostrophes are normalized, and every word counts. The diff is an LCS over words;
   missing and extra words between two matches are paired as "changed". Accuracy is
   `correct words / max(source words, answer words)`.
-- **Settings** (TTS provider, each provider's voice, TTS rate/pitch, player speed/loop, optional
+- **Settings** (TTS provider, each provider's voice, ElevenLabs model, player speed/loop, optional
   credentials) are stored as JSON in the SQLite `settings` table. The Azure voice used to be stored as
-  `voice`; that name is still read.
+  `voice`; that name is still read. A speaking rate or pitch saved by an older version is ignored on
+  load; clips made with it are kept until regenerated.
 - `metadata.json` in each lesson folder is written for readability; SQLite (`dictation.db` in the app
   data directory) is the source of truth.
 - **Saved answers**: the latest answer to each item is kept in the `answers` table (schema v2), exactly
@@ -154,8 +159,9 @@ item was exported. API credentials, region, source paths, answers, attempts and 
 are absent. This is not a database backup.
 
 Export copies every existing audio file, whatever settings made it. `voice` holds the exporting
-device's current synthesis settings; it is still written because older app versions refuse a
-manifest without it, but the app no longer reads it. An item's `audioCacheKey` records the settings
+device's provider, voices and model, plus `speakingRate: 0` and `pitch: 0`; it is still written,
+with those two fields, because older app versions refuse a manifest without them, but the app no
+longer reads it. An item's `audioCacheKey` records the settings
 that produced its clip (a hash, not recoverable voice metadata); its presence marks that the
 archive carries that clip. Import only matches IDs, and fills audio only where local audio is
 absent and position/text match; it never replaces an existing clip, and imported clips are used

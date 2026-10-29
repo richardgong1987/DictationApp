@@ -252,8 +252,8 @@ Wait for the audio count to reach the number of items before an uninterrupted pr
 If some clips fail, check Settings and your connection, then retry generation. A passage that cannot
 be spoken, such as a `---` divider, can be removed with its **Delete** button.
 
-Audio is saved locally and shared by both modes. Changing the provider, voice, model, speaking rate
-or pitch in Settings affects only audio generated from then on; existing clips are never replaced
+Audio is saved locally and shared by both modes. Changing the provider, voice or model in Settings
+affects only audio generated from then on; existing clips are never replaced
 automatically, so different lessons can use different providers. **Regenerate** (one passage) and
 **Regenerate all** replace existing audio with the currently selected provider and settings; use
 them when you deliberately want to replace it.
@@ -339,7 +339,7 @@ and its existing per-passage MP3s in one `.zip`, then send it to another device 
 |---|---|
 | Lesson IDs, titles, creation dates, source text and passage text/order | Typed answers, checked answers, attempt history and practice statistics |
 | Existing MP3s and their audio cache keys | API keys, Azure region and environment variables |
-| Exporting device's provider, voices, ElevenLabs model, speaking rate and pitch | Dictation player speed and loop preference |
+| Exporting device's provider, voices and ElevenLabs model | Dictation player speed and loop preference |
 
 **Imported clips are used as they are**, whatever provider or voice made them, so they play without
 another synthesis request or an API key. Import does not change this device's Settings.
@@ -353,11 +353,10 @@ See the [full transfer guide](docs/USER_GUIDE.md#transfer-lessons-and-audio) for
 
 - **Can I practice offline?** Yes, with already-generated audio. Generate all clips before going
   offline; playing a passage with no audio triggers a provider request.
-- **Does slowing playback use credits?** No. The player's **Speed** changes local playback.
-  **Speaking rate** in Settings applies to audio generated afterwards; existing clips keep their rate
-  unless you regenerate them.
-- **Does changing the voice or provider replace my audio?** No. Provider, voice, model, speaking rate
-  and pitch apply only to audio generated from then on. Existing clips stay until you use
+- **Does slowing playback use credits?** No. The player's **Speed** changes local playback and never
+  calls the provider. Synthesis always uses the voice's normal speed.
+- **Does changing the voice or provider replace my audio?** No. Provider, voice and model apply only
+  to audio generated from then on. Existing clips stay until you use
   **Regenerate** or **Regenerate all**, so lessons can carry audio from different providers.
 - **No sound or generation failed?** Check system volume and the selected provider's credentials,
   region/voice/model, internet access and available quota. Retry the failed clip or **Generate missing audio**.

@@ -92,9 +92,6 @@ export type TtsProvider = "azure" | "elevenlabs";
 export interface Settings {
   ttsProvider: TtsProvider;
   azureVoice: string;
-  speakingRate: number;
-  /** Azure only. */
-  pitch: number;
   azureRegion: string;
   azureKey: string;
   elevenlabsVoiceId: string;

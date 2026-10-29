@@ -513,12 +513,9 @@ fn switching_provider_keeps_audio_until_it_is_regenerated() {
 
     let mut settings = h.call("get_settings", json!({})).unwrap()["settings"].clone();
     settings["ttsProvider"] = json!("elevenlabs");
-    settings["speakingRate"] = json!(50);
     let saved = h
         .call("save_settings", json!({ "settings": settings }))
         .unwrap();
-    // ElevenLabs speaks at most 1.2x.
-    assert_eq!(saved["settings"]["speakingRate"], 20);
     assert_eq!(saved["credentialsConfigured"], false);
 
     // The Azure audio stays, so nothing needs the missing ElevenLabs key.

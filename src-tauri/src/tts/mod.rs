@@ -9,7 +9,6 @@ mod http;
 
 use std::fmt;
 use std::future::Future;
-use std::ops::RangeInclusive;
 
 use serde::{Deserialize, Serialize};
 
@@ -25,17 +24,6 @@ pub enum TtsProviderKind {
     ElevenLabs,
 }
 
-impl TtsProviderKind {
-    /// Speaking rate adjustments in percent that the provider accepts.
-    /// ElevenLabs only speaks at 0.7x to 1.2x.
-    pub fn speaking_rate_range(self) -> RangeInclusive<i32> {
-        match self {
-            Self::Azure => -50..=100,
-            Self::ElevenLabs => -30..=20,
-        }
-    }
-}
-
 impl fmt::Display for TtsProviderKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
@@ -46,7 +34,8 @@ impl fmt::Display for TtsProviderKind {
 }
 
 /// Everything that determines the synthesized audio. Every field is part of
-/// the audio cache key.
+/// the audio cache key. Speech is always at the provider's normal speed and
+/// pitch; the player slows it down instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TtsRequest {
     pub provider: TtsProviderKind,
@@ -55,10 +44,6 @@ pub struct TtsRequest {
     pub voice: String,
     /// ElevenLabs model ID; empty for Azure, which has no model choice.
     pub model: String,
-    /// Speaking rate adjustment in percent.
-    pub rate: i32,
-    /// Pitch adjustment in percent; always 0 for ElevenLabs, which cannot change it.
-    pub pitch: i32,
     pub output_format: String,
 }
 

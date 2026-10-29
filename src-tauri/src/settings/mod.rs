@@ -29,11 +29,6 @@ pub struct Settings {
     // Stored as `voice` before ElevenLabs was supported.
     #[serde(alias = "voice")]
     pub azure_voice: String,
-    /// TTS speaking rate adjustment in percent (0 = normal), within
-    /// [`TtsProviderKind::speaking_rate_range`] of the selected provider.
-    pub speaking_rate: i32,
-    /// TTS pitch adjustment in percent, -50..=50 (0 = normal). Azure only.
-    pub pitch: i32,
     /// Azure region stored in-app; `AZURE_SPEECH_REGION` takes precedence.
     pub azure_region: String,
     /// Azure key stored in-app; `AZURE_SPEECH_KEY` takes precedence.
@@ -55,8 +50,6 @@ impl Default for Settings {
         Self {
             tts_provider: TtsProviderKind::default(),
             azure_voice: DEFAULT_AZURE_VOICE.to_string(),
-            speaking_rate: 0,
-            pitch: 0,
             azure_region: String::new(),
             azure_key: String::new(),
             elevenlabs_voice_id: DEFAULT_ELEVENLABS_VOICE.to_string(),
@@ -74,11 +67,6 @@ impl Settings {
         self.azure_voice = trimmed_or(&self.azure_voice, DEFAULT_AZURE_VOICE);
         self.elevenlabs_voice_id = trimmed_or(&self.elevenlabs_voice_id, DEFAULT_ELEVENLABS_VOICE);
         self.elevenlabs_model = trimmed_or(&self.elevenlabs_model, DEFAULT_ELEVENLABS_MODEL);
-        let rate_range = self.tts_provider.speaking_rate_range();
-        self.speaking_rate = self
-            .speaking_rate
-            .clamp(*rate_range.start(), *rate_range.end());
-        self.pitch = self.pitch.clamp(-50, 50);
         self.azure_region = self.azure_region.trim().to_lowercase();
         self.azure_key = self.azure_key.trim().to_string();
         self.elevenlabs_key = self.elevenlabs_key.trim().to_string();
@@ -97,8 +85,8 @@ impl Settings {
             azure_voice: self.azure_voice.clone(),
             elevenlabs_voice_id: self.elevenlabs_voice_id.clone(),
             elevenlabs_model: self.elevenlabs_model.clone(),
-            speaking_rate: self.speaking_rate,
-            pitch: self.pitch,
+            speaking_rate: 0,
+            pitch: 0,
         }
     }
 
@@ -110,8 +98,6 @@ impl Settings {
                 text: text.to_string(),
                 voice: self.azure_voice.clone(),
                 model: String::new(),
-                rate: self.speaking_rate,
-                pitch: self.pitch,
                 output_format: AZURE_OUTPUT_FORMAT.to_string(),
             },
             TtsProviderKind::ElevenLabs => TtsRequest {
@@ -119,8 +105,6 @@ impl Settings {
                 text: text.to_string(),
                 voice: self.elevenlabs_voice_id.clone(),
                 model: self.elevenlabs_model.clone(),
-                rate: self.speaking_rate,
-                pitch: 0,
                 output_format: ELEVENLABS_OUTPUT_FORMAT.to_string(),
             },
         }
@@ -155,6 +139,8 @@ pub struct VoiceSettings {
     pub azure_voice: String,
     pub elevenlabs_voice_id: String,
     pub elevenlabs_model: String,
+    /// Always 0 now that speech is at normal speed and pitch; older versions
+    /// of the app still expect these in an export.
     pub speaking_rate: i32,
     pub pitch: i32,
 }
@@ -302,8 +288,6 @@ mod tests {
         let settings = Settings {
             azure_voice: "  ".into(),
             elevenlabs_voice_id: " ".into(),
-            speaking_rate: 500,
-            pitch: -500,
             azure_region: " EastUS ".into(),
             playback_speed: 3.0,
             ..Settings::default()
@@ -311,47 +295,31 @@ mod tests {
         .sanitized();
         assert_eq!(settings.azure_voice, "en-US-JennyNeural");
         assert_eq!(settings.elevenlabs_voice_id, DEFAULT_ELEVENLABS_VOICE);
-        assert_eq!(settings.speaking_rate, 100);
-        assert_eq!(settings.pitch, -50);
         assert_eq!(settings.azure_region, "eastus");
         assert_eq!(settings.playback_speed, 1.0);
     }
 
     #[test]
-    fn elevenlabs_speaking_rate_is_clamped_to_its_speed_range() {
-        let settings = |speaking_rate| {
-            Settings {
-                tts_provider: TtsProviderKind::ElevenLabs,
-                speaking_rate,
-                ..Settings::default()
-            }
-            .sanitized()
-        };
-        assert_eq!(settings(50).speaking_rate, 20);
-        assert_eq!(settings(-50).speaking_rate, -30);
-    }
-
-    #[test]
-    fn elevenlabs_request_uses_its_voice_and_model_and_ignores_pitch() {
+    fn elevenlabs_request_uses_its_voice_and_model() {
         let settings = Settings {
             tts_provider: TtsProviderKind::ElevenLabs,
             elevenlabs_voice_id: "abc123".into(),
             elevenlabs_model: "eleven_flash_v2_5".into(),
-            speaking_rate: 10,
-            pitch: 20,
             ..Settings::default()
         };
         let request = settings.tts_request("Hello.");
         assert_eq!(request.provider, TtsProviderKind::ElevenLabs);
         assert_eq!(request.voice, "abc123");
         assert_eq!(request.model, "eleven_flash_v2_5");
-        assert_eq!(request.rate, 10);
-        assert_eq!(request.pitch, 0);
     }
 
     #[test]
-    fn settings_saved_before_elevenlabs_support_still_load() {
-        let settings: Settings = serde_json::from_str(r#"{"voice":"en-GB-SoniaNeural"}"#).unwrap();
+    fn settings_saved_by_older_versions_still_load() {
+        // Before ElevenLabs support, and with the speaking rate and pitch
+        // that could be set back then.
+        let settings: Settings =
+            serde_json::from_str(r#"{"voice":"en-GB-SoniaNeural","speakingRate":10,"pitch":-5}"#)
+                .unwrap();
         assert_eq!(settings.tts_provider, TtsProviderKind::Azure);
         assert_eq!(settings.azure_voice, "en-GB-SoniaNeural");
         assert_eq!(settings.elevenlabs_model, DEFAULT_ELEVENLABS_MODEL);

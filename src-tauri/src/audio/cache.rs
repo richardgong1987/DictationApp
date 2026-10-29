@@ -14,6 +14,11 @@ use crate::tts::{TtsProvider, TtsProviderKind, TtsRequest};
 /// Bump when the key recipe changes, so keys made with different recipes never match.
 const CACHE_KEY_VERSION: &str = "v1";
 
+/// Speaking rate and pitch, in percent. They used to be settings, and older
+/// versions of the app still hash them, so they stay in the recipe as 0.
+const NORMAL_RATE: &str = "0";
+const NORMAL_PITCH: &str = "0";
+
 /// `SHA-256(version, text, voice, rate, pitch, output_format)` as lowercase
 /// hex, followed by `provider, model` for providers other than Azure. Stored
 /// with an item's audio as a record of the settings that made it.
@@ -21,14 +26,12 @@ const CACHE_KEY_VERSION: &str = "v1";
 /// Fields are separated by a control character that cannot appear in any of
 /// them, so different field boundaries can never produce the same input.
 pub fn cache_key(request: &TtsRequest) -> String {
-    let rate = request.rate.to_string();
-    let pitch = request.pitch.to_string();
     let mut fields = vec![
         CACHE_KEY_VERSION,
         request.text.as_str(),
         request.voice.as_str(),
-        rate.as_str(),
-        pitch.as_str(),
+        NORMAL_RATE,
+        NORMAL_PITCH,
         request.output_format.as_str(),
     ];
     match request.provider {
@@ -145,8 +148,6 @@ mod tests {
             text: text.into(),
             voice: "en-US-JennyNeural".into(),
             model: String::new(),
-            rate: 0,
-            pitch: 0,
             output_format: "audio-24khz-48kbitrate-mono-mp3".into(),
         }
     }
@@ -195,14 +196,6 @@ mod tests {
             },
             TtsRequest {
                 voice: "en-GB-SoniaNeural".into(),
-                ..base.clone()
-            },
-            TtsRequest {
-                rate: 10,
-                ..base.clone()
-            },
-            TtsRequest {
-                pitch: -5,
                 ..base.clone()
             },
             TtsRequest {

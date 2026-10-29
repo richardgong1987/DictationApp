@@ -1,10 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, errorMessage } from "../api/client";
-import { SPEAKING_RATE_RANGE } from "../api/constants";
 import type { Settings, SettingsDetail, TtsProvider } from "../api/types";
 import ErrorBanner from "../components/ErrorBanner";
 import PageHeader from "../components/PageHeader";
-import { formatSignedPercent, formatTtsProvider } from "../format";
+import { formatTtsProvider } from "../format";
 
 /** Suggestions only; any Azure neural voice name can be typed in. */
 const AZURE_VOICES = [
@@ -61,15 +60,6 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
     setForm((f) => f && { ...f, [key]: value });
   };
 
-  /** Keeps the speaking rate within what the new provider supports. */
-  function changeProvider(ttsProvider: TtsProvider) {
-    const { min, max } = SPEAKING_RATE_RANGE[ttsProvider];
-    setIsSaved(false);
-    setForm(
-      (f) => f && { ...f, ttsProvider, speakingRate: Math.min(max, Math.max(min, f.speakingRate)) },
-    );
-  }
-
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!form) return;
@@ -105,15 +95,16 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
               Provider
               <select
                 value={form.ttsProvider}
-                onChange={(e) => changeProvider(e.target.value as TtsProvider)}
+                onChange={(e) => update("ttsProvider", e.target.value as TtsProvider)}
               >
                 <option value="azure">{formatTtsProvider("azure")}</option>
                 <option value="elevenlabs">{formatTtsProvider("elevenlabs")}</option>
               </select>
             </label>
             <p className="muted small">
-              New audio is generated with this provider. Audio you already have is kept, whichever
-              provider made it, until you regenerate it.
+              New audio is generated with this provider and voice, at normal speed; slow it down
+              with the player's Speed. Audio you already have is kept, whichever provider made it,
+              until you regenerate it.
             </p>
           </fieldset>
 
@@ -122,38 +113,6 @@ export default function SettingsScreen({ onClose }: { onClose: () => void }) {
           ) : (
             <ElevenLabsFields form={form} detail={detail} update={update} />
           )}
-
-          <fieldset>
-            <legend>Speech</legend>
-            <label>
-              Speaking rate: {formatSignedPercent(form.speakingRate)}
-              <input
-                type="range"
-                min={SPEAKING_RATE_RANGE[form.ttsProvider].min}
-                max={SPEAKING_RATE_RANGE[form.ttsProvider].max}
-                step={5}
-                value={form.speakingRate}
-                onChange={(e) => update("speakingRate", Number(e.target.value))}
-              />
-            </label>
-            {form.ttsProvider === "azure" && (
-              <label>
-                Pitch: {formatSignedPercent(form.pitch)}
-                <input
-                  type="range"
-                  min={-50}
-                  max={50}
-                  step={5}
-                  value={form.pitch}
-                  onChange={(e) => update("pitch", Number(e.target.value))}
-                />
-              </label>
-            )}
-            <p className="muted small">
-              Changing the provider, voice, rate or pitch only affects audio generated from now on.
-              To redo a lesson's existing audio with them, use Regenerate in that lesson.
-            </p>
-          </fieldset>
 
           <div className="actions">
             <button type="submit" className="primary" disabled={isSaving}>

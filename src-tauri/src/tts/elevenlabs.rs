@@ -43,15 +43,10 @@ impl TtsProvider for ElevenLabsTts {
     }
 }
 
-/// At normal speed `voice_settings` is left out, so the voice keeps the
-/// settings saved with it in ElevenLabs.
+/// `voice_settings` is left out, so the voice speaks with the settings saved
+/// with it in ElevenLabs.
 fn request_body(request: &TtsRequest) -> Value {
-    let mut body = json!({ "text": request.text, "model_id": request.model });
-    if request.rate != 0 {
-        let speed = f64::from(100 + request.rate) / 100.0;
-        body["voice_settings"] = json!({ "speed": speed });
-    }
-    body
+    json!({ "text": request.text, "model_id": request.model })
 }
 
 /// ElevenLabs voice IDs are letters and digits, e.g. `JBFqnCBsd6RMkjVDRZzb`.
@@ -78,30 +73,18 @@ fn describe_error(status: StatusCode, body: &str) -> Option<String> {
 mod tests {
     use super::*;
 
-    fn request(rate: i32) -> TtsRequest {
-        TtsRequest {
+    #[test]
+    fn body_carries_text_and_model_and_leaves_speed_to_the_voice() {
+        let body = request_body(&TtsRequest {
             provider: TtsProviderKind::ElevenLabs,
             text: "Tom & Jerry \"said\"".into(),
             voice: "JBFqnCBsd6RMkjVDRZzb".into(),
             model: "eleven_multilingual_v2".into(),
-            rate,
-            pitch: 0,
             output_format: "mp3_44100_128".into(),
-        }
-    }
-
-    #[test]
-    fn body_carries_text_and_model_and_leaves_normal_speed_to_the_voice() {
-        let body = request_body(&request(0));
+        });
         assert_eq!(body["text"], "Tom & Jerry \"said\"");
         assert_eq!(body["model_id"], "eleven_multilingual_v2");
         assert!(body.get("voice_settings").is_none());
-    }
-
-    #[test]
-    fn speaking_rate_becomes_speed() {
-        assert_eq!(request_body(&request(-30))["voice_settings"]["speed"], 0.7);
-        assert_eq!(request_body(&request(20))["voice_settings"]["speed"], 1.2);
     }
 
     #[test]
