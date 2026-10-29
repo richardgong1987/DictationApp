@@ -103,7 +103,7 @@ Decisions made while implementing V1, where the specification left room:
 - **ElevenLabs**: REST endpoint `https://api.elevenlabs.io/v1/text-to-speech/<voice-id>`, output
   `mp3_44100_128`, model `eleven_multilingual_v2` by default. Requests send no `voice_settings`, so
   the voice speaks with the settings saved with it in the ElevenLabs account.
-- **Speed**: the player's speed (0.6×–1.25×) is the only speed control; it changes local playback
+- **Speed**: the player's speed (0.6×–2×) is the only speed control; it changes local playback
   and never calls the provider.
 - Both providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). Lesson generation
   runs one item at a time to stay within free-tier rate limits.

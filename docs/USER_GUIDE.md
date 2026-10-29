@@ -246,7 +246,7 @@ Enable **Loop passage** and choose **Time to repeat aloud**:
 
 During the pause, **Your turn** replaces the timeline with a countdown. The passage's play/pause
 control also pauses/resumes this turn. Use the seek bar while audio is available, or replay to
-start over. **Speed** offers 0.60×, 0.75×, 0.90×, 1.00×, 1.10× and 1.25×, as in Dictation.
+start over. **Speed** offers 0.60×, 0.75×, 0.90×, 1.00×, 1.10×, 1.25×, 1.50×, 1.75× and 2.00×, as in Dictation.
 
 ### Long passages: one sentence or phrase at a time
 

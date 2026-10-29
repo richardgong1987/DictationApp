@@ -303,7 +303,8 @@ use the visible player controls in **Shadowing**.
 3. Enable **Loop passage** to practice it repeatedly.
 4. Set **Time to repeat aloud**: **No pause**, **3 seconds**, **5 seconds**, or **Match passage length**.
    During a repeat pause, **Your turn** shows a countdown: say the passage aloud before it plays again.
-5. Adjust **Speed** if needed. Both practice modes offer 0.60×, 0.75×, 0.90×, 1.00×, 1.10× and 1.25×.
+5. Adjust **Speed** if needed. Both practice modes offer 0.60× to 2.00×: 0.60×, 0.75×, 0.90×, 1.00×,
+   1.10×, 1.25×, 1.50×, 1.75× and 2.00×.
 
 The repeat pause applies to **passage looping**. **Match passage length** gives you time based on the
 clip's duration at the selected playback speed. Choose **No pause** to read along continuously with

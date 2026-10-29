@@ -13,7 +13,7 @@ const AZURE_OUTPUT_FORMAT: &str = "audio-24khz-48kbitrate-mono-mp3";
 const ELEVENLABS_OUTPUT_FORMAT: &str = "mp3_44100_128";
 
 /// Speeds the player offers; any other stored value falls back to 1.0.
-pub const PLAYBACK_SPEEDS: [f64; 6] = [0.6, 0.75, 0.9, 1.0, 1.1, 1.25];
+pub const PLAYBACK_SPEEDS: [f64; 9] = [0.6, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0];
 
 const DEFAULT_AZURE_VOICE: &str = "en-US-JennyNeural";
 /// "George", one of the default voices every ElevenLabs account has.
