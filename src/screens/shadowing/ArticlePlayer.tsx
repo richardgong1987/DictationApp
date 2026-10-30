@@ -63,7 +63,9 @@ export default function ArticlePlayer({
             onClick={() => player.restartArticle()}
             title="Play the article from the beginning"
           >
-            ⏮ Restart
+            {/* The text form: on its own, iOS would draw the symbol as a blue emoji. */}
+            {"\u23EE\uFE0E"}
+            <span className="wide-only"> Restart</span>
           </button>
           <button
             type="button"
@@ -126,14 +128,14 @@ export default function ArticlePlayer({
       </div>
 
       <div className="player-options">
-        <span className="article-status muted small" role="status">
+        <span className="article-status muted small wide-only" role="status">
           {articleStatus(state, passageCount)}
         </span>
         <label
           className="inline-field"
           title="Play the article whole, one sentence at a time, or in short phrases split at commas"
         >
-          Practice by
+          <span className="wide-only">Practice by</span>
           <select value={unit} onChange={(e) => player.setUnit(e.target.value as RepeatUnit)}>
             {REPEAT_UNITS.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -146,7 +148,7 @@ export default function ArticlePlayer({
           className="inline-field"
           title="Pause after each part for repeating it aloud, also between repetitions while looping"
         >
-          Time to repeat aloud
+          <span className="wide-only">Time to repeat aloud</span>
           <select
             value={repeatPause}
             onChange={({ target: { value } }) =>
@@ -242,6 +244,7 @@ function YourTurn({
 
 function playLabel(state: ShadowingState): string {
   if (!isUnderway(state) || state.phase === "failed") return "▶ Play article";
+  if (state.phase === "loading" && !state.isPaused) return "Loading…";
   return isRunning(state) ? "❚❚ Pause" : "▶ Resume";
 }
 

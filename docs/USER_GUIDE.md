@@ -65,7 +65,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 | **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, pin/rename/delete lessons, or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
 | **Lesson detail** | Click a lesson title in the library. Read passages, inspect word counts and audio badges, generate audio, and see attempt counts/best accuracy. Click the heading to rename; click a passage's **▶** to start dictation at that item. |
 | **Dictation** | Listen, type, reveal/check, and review word differences. All items appear as cards; the active card has an accent border and highlighted number. Untouched inactive cards keep their answer boxes collapsed. |
-| **Shadowing** | Use the article player at the top or a passage's own player. Practice a passage whole, sentence by sentence or phrase by phrase. Show/hide all text, choose playback speed, and leave time to repeat aloud. |
+| **Shadowing** | The whole article under one player. Play it whole, sentence by sentence or phrase by phrase; click the text to start anywhere, and loop a hard sentence. Show/hide the text, choose playback speed, and leave time to repeat aloud. |
 | **Settings** | Choose the TTS provider and its credentials, voice and model. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
 
 The layout uses the available window width and wraps controls on smaller screens. Colors follow
@@ -235,11 +235,22 @@ Dictation shortcuts; Shadowing uses its visible player controls.
 
 ## Practice shadowing
 
-Text starts visible. Click a passage's **Play** to start there and carry on through the passages after
-it, or its replay icon to restart. Loop stays on the passage; turning off its **Continue** stops at its end.
-Enable **Loop passage** and choose **Time to repeat aloud**:
+The whole article is on screen as one text, a paragraph per passage, with one player that stays at
+the top of the window. Click **Play article** to start at the top, or click anywhere in the text to
+start there. It plays through to the end and keeps the current part in view. **Restart** goes back
+to the top, and **Loop article** starts over after the last passage.
 
-| Option | After each repetition |
+**Practice by** chooses what a part is:
+
+| Option | Parts |
+|---|---|
+| **Whole passage** | Each paragraph. |
+| **Sentence** | Each sentence. |
+| **Phrase** | Also the pieces inside sentences, at commas, semicolons, colons and dashes. Very short pieces such as list items ("Three, Four, and Five") stay with their neighbors. |
+
+**Time to repeat aloud** chooses how long you get after each part:
+
+| Option | After each part |
 |---|---|
 | **No pause** | The audio goes on immediately. |
 | **2 seconds** | Two seconds to speak. |
@@ -250,52 +261,30 @@ Enable **Loop passage** and choose **Time to repeat aloud**:
 | **8 seconds** | Eight seconds to speak. |
 | **Match the audio's length** | As long as what you just heard takes at the selected playback speed. |
 
-During the pause, **Your turn** replaces the timeline with a countdown. The passage's play/pause
-control also pauses/resumes this turn. Use the seek bar while audio is available, or replay to
-start over. **Speed** offers 0.60×, 0.75×, 0.90×, 1.00×, 1.10×, 1.25×, 1.50×, 1.75× and 2.00×, as in Dictation.
+During the pause, **Your turn** replaces the timeline with a countdown, and **Pause** also pauses it.
+For fluent continuous reading, use **Whole passage** and **No pause**. To repeat the whole article
+after the audio, the way a class repeats after its teacher, use **Sentence** and a pause such as
+**3 seconds**.
 
-### Long passages: one sentence or phrase at a time
+**Speed** offers 0.60×, 0.75×, 0.90×, 1.00×, 1.10×, 1.25×, 1.50×, 1.75× and 2.00×, as in Dictation.
 
-When a passage is too long to follow, change **Practice by** from **Whole passage** to:
+### When a sentence holds you up
 
-| Option | Each passage is cut |
-|---|---|
-| **Sentence** | at the end of every sentence. |
-| **Phrase** | also inside sentences, at commas, semicolons, colons and dashes. Very short pieces such as list items ("Three, Four, and Five") stay with their neighbors. |
+Switch **Practice by** to **Sentence** (or **Phrase**); playback stays on the sentence you are in.
+Turn on **Loop sentence** to repeat it as often as you need, then turn it off and the article carries
+on from there. The loop stays on if you move to another part, so you can repeat that one instead.
 
-Dotted underlines show where the text is cut. Click a sentence or phrase to play it; **‹** and **›**
-move to the previous or next one, and work while the text is hidden. **Play** goes through the
-passage one piece at a time, with **Your turn** after each, and on to the next passage. **Loop sentence** (or **Loop phrase**)
-repeats the current piece until you turn it off or move to another; the loop stays on as you move.
-Replay starts the current piece again.
+Dotted underlines show where the text is cut. Click a part to play from it. **‹** and **›** move to
+the previous or next part, into the neighboring passages too, and work while the text is hidden. The
+replay icon starts the current part again, and the seek bar moves within the current passage.
 
 The app finds each piece in the audio by the speaker's pauses, so it works with existing audio and
 any voice, without extra speech requests. Where the voice runs two pieces together without a pause,
 they stay one piece.
 
-**Play article** plays passages in order, scrolls to the current passage, and offers
-**Pause/Resume**, **Restart**, and **Loop article**. It follows **Practice by** and **Time to repeat
-aloud**:
-
-- For fluent continuous reading, use **Whole passage** and **No pause**. It plays straight through.
-- To repeat the whole article after the audio, the way a class repeats after its teacher, choose
-  **Sentence** and a pause such as **3 seconds**. **Your turn** follows every sentence, including the
-  last one of each passage. **Whole passage** and **Phrase** work the same way, in longer or shorter
-  parts.
-
-During the article, a passage's replay icon, **‹** / **›**, loop button and clickable text keep the
-article going from that point. Changing **Practice by** starts the current passage over.
-
-**Play** on any passage starts from there and carries on through the passages after it. When a
-sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to carry on. **Play**
-on the current passage pauses and resumes it.
-
-To stop at the end of a passage instead, turn off its **Continue**; this lasts until you move to
-another passage. Turning it back on carries on without restarting, and on a passage that has
-finished, it goes on to the next one.
-
-Starting a passage or the article replaces whatever was playing. They share one player and cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
-**Retry**. Leaving the screen stops playback and repeat timers.
+**Hide text / Show text** applies to the whole article. A failed passage shows **Retry**. Leaving the
+screen stops playback and repeat timers. On a phone the title and status line are hidden, and the two
+menus lose their labels, to leave more of the screen to the article.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation
 answers/statistics. Its speed, practice unit, pause and loop choices last for the current visit.

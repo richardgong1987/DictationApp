@@ -235,10 +235,10 @@ src/
     ├── lesson/       LessonScreen, item row, audio generation hook and status
     ├── shadowing/
     │   ├── ShadowingScreen.tsx       loads the lesson
-    │   ├── ShadowingSession.tsx      article player on top, one row per passage
-    │   ├── ArticlePlayer.tsx         play the whole article, restart, loop
-    │   ├── PassageRow.tsx            one passage: its player, "Your turn" countdown, text
-    │   ├── shadowingPlayer.ts        the one player: article and passage modes, repeat pause
+    │   ├── ShadowingSession.tsx      the player in the sticky header, above the whole article
+    │   ├── ArticlePlayer.tsx         its controls, "Your turn" countdown and practice choices
+    │   ├── ArticleText.tsx           the article as one text; clicking a part plays from there
+    │   ├── shadowingPlayer.ts        the one player: passages in order, parts, repeat pause, loops
     │   ├── useShadowingPlayer.ts     creates it, renders its state, stops it on leaving
     │   ├── passageSegments.ts        cuts a passage into sentences or phrases at the audio's pauses
     │   └── usePassageTimings.ts      decodes each passage's audio to find those pauses
@@ -262,8 +262,8 @@ continues where you stopped; the ▶ on an item in the lesson screen starts from
 
 The shadowing screen uses the same items and cached audio but keeps nothing: no answers, no
 statistics, and its speed and pause choices last for the visit only. One `ShadowingPlayer` owns its
-single audio element and the "Your turn" timer, so the article and a looping passage never overlap,
-and leaving the screen stops both.
+single audio element and the "Your turn" timer, and leaving the screen stops both. The article reads
+as one text, but each passage keeps its own audio; the player moves from one to the next.
 
 Practising by sentence or phrase needs no extra TTS requests and no timestamps from the provider.
 `usePassageTimings` decodes each passage's cached MP3 with Web Audio and `findPauses` lists its

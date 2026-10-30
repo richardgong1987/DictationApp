@@ -155,7 +155,7 @@ language-aware assessment.
 |---|---|---|
 | Open it | **Dictation** on a lesson card or lesson detail page | **Shadowing** on a lesson card or lesson detail page |
 | Practice | Listen, replay, type, then reveal the original | Read aloud with the audio or during the repeat pause |
-| Focus on a hard passage | Replay, loop, seek and slow it down | **Loop passage**, or practice a long one **sentence by sentence** or **phrase by phrase**, with time to repeat aloud |
+| Focus on a hard passage | Replay, loop, seek and slow it down | Switch to **Sentence** or **Phrase** and **Loop** the part that holds you up, with time to repeat aloud |
 | Review | Word-by-word feedback and accuracy | Listen and judge your own fluency; no recording or pronunciation score |
 | Continue | Answers save automatically; resume your dictation | **Play article** for all passages in order; **Loop article** to repeat |
 
@@ -174,9 +174,9 @@ full-width card layout; see the [screen guide](docs/USER_GUIDE.md#find-your-way-
 
 ![Dictation practice with original text revealed and word-by-word feedback](docs/diction.png)
 
-### Shadowing — practice one passage, then read the whole article
+### Shadowing — read the whole article, and loop what holds you up
 
-![Shadowing with full-article playback, passage looping and repeat-pause controls](docs/shadowing.png)
+![Shadowing with the whole article under one player, a sentence highlighted and the learner's turn counting down](docs/shadowing.png)
 
 ## Download and install
 
@@ -294,43 +294,33 @@ Dictation speed and loop choices are saved and shared across its cards.
 A focused button handles its own Enter/Space action. These shortcuts belong to **Dictation**;
 use the visible player controls in **Shadowing**.
 
-## Shadowing: repeat a hard passage → read the whole article
+## Shadowing: read the whole article → loop what holds you up
 
-### Work on a difficult passage
-
-1. Open **Shadowing**. The passage text is visible, ready to read aloud.
-2. Click that passage's **Play** button to hear it, or the replay icon to start it again. It carries on
-   through the passages after it unless you loop it or turn its **Continue** off.
-3. Enable **Loop passage** to practice it repeatedly.
-4. Set **Time to repeat aloud**: **No pause**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or **Match the audio's length**.
-   During a repeat pause, **Your turn** shows a countdown: say the passage aloud before it plays again.
+1. Open **Shadowing**. The whole article is on screen, with one player that stays at the top of the window.
+2. Click **Play article**, or click anywhere in the text to start there. It plays through to the end
+   and keeps the current part in view.
+3. Choose **Practice by**: **Whole passage**, **Sentence** or **Phrase**.
+4. Set **Time to repeat aloud**: **No pause**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or
+   **Match the audio's length**, which gives you as long as the part takes at the selected speed.
+   During the pause, **Your turn** shows a countdown: say the part aloud before the audio goes on.
 5. Adjust **Speed** if needed. Both practice modes offer 0.60× to 2.00×: 0.60×, 0.75×, 0.90×, 1.00×,
    1.10×, 1.25×, 1.50×, 1.75× and 2.00×.
 
-The repeat pause applies to **passage looping**, to sentences and phrases, and to the whole article.
-**Match the audio's length** gives you time based on the clip's duration at the selected playback
-speed. Choose **No pause** to read along continuously with that passage's repeated audio.
+Two combinations cover most practice:
 
-### Move on to the whole article
+- **Read along:** **Whole passage** and **No pause** play straight through, for rhythm and continuity.
+- **Repeat after the audio:** **Sentence** and **3 seconds** go through the whole article one sentence
+  at a time, the way a class repeats after its teacher.
 
-When the individual passages feel comfortable, click **Play article** at the top. It plays all
-passages in order, following **Practice by** and **Time to repeat aloud**:
+### When a sentence holds you up
 
-- **Read along:** with **Whole passage** and **No pause** it plays straight through, for rhythm and
-  continuity.
-- **Repeat after the audio:** with **Sentence** and **3 seconds**, the whole article goes one sentence
-  at a time, the way a class repeats after its teacher, with **Your turn** after every sentence.
-  Choose **Whole passage** or **Phrase** to repeat in longer or shorter parts.
+Switch **Practice by** to **Sentence**; playback stays on the sentence you are in. Turn on
+**Loop sentence** to repeat it as often as you need, then turn it off and the article carries on from
+there.
 
-Use **Pause/Resume**, **Restart**, or **Loop article** as needed.
-
-To start somewhere else, click **Play** on any passage. It plays from there through the passages
-after it. When a sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to
-carry on. To stop at the end of a passage instead, turn off its **Continue**.
-
-Starting a passage or the article replaces whatever was playing, so they do not play over each other. During the article, a passage's replay icon,
-**‹** / **›**, loop button and clickable text keep the article going from that point. **Hide text / Show text** lets you
-practice with or without the transcript.
+**‹** and **›** move to the previous or next part, into the neighboring passages too, and the replay
+icon starts the current part again. **Loop article** starts over after the last passage, and
+**Hide text / Show text** lets you practice with or without the transcript.
 
 Shadowing is self-directed speaking practice: it does not record your voice or score pronunciation.
 Its speed and pause choices last for the current visit; it does not change your dictation answers or statistics.

@@ -853,4 +853,61 @@ button.text-toggle {
     --page-top-gap: 12px;
     --page-bottom-gap: 32px;
   }
+
+  /* The shadowing header stays on screen above the article, so it keeps every
+     control but gives up all the space it can. */
+  .shadowing .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+  }
+
+  .shadowing .topbar {
+    display: contents;
+  }
+
+  .shadowing .page-header .link {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+
+  .article-player {
+    flex-basis: 100%;
+    min-width: 0;
+    margin-top: 0;
+  }
+
+  .article-player .transport .play {
+    min-width: 92px;
+  }
+
+  .player-options {
+    flex-wrap: nowrap;
+  }
+
+  .player-options .inline-field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .player-options select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Out of sight, but still read out by screen readers. */
+  .wide-only {
+    position: absolute;
+    width: 1px;
+    min-width: 0;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

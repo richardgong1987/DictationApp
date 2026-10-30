@@ -59,7 +59,7 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
           ← {lesson.title}
         </button>
         <div className="topbar">
-          <div>
+          <div className="wide-only">
             <h1>Shadowing</h1>
             <div className="muted small">
               {items.length} passages · listen and read aloud along with the audio
