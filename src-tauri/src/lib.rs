@@ -7,6 +7,7 @@
 //! the frontend; `app_state` wires everything together.
 
 mod app_state;
+mod appearance;
 mod audio;
 mod commands;
 mod database;
@@ -34,7 +35,7 @@ pub fn run() {
     // directory. Real environment variables always win.
     let _ = dotenvy::dotenv();
 
-    with_commands(tauri::Builder::default())
+    let builder = with_commands(tauri::Builder::default())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
@@ -43,8 +44,19 @@ pub fn run() {
             let _ = dotenvy::from_path(data_dir.join(".env"));
             let database = Database::open(&data_dir.join("dictation.db"))?;
             app.manage(AppState::new(database, data_dir, read_env_credentials()));
+            appearance::follow_night_schedule(app.handle())?;
             Ok(())
-        })
+        });
+
+    #[cfg(mobile)]
+    let builder = builder.on_window_event(|window, event| {
+        if matches!(event, tauri::WindowEvent::Resumed) {
+            // Fails only when the app is closing.
+            let _ = appearance::catch_up_after_resuming(window.app_handle());
+        }
+    });
+
+    builder
         .run(tauri::generate_context!())
         .expect("error while running DictationApp");
 }

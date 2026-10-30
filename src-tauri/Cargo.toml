@@ -29,6 +29,10 @@ dotenvy = "0.15"
 # Lesson exports. MP3s are already compressed, so storing entries uncompressed is enough.
 zip = { version = "8", default-features = false }
 
+[target.'cfg(target_os = "ios")'.dependencies]
+# Forces the dark appearance at night, which Tauri does not offer on iOS.
+objc2 = "0.6"
+
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
 tempfile = "3"

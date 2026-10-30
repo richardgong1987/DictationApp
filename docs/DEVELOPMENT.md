@@ -190,6 +190,7 @@ and call one service.
 src-tauri/src/
 ├── lib.rs            startup: .env, database, AppState, command registration
 ├── app_state.rs      composition root: builds every repository and service once
+├── appearance.rs     night schedule: forces the dark appearance from 19:00 to 07:00
 ├── commands.rs       the IPC surface (mirrored by src/api/client.ts)
 ├── database.rs       SQLite connection and schema
 ├── error.rs          AppError; each variant's text is what the user sees

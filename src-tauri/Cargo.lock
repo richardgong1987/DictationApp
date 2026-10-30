@@ -611,6 +611,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "hex",
+ "objc2",
  "reqwest 0.12.28",
  "rusqlite",
  "serde",

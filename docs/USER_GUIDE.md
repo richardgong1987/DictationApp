@@ -68,9 +68,10 @@ a major step toward being able to speak it. Use the app to work on that step as 
 | **Shadowing** | Use the article player at the top or a passage's own player. Practice a passage whole, sentence by sentence or phrase by phrase. Show/hide all text, choose playback speed, and leave time to repeat aloud. |
 | **Settings** | Choose the TTS provider and its credentials, voice and model. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
 
-The layout uses the available window width, wraps controls on smaller screens, and follows the
-system's light/dark appearance. Original text and typed answers use distinct green backgrounds.
-Their position, labels and controls identify them in either theme.
+The layout uses the available window width and wraps controls on smaller screens. Colors follow
+reading-app themes: warm Sepia by day, and dark-gray Night from 19:00 to 07:00 local time or
+whenever the system is set to dark. Original text and typed answers use different shades of the
+page color. Their position, labels and controls identify them in either theme.
 
 ## Practice a language other than English
 
