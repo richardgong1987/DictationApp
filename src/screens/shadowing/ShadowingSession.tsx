@@ -20,10 +20,8 @@ const REPEAT_UNITS: { value: RepeatUnit; label: string }[] = [
 ];
 
 const REPEAT_PAUSES: { value: RepeatPause; label: string }[] = [
-  { value: "none", label: "No pause" },
-  { value: "twoSeconds", label: "2 seconds" },
-  { value: "threeSeconds", label: "3 seconds" },
-  { value: "fiveSeconds", label: "5 seconds" },
+  { value: 0, label: "No pause" },
+  ...[2, 3, 5, 6, 7, 8].map((seconds) => ({ value: seconds, label: `${seconds} seconds` })),
   { value: "clipLength", label: "Match the audio's length" },
 ];
 
@@ -126,7 +124,9 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
             Time to repeat aloud
             <select
               value={state.repeatPause}
-              onChange={(e) => player.setRepeatPause(e.target.value as RepeatPause)}
+              onChange={({ target: { value } }) =>
+                player.setRepeatPause(value === "clipLength" ? value : Number(value))
+              }
             >
               {REPEAT_PAUSES.map(({ value, label }) => (
                 <option key={value} value={value}>

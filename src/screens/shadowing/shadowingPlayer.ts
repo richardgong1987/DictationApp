@@ -4,8 +4,11 @@
 
 import type { Clip, SegmentUnit } from "./passageSegments";
 
-/** How long the learner gets to repeat what they heard aloud before the audio goes on. */
-export type RepeatPause = "none" | "twoSeconds" | "threeSeconds" | "fiveSeconds" | "clipLength";
+/**
+ * How long the learner gets to repeat what they heard aloud before the audio
+ * goes on: a number of seconds, where 0 is no pause, or as long as the clip took.
+ */
+export type RepeatPause = number | "clipLength";
 
 /** How passages are played: whole, or a sentence or phrase at a time. */
 export type RepeatUnit = "passage" | SegmentUnit;
@@ -113,7 +116,7 @@ const INITIAL_STATE: ShadowingState = {
   ...STOPPED,
   isArticleLooping: false,
   speed: 1,
-  repeatPause: "none",
+  repeatPause: 0,
   unit: "passage",
 };
 
@@ -131,18 +134,7 @@ export function isRunning(state: ShadowingState): boolean {
 
 /** The learner's turn after hearing a clip that lasts `clipSeconds` at speed 1. */
 export function repeatPauseMs(pause: RepeatPause, clipSeconds: number, speed: number): number {
-  switch (pause) {
-    case "none":
-      return 0;
-    case "twoSeconds":
-      return 2000;
-    case "threeSeconds":
-      return 3000;
-    case "fiveSeconds":
-      return 5000;
-    case "clipLength":
-      return (clipSeconds / speed) * 1000;
-  }
+  return (pause === "clipLength" ? clipSeconds / speed : pause) * 1000;
 }
 
 export class ShadowingPlayer {

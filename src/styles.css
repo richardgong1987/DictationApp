@@ -595,6 +595,7 @@ select:focus {
   background: var(--reveal-bg);
   border: 1px solid var(--reveal-border);
   overflow-wrap: anywhere;
+  padding: 0 2px;
 }
 
 .typing-area {

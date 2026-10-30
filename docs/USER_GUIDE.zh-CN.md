@@ -111,6 +111,9 @@ If I had known about the problem, I would have called you.
 | 2 seconds | 每次播放后留 2 秒自己朗读 |
 | 3 seconds | 每次播放后留 3 秒自己朗读 |
 | 5 seconds | 每次播放后留 5 秒自己朗读 |
+| 6 seconds | 每次播放后留 6 秒自己朗读 |
+| 7 seconds | 每次播放后留 7 秒自己朗读 |
+| 8 seconds | 每次播放后留 8 秒自己朗读 |
 | Match the audio's length | 按当前播放速度下刚听到的音频时长留出朗读时间 |
 
 这个停顿设置用于 **Loop passage（单段循环）**、下面的逐句和逐短语练习，以及第二步的整篇跟读。

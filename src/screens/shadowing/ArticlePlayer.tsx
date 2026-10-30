@@ -69,7 +69,7 @@ function articleStatus(state: ShadowingState, passageCount: number): string {
   const passage = `Passage ${state.index + 1} of ${passageCount}`;
   switch (state.mode) {
     case "idle":
-      return state.repeatPause === "none"
+      return state.repeatPause === 0
         ? "Play every passage in order and read along."
         : `Play every passage in order, repeating each ${state.unit} aloud after it.`;
     case "passage":

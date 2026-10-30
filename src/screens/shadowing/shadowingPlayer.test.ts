@@ -226,7 +226,7 @@ describe("a single passage", () => {
   });
 
   it("repeats after the learner's turn while looping", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageLoop(1);
     await loadPassage(1);
 
@@ -244,7 +244,7 @@ describe("a single passage", () => {
   });
 
   it("freezes the countdown while paused and continues it on resume", async () => {
-    const player = createPlayer({ repeatPause: "fiveSeconds" });
+    const player = createPlayer({ repeatPause: 5 });
     player.togglePassageLoop(0);
     await loadPassage(0);
     audio.finish();
@@ -288,7 +288,7 @@ describe("a single passage", () => {
   });
 
   it("stops where it is when looping is turned off during the learner's turn", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageLoop(0);
     await loadPassage(0);
     audio.finish();
@@ -320,7 +320,7 @@ describe("a passage a sentence at a time", () => {
   };
 
   it("plays each sentence with the learner's turn after it, then stops", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassage(1);
     await loadPassage(1);
     assert.deepEqual(clipRequests, [[1, "sentence"]]);
@@ -345,7 +345,7 @@ describe("a passage a sentence at a time", () => {
   });
 
   it("repeats one sentence while looping", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.playSegment(1, 1);
     await loadPassage(1);
     assert.equal(audio.currentTime, 1);
@@ -372,7 +372,7 @@ describe("a passage a sentence at a time", () => {
   });
 
   it("goes on to the next sentence when looping is turned off during the learner's turn", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassageLoop(1);
     await loadPassage(1);
     timers.advance(1250);
@@ -385,7 +385,7 @@ describe("a passage a sentence at a time", () => {
 
   it("waits for audio that started late before ending a sentence", async () => {
     audio.startLatencyMs = 100;
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassage(1);
     await loadPassage(1);
 
@@ -396,7 +396,7 @@ describe("a passage a sentence at a time", () => {
   });
 
   it("ends a sentence on time after the speed changes", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassage(1);
     await loadPassage(1);
     timers.advance(750);
@@ -419,7 +419,7 @@ describe("a passage a sentence at a time", () => {
   });
 
   it("moves to the sentence at the point the learner seeks to", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassage(1);
     await loadPassage(1);
 
@@ -546,7 +546,7 @@ describe("the article with time to repeat aloud", () => {
   }
 
   it("gives a turn after every sentence of every passage, including the last one", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.toggleArticle();
     await loadPassage(0);
     audio.finish();
@@ -581,7 +581,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("gives a turn after every whole passage", async () => {
-    const player = createPlayer({ repeatPause: "fiveSeconds" });
+    const player = createPlayer({ repeatPause: 5 });
     player.toggleArticle();
     await loadPassage(0);
 
@@ -608,7 +608,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("replays the current sentence and carries on with the article", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     await reachTurnAfterSecondSentence(player);
 
     player.replayPassage(1);
@@ -620,7 +620,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("moves to another sentence and carries on with the article", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     await reachTurnAfterSecondSentence(player);
 
     player.playSegment(1, 2);
@@ -633,7 +633,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("loops the current sentence, and goes on once looping is turned off", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     await reachTurnAfterSecondSentence(player);
 
     player.togglePassageLoop(1);
@@ -648,7 +648,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("goes on to the next passage when looping is turned off after its last sentence", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     await reachTurnAfterSecondSentence(player);
     player.playSegment(1, 2);
     player.togglePassageLoop(1);
@@ -663,7 +663,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("starts the current passage over in the new unit, without leaving the article", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.toggleArticle();
     await loadPassage(0);
     audio.finish();
@@ -681,7 +681,7 @@ describe("the article with time to repeat aloud", () => {
   });
 
   it("pauses with the current passage's own Play, and leaves for another passage's", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     await reachTurnAfterSecondSentence(player);
 
     player.togglePassage(1);
@@ -697,7 +697,7 @@ describe("the article with time to repeat aloud", () => {
 
 describe("continuing from a passage", () => {
   it("starts from any passage and carries on through the ones after it", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageContinue(1);
     await loadPassage(1);
     assert.deepEqual(position(player), at(1, 0, "audio"));
@@ -738,7 +738,7 @@ describe("continuing from a passage", () => {
   });
 
   it("repeats a hard sentence while looping, then carries on from it", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassageContinue(1);
     await loadPassage(1);
     timers.advance(1250 + 3000);
@@ -775,7 +775,7 @@ describe("continuing from a passage", () => {
   });
 
   it("stops where it is when turned off during the turn after the last sentence", async () => {
-    const player = createPlayer({ unit: "sentence", repeatPause: "threeSeconds" });
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.togglePassageContinue(1);
     await loadPassage(1);
     player.playSegment(1, 2);
@@ -819,7 +819,7 @@ describe("switching between the article and single passages", () => {
   });
 
   it("starts the article from the beginning after passage practice", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageLoop(1);
     await loadPassage(1);
     audio.finish();
@@ -834,7 +834,7 @@ describe("switching between the article and single passages", () => {
   });
 
   it("cancels the learner's turn when another passage starts", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageLoop(0);
     await loadPassage(0);
     audio.finish();
@@ -848,7 +848,7 @@ describe("switching between the article and single passages", () => {
   });
 
   it("cancels the learner's turn when the article restarts", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageLoop(2);
     await loadPassage(2);
     audio.finish();
@@ -883,7 +883,7 @@ describe("switching between the article and single passages", () => {
 
 describe("leaving the screen", () => {
   it("stops playback and cancels the countdown and pending loads", async () => {
-    const player = createPlayer({ repeatPause: "threeSeconds" });
+    const player = createPlayer({ repeatPause: 3 });
     player.togglePassageLoop(0);
     await loadPassage(0);
     audio.finish();
@@ -904,8 +904,11 @@ describe("repeatPauseMs", () => {
   it("matches the clip at the playback speed", () => {
     assert.equal(repeatPauseMs("clipLength", 3, 1), 3000);
     assert.equal(repeatPauseMs("clipLength", 3, 1.25), 2400);
-    assert.equal(repeatPauseMs("none", 3, 1), 0);
-    assert.equal(repeatPauseMs("twoSeconds", 3, 0.6), 2000);
-    assert.equal(repeatPauseMs("fiveSeconds", 3, 0.6), 5000);
+  });
+
+  it("waits the chosen seconds at any speed", () => {
+    assert.equal(repeatPauseMs(0, 3, 1), 0);
+    assert.equal(repeatPauseMs(2, 3, 0.6), 2000);
+    assert.equal(repeatPauseMs(8, 3, 0.6), 8000);
   });
 });

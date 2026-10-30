@@ -244,6 +244,9 @@ Enable **Loop passage** and choose **Time to repeat aloud**:
 | **2 seconds** | Two seconds to speak. |
 | **3 seconds** | Three seconds to speak. |
 | **5 seconds** | Five seconds to speak. |
+| **6 seconds** | Six seconds to speak. |
+| **7 seconds** | Seven seconds to speak. |
+| **8 seconds** | Eight seconds to speak. |
 | **Match the audio's length** | As long as what you just heard takes at the selected playback speed. |
 
 During the pause, **Your turn** replaces the timeline with a countdown. The passage's play/pause
