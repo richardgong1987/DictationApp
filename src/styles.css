@@ -207,7 +207,6 @@ button.toggle.on {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px var(--side-gap);
 }
 
 .lesson-list,
@@ -216,7 +215,6 @@ button.toggle.on {
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 10px;
 }
 
 /* Title, then counts, then buttons, each on its own row, so a long title
@@ -458,7 +456,7 @@ select:focus {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 0px;
 }
 
 /* The item number shares the first row with the player; the text, answer
@@ -584,7 +582,6 @@ select:focus {
 
 .original-text,
 .typing-area {
-  padding: 10px var(--side-gap);
   border-radius: 8px;
   font-size: 22px;
   line-height: 1.5;
@@ -842,7 +839,6 @@ button.text-toggle {
   }
 
   .card {
-    padding: 12px var(--side-gap);
   }
 
   .practice-card {
