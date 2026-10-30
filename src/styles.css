@@ -587,7 +587,6 @@ select:focus {
 
 .original-text,
 .typing-area {
-  border-radius: 8px;
   font-size: 22px;
   line-height: 1.5;
 }
@@ -852,6 +851,5 @@ button.text-toggle {
 
   .original-text,
   .typing-area {
-    padding-block: 8px;
   }
 }
