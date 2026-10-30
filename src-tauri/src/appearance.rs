@@ -50,8 +50,9 @@ pub fn follow_night_schedule<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()
 /// iOS freezes the schedule's thread while the app is in the background, so
 /// coming back has to catch up with the clock straight away.
 #[cfg(mobile)]
-pub fn catch_up_after_resuming<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    set_forced_dark(app, is_night_now())
+pub fn catch_up_after_resuming<R: Runtime>(app: &AppHandle<R>) {
+    // Fails only when the app is closing.
+    let _ = set_forced_dark(app, is_night_now());
 }
 
 fn set_forced_dark<R: Runtime>(app: &AppHandle<R>, is_forced: bool) -> tauri::Result<()> {
@@ -69,7 +70,8 @@ fn force_native_appearance<R: Runtime>(
     window.set_theme(is_forced.then_some(tauri::Theme::Dark))
 }
 
-/// Tauri's `set_theme` does nothing on iOS, so this goes to UIKit directly.
+/// Tauri's `set_theme` does nothing on iOS, so this goes to UIKit directly. On
+/// the root view controller, the style reaches the status bar as well.
 #[cfg(target_os = "ios")]
 fn force_native_appearance<R: Runtime>(
     window: &WebviewWindow<R>,
@@ -83,13 +85,12 @@ fn force_native_appearance<R: Runtime>(
     let style = if is_forced { DARK } else { FOLLOW_SYSTEM };
 
     window.with_webview(move |webview| {
-        let web_view = webview.inner().cast::<AnyObject>();
+        let root_controller = webview.view_controller().cast::<AnyObject>();
         // SAFETY: `with_webview` runs this on the main thread and passes the
-        // live WKWebView; `window` and `overrideUserInterfaceStyle` are UIKit
-        // API with these signatures.
+        // live view controller; the setter takes a UIUserInterfaceStyle, an
+        // NSInteger.
         unsafe {
-            let ui_window: *mut AnyObject = msg_send![web_view, window];
-            let _: () = msg_send![ui_window, setOverrideUserInterfaceStyle: style];
+            let _: () = msg_send![root_controller, setOverrideUserInterfaceStyle: style];
         }
     })
 }

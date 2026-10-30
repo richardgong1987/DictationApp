@@ -51,8 +51,7 @@ pub fn run() {
     #[cfg(mobile)]
     let builder = builder.on_window_event(|window, event| {
         if matches!(event, tauri::WindowEvent::Resumed) {
-            // Fails only when the app is closing.
-            let _ = appearance::catch_up_after_resuming(window.app_handle());
+            appearance::catch_up_after_resuming(window.app_handle());
         }
     });
 

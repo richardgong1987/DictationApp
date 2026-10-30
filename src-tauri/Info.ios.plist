@@ -9,5 +9,9 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<!-- The clock and battery take the app's appearance: dark on Sepia, light on Night
+	     (src-tauri/src/appearance.rs). A fixed light style vanishes against Sepia. -->
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDefault</string>
 </dict>
 </plist>
