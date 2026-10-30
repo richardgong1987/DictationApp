@@ -206,16 +206,35 @@ export class ShadowingPlayer {
   // -- Single passages ------------------------------------------------------
 
   /**
-   * Plays or pauses a passage on its own; during the article it switches to
-   * that passage, which is the one control that leaves the article. Once
-   * stopped, it goes on from the sentence or phrase where it stopped, or
-   * starts over after the end of the passage.
+   * Plays or pauses the passage in the player. Any other passage plays on its
+   * own, leaving the article if it was running. Once stopped, it goes on from
+   * the sentence or phrase where it stopped, or starts over after the end of
+   * the passage.
    */
   togglePassage(index: number) {
     const s = this.current;
-    if (!this.isPractising(index)) this.start("passage", index);
+    if (!this.isInPlayer(index)) this.start("passage", index);
     else if (s.phase === "ended") this.playSegment(index, s.segment);
     else this.togglePause();
+  }
+
+  /**
+   * Whether playback carries on after this passage, by being the article from
+   * here on. Audio already playing is not interrupted; a passage that has
+   * ended goes on to the next one.
+   */
+  togglePassageContinue(index: number) {
+    const s = this.current;
+    if (!this.isInPlayer(index)) {
+      this.start("article", index);
+    } else if (s.phase === "ended") {
+      this.advanceArticle();
+    } else if (s.mode === "passage") {
+      this.update({ mode: "article" });
+    } else {
+      this.update({ mode: "passage" });
+      if (s.phase === "yourTurn" && !s.isPassageLooping && !this.hasNextSegment()) this.stopTurn();
+    }
   }
 
   /** Plays the current sentence or phrase (or the whole passage) again from its beginning. */
@@ -236,9 +255,7 @@ export class ShadowingPlayer {
     } else if (!s.isPassageLooping && s.phase === "ended") {
       this.start("passage", index, { segment: s.segment, isPassageLooping: true });
     } else if (s.isPassageLooping && s.phase === "yourTurn" && !this.goesOnAfterClip()) {
-      // Nothing follows the learner's turn any more, so it stops where it is.
-      this.clearTurnTimer();
-      this.update({ isPassageLooping: false, phase: "ended", isPaused: false, turnRemainingMs: 0 });
+      this.stopTurn();
     } else {
       this.update({ isPassageLooping: !s.isPassageLooping });
     }
@@ -321,10 +338,6 @@ export class ShadowingPlayer {
   }
 
   // -- Internals ------------------------------------------------------------
-
-  private isPractising(index: number): boolean {
-    return this.current.mode === "passage" && this.current.index === index;
-  }
 
   private isInPlayer(index: number): boolean {
     return this.current.mode !== "idle" && this.current.index === index;
@@ -570,6 +583,12 @@ export class ShadowingPlayer {
     }
     this.cue(s.isPassageLooping ? s.segment : s.segment + 1);
     this.play();
+  }
+
+  /** Nothing follows the learner's turn any more, so it stops where it is. */
+  private stopTurn() {
+    this.clearTurnTimer();
+    this.update({ isPassageLooping: false, phase: "ended", isPaused: false, turnRemainingMs: 0 });
   }
 
   private turnRemaining(): number {

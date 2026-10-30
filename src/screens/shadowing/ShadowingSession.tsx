@@ -148,10 +148,12 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
             segments={segmentsById.get(item.id) ?? null}
             knownDuration={timings.get(item.id)?.duration}
             isTextShown={isTextShown}
+            isLastPassage={index + 1 === items.length}
             commands={{
               togglePlay: () => player.togglePassage(index),
               replay: () => player.replayPassage(index),
               toggleLoop: () => player.togglePassageLoop(index),
+              toggleContinue: () => player.togglePassageContinue(index),
               playSegment: (segment) => player.playSegment(index, segment),
               seek: (seconds) => player.seek(seconds),
               retry: () => player.retry(),

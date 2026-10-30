@@ -323,8 +323,13 @@ passages in order, following **Practice by** and **Time to repeat aloud**:
 
 Use **Pause/Resume**, **Restart**, or **Loop article** as needed.
 
-A passage's **Play** switches away from article playback; starting the article switches away from
-passage practice. They do not play over each other. During the article, a passage's replay icon,
+To start somewhere else, click **Continue** on any passage. It plays from there through the passages
+after it, or, if that passage is already playing, carries on after it without restarting. When a
+sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to carry on. Turn
+**Continue** off to stop after the current passage.
+
+**Play** on another passage switches away from article playback; starting the article switches away
+from passage practice. They do not play over each other. During the article, a passage's replay icon,
 **‹** / **›**, loop button and clickable text keep the article going from that point. **Hide text / Show text** lets you
 practice with or without the transcript.
 

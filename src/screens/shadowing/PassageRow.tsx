@@ -8,6 +8,7 @@ export interface PassageCommands {
   togglePlay: () => void;
   replay: () => void;
   toggleLoop: () => void;
+  toggleContinue: () => void;
   playSegment: (segment: number) => void;
   seek: (seconds: number) => void;
   retry: () => void;
@@ -23,6 +24,7 @@ interface Props {
   /** Length of this passage's audio, once known. */
   knownDuration: number | undefined;
   isTextShown: boolean;
+  isLastPassage: boolean;
   commands: PassageCommands;
 }
 
@@ -34,14 +36,16 @@ export default function PassageRow({
   segments,
   knownDuration,
   isTextShown,
+  isLastPassage,
   commands,
 }: Props) {
   const rowRef = useRef<HTMLLIElement>(null);
   const isPractising = playback?.mode === "passage";
   const isInArticle = playback?.mode === "article";
-  const isPlaying = isPractising && isRunning(playback);
+  const isPlaying = playback !== null && isRunning(playback);
   const isLooping = playback?.isPassageLooping ?? false;
-  const isLoading = isPractising && playback.phase === "loading" && !playback.isPaused;
+  const isContinuing = isInArticle && playback.phase !== "ended";
+  const isLoading = playback?.phase === "loading" && !playback.isPaused;
   const length = playback && playback.duration > 0 ? playback.duration : (knownDuration ?? 0);
   const currentTime = playback?.currentTime ?? 0;
   const canSeek =
@@ -63,7 +67,7 @@ export default function PassageRow({
             type="button"
             className="primary play"
             onClick={commands.togglePlay}
-            title={isPractising ? "Play / Pause" : "Practice this passage on its own"}
+            title={playback ? "Play / Pause" : "Practice this passage on its own"}
           >
             {isLoading ? "Loading…" : isPlaying ? "❚❚ Pause" : "▶ Play"}
           </button>
@@ -117,6 +121,17 @@ export default function PassageRow({
           title={`Repeat this ${unit}, with time to repeat it aloud in between`}
         >
           ⟳ Loop {unit}
+        </button>
+
+        <button
+          type="button"
+          className={isContinuing ? "toggle on" : "toggle"}
+          onClick={commands.toggleContinue}
+          aria-pressed={isContinuing}
+          disabled={isLastPassage}
+          title="Carry on through the next passages instead of stopping after this one"
+        >
+          ↓ Continue
         </button>
       </div>
 

@@ -282,8 +282,14 @@ aloud**:
 During the article, a passage's replay icon, **‹** / **›**, loop button and clickable text keep the
 article going from that point. Changing **Practice by** starts the current passage over.
 
-A passage's **Play** switches away from article playback, and **Play article** switches away from
-passage practice. They share one player and cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
+**Continue** on a passage starts the article from there, or, if that passage is already playing,
+carries on after it without restarting. On a passage that has finished, it goes on to the next one.
+When a sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to carry on.
+Turn **Continue** off to stop after the current passage. **Play** on the current passage pauses and
+resumes it.
+
+**Play** on another passage switches away from article playback, and **Play article** switches away
+from passage practice. They share one player and cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
 **Retry**. Leaving the screen stops playback and repeat timers.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation
