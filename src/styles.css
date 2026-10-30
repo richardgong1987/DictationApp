@@ -585,6 +585,7 @@ select:focus {
 }
 
 .original-text,
+.article-text,
 .typing-area {
   font-size: 22px;
   line-height: 1.5;
@@ -698,8 +699,8 @@ select:focus {
   margin: 8px 0 0;
 }
 
-/* Shadowing: the article player above the passages, which reuse the
-   practice card and player row. */
+/* Shadowing: the player, which reuses the practice player row, stays in the
+   page header above the whole article. */
 
 .inline-field {
   display: flex;
@@ -716,7 +717,7 @@ button.text-toggle {
 .article-player {
   display: grid;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-top: 8px;
 }
 
 .article-player .transport .play {
@@ -732,18 +733,27 @@ button.text-toggle {
   margin: 0;
 }
 
-.passages-heading {
+.player-options {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  align-items: center;
+  gap: 8px 14px;
 }
 
-.passages-heading h2 {
-  font-size: 1.1rem;
+/* The passages are paragraphs of one text. */
+.article-text {
+  display: grid;
+  gap: 0.6em;
+  overflow-wrap: anywhere;
+}
+
+.article-text p {
   margin: 0;
+}
+
+/* The paragraphs themselves already show where whole passages split. */
+.article-text.whole .segment:not(.current) {
+  text-decoration: none;
 }
 
 .segment-stepper {
@@ -769,6 +779,8 @@ button.text-toggle {
   text-underline-offset: 0.3em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+  /* Following the audio keeps a line of what comes next in view. */
+  scroll-margin-block: 1.5em;
 }
 
 .segment:hover,

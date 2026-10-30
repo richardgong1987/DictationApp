@@ -7,23 +7,11 @@ import PageHeader from "../../components/PageHeader";
 import { formatSpeed } from "../../format";
 import type { Navigate } from "../../navigation";
 import ArticlePlayer from "./ArticlePlayer";
-import PassageRow from "./PassageRow";
+import ArticleText from "./ArticleText";
 import { segmentPassage, type Segment } from "./passageSegments";
-import type { RepeatPause, RepeatUnit } from "./shadowingPlayer";
+import { isUnderway } from "./shadowingPlayer";
 import { usePassageTimings } from "./usePassageTimings";
 import { useShadowingPlayer } from "./useShadowingPlayer";
-
-const REPEAT_UNITS: { value: RepeatUnit; label: string }[] = [
-  { value: "passage", label: "Whole passage" },
-  { value: "sentence", label: "Sentence" },
-  { value: "phrase", label: "Phrase" },
-];
-
-const REPEAT_PAUSES: { value: RepeatPause; label: string }[] = [
-  { value: 0, label: "No pause" },
-  ...[2, 3, 5, 6, 7, 8].map((seconds) => ({ value: seconds, label: `${seconds} seconds` })),
-  { value: "clipLength", label: "Match the audio's length" },
-];
 
 interface Props {
   lesson: Lesson;
@@ -32,7 +20,7 @@ interface Props {
 }
 
 /**
- * The whole article on top, and every passage below with its own player.
+ * The player stays at the top of the window, above the whole article.
  * Speed and the other choices last for this visit only.
  */
 export default function ShadowingSession({ lesson, initialItems, navigate }: Props) {
@@ -57,6 +45,12 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
     }
     return byId;
   }, [items, timings, unit]);
+
+  const playSegment = useCallback(
+    (index: number, segment: number) => player.playSegment(index, segment),
+    [player],
+  );
+  const currentItem = items[state.index];
 
   return (
     <main className="page shadowing">
@@ -97,70 +91,27 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
             </button>
           </div>
         </div>
+        <ArticlePlayer
+          state={state}
+          player={player}
+          passageCount={items.length}
+          segmentCount={segmentsById.get(currentItem.id)?.length ?? 1}
+          knownDuration={timings.get(currentItem.id)?.duration}
+        />
       </PageHeader>
 
-      <ArticlePlayer state={state} player={player} passageCount={items.length} />
-
-      <div className="passages-heading">
-        <h2>Passages</h2>
-        <div className="actions">
-          <label
-            className="inline-field"
-            title="Play passages and the article whole, one sentence at a time, or in short phrases split at commas"
-          >
-            Practice by
-            <select value={unit} onChange={(e) => player.setUnit(e.target.value as RepeatUnit)}>
-              {REPEAT_UNITS.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label
-            className="inline-field"
-            title="Pause after each part of the article, each sentence or phrase, and between repetitions while looping"
-          >
-            Time to repeat aloud
-            <select
-              value={state.repeatPause}
-              onChange={({ target: { value } }) =>
-                player.setRepeatPause(value === "clipLength" ? value : Number(value))
-              }
-            >
-              {REPEAT_PAUSES.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </div>
-
-      <ol className="practice-list">
-        {items.map((item, index) => (
-          <PassageRow
-            key={item.id}
-            item={item}
-            playback={state.mode !== "idle" && state.index === index ? state : null}
-            unit={unit}
-            segments={segmentsById.get(item.id) ?? null}
-            knownDuration={timings.get(item.id)?.duration}
-            isTextShown={isTextShown}
-            isLastPassage={index + 1 === items.length}
-            commands={{
-              togglePlay: () => player.togglePassage(index),
-              replay: () => player.replayPassage(index),
-              toggleLoop: () => player.togglePassageLoop(index),
-              toggleContinue: () => player.togglePassageContinue(index),
-              playSegment: (segment) => player.playSegment(index, segment),
-              seek: (seconds) => player.seek(seconds),
-              retry: () => player.retry(),
-            }}
-          />
-        ))}
-      </ol>
+      {isTextShown ? (
+        <ArticleText
+          items={items}
+          segmentsById={segmentsById}
+          unit={unit}
+          currentIndex={isUnderway(state) ? state.index : null}
+          currentSegment={state.segment}
+          playSegment={playSegment}
+        />
+      ) : (
+        <p className="muted">The text is hidden. The player above still moves through it.</p>
+      )}
     </main>
   );
 }

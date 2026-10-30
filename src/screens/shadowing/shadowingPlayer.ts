@@ -1,6 +1,7 @@
-// The one player of the shadowing screen. Every control goes through it, so
-// the article and single passages share one audio element and never overlap.
-// It is plain TypeScript so its rules can be tested without React or a browser.
+// The one player of the shadowing screen. The article is read as one text, but
+// each passage has its own audio; the player moves from one to the next, a part
+// at a time, with one audio element. It is plain TypeScript so its rules can be
+// tested without React or a browser.
 
 import type { Clip, SegmentUnit } from "./passageSegments";
 
@@ -14,28 +15,18 @@ export type RepeatPause = number | "clipLength";
 export type RepeatUnit = "passage" | SegmentUnit;
 
 /**
- * - `idle`: nothing has been played yet.
- * - `article`: passages in lesson order, from wherever playback started. The usual mode.
- * - `passage`: one passage on its own, once its Continue is turned off.
- *
- * Both play by the chosen `unit`, with `repeatPause` for repeating each part aloud.
- * With the defaults, the article plays straight through for reading along.
- */
-export type ShadowingMode = "idle" | "article" | "passage";
-
-/**
  * Where the current passage is:
+ * - `idle`: nothing has been played yet;
  * - `loading`: its audio is being fetched, or generated first;
  * - `audio`: its audio is playing, or paused;
- * - `yourTurn`: the pause after a part of the article, a sentence, phrase or looping passage, for the learner to repeat it aloud;
- * - `ended`: stopped at the end of the passage, or of the article;
+ * - `yourTurn`: the pause after each part, for the learner to repeat it aloud;
+ * - `ended`: stopped at the end of the article;
  * - `failed`: its audio could not be loaded or played (see `error`).
  */
-export type ShadowingPhase = "loading" | "audio" | "yourTurn" | "ended" | "failed";
+export type ShadowingPhase = "idle" | "loading" | "audio" | "yourTurn" | "ended" | "failed";
 
 export interface ShadowingState {
-  mode: ShadowingMode;
-  /** The passage in the player; meaningless while `mode` is idle. */
+  /** The passage in the player; the first one while idle. */
   index: number;
   /**
    * The sentence or phrase playing, or the one that plays next once stopped.
@@ -45,11 +36,10 @@ export interface ShadowingState {
   phase: ShadowingPhase;
   /** The learner paused; resuming continues the audio or the countdown. */
   isPaused: boolean;
-  /** Play the same passage, sentence or phrase again after the learner's turn. */
-  isPassageLooping: boolean;
+  /** Play the same passage, sentence or phrase again after the learner's turn, instead of going on. */
+  isSegmentLooping: boolean;
   /** Start the article over after its last passage. */
   isArticleLooping: boolean;
-  /** For single passages and the article alike, as are `repeatPause` and `unit`. */
   speed: number;
   repeatPause: RepeatPause;
   unit: RepeatUnit;
@@ -88,6 +78,14 @@ export interface Timers {
   clearTimeout(id: number): void;
 }
 
+interface StartOptions {
+  /** The part to start from; it can be LAST_SEGMENT. */
+  segment?: number;
+  /** Starts instead from the part at this point of the passage's audio. */
+  atTime?: number;
+  isSegmentLooping?: boolean;
+}
+
 export interface ShadowingPlayerOptions {
   audio: AudioOutput;
   timers: Timers;
@@ -99,12 +97,11 @@ export interface ShadowingPlayerOptions {
 }
 
 const STOPPED = {
-  mode: "idle",
   index: 0,
   segment: 0,
-  phase: "ended",
+  phase: "idle",
   isPaused: false,
-  isPassageLooping: false,
+  isSegmentLooping: false,
   currentTime: 0,
   duration: 0,
   turnRemainingMs: 0,
@@ -126,10 +123,18 @@ const WHOLE_PASSAGE: readonly Clip[] = [{ start: 0, end: Infinity }];
 /** A clip timer that fires this close to the clip's end has reached it. */
 const CLIP_END_SLACK_SECONDS = 0.02;
 
+/** A passage's last sentence or phrase, before it is known how many it has. */
+const LAST_SEGMENT = Infinity;
+
 /** Audio is playing or about to, or the learner's turn is counting down. */
 export function isRunning(state: ShadowingState): boolean {
-  if (state.mode === "idle" || state.isPaused) return false;
+  if (state.isPaused) return false;
   return state.phase === "loading" || state.phase === "audio" || state.phase === "yourTurn";
+}
+
+/** The article has been started and has not reached its end. */
+export function isUnderway({ phase }: ShadowingState): boolean {
+  return phase !== "idle" && phase !== "ended";
 }
 
 /** The learner's turn after hearing a clip that lasts `clipSeconds` at speed 1. */
@@ -181,95 +186,45 @@ export class ShadowingPlayer {
 
   // -- The article ----------------------------------------------------------
 
-  /** Pauses and resumes the article; from passage practice, or once finished, it starts over. */
+  /** Pauses and resumes the article; before it has started, or once finished, it starts from the top. */
   toggleArticle() {
-    if (this.isArticleGoing()) this.togglePause();
+    if (isUnderway(this.current)) this.togglePause();
     else this.restartArticle();
   }
 
   restartArticle() {
-    this.start("article", 0);
+    this.start(0);
   }
 
   setArticleLooping(isArticleLooping: boolean) {
     this.update({ isArticleLooping });
   }
 
-  // -- Single passages ------------------------------------------------------
+  // -- Moving around --------------------------------------------------------
 
-  /**
-   * Plays or pauses the passage in the player. Any other passage starts from
-   * its beginning and carries on after it. Once stopped, it goes on from the
-   * sentence or phrase where it stopped, or starts over after the end of the
-   * passage.
-   */
-  togglePassage(index: number) {
-    const s = this.current;
-    if (!this.isInPlayer(index)) this.start("article", index);
-    else if (s.phase === "ended") this.playSegment(index, s.segment);
-    else this.togglePause();
-  }
-
-  /**
-   * Turns off, or back on, carrying on after this passage. Audio already
-   * playing is not interrupted; a passage that has ended goes on to the next one.
-   */
-  togglePassageContinue(index: number) {
-    const s = this.current;
-    if (!this.isInPlayer(index)) {
-      this.start("article", index);
-    } else if (s.phase === "ended") {
-      this.advanceArticle();
-    } else if (s.mode === "passage") {
-      this.update({ mode: "article" });
-    } else {
-      this.update({ mode: "passage" });
-      if (s.phase === "yourTurn" && !s.isPassageLooping && !this.hasNextSegment()) this.stopTurn();
-    }
+  /** Plays one part of the article, and carries on from there. */
+  playSegment(index: number, segment: number) {
+    this.start(index, { segment, isSegmentLooping: this.current.isSegmentLooping });
   }
 
   /** Plays the current sentence or phrase (or the whole passage) again from its beginning. */
-  replayPassage(index: number) {
-    this.playSegment(index, this.isInPlayer(index) ? this.current.segment : 0);
+  replaySegment() {
+    this.playSegment(this.current.index, this.current.segment);
   }
 
-  /** Plays one sentence or phrase of a passage, and goes on from there. */
-  playSegment(index: number, segment: number) {
-    const isPassageLooping = this.isInPlayer(index) && this.current.isPassageLooping;
-    this.start(this.playbackMode(index), index, { segment, isPassageLooping });
+  /** Moves to the next part of the article, into the next passage after a passage's last one. */
+  nextSegment() {
+    const { index, segment } = this.current;
+    if (this.hasNextSegment()) this.playSegment(index, segment + 1);
+    else if (index + 1 < this.passageCount) this.playSegment(index + 1, 0);
   }
 
-  togglePassageLoop(index: number) {
-    const s = this.current;
-    if (!this.isInPlayer(index)) {
-      this.start("article", index, { isPassageLooping: true });
-    } else if (!s.isPassageLooping && s.phase === "ended") {
-      this.start(this.playbackMode(index), index, { segment: s.segment, isPassageLooping: true });
-    } else if (s.isPassageLooping && s.phase === "yourTurn" && !this.goesOnAfterClip()) {
-      this.stopTurn();
-    } else {
-      this.update({ isPassageLooping: !s.isPassageLooping });
-    }
+  /** Moves to the previous part of the article, into the previous passage before a passage's first one. */
+  previousSegment() {
+    const { index, segment } = this.current;
+    if (segment > 0) this.playSegment(index, segment - 1);
+    else if (index > 0) this.playSegment(index - 1, LAST_SEGMENT);
   }
-
-  setRepeatPause(repeatPause: RepeatPause) {
-    this.update({ repeatPause });
-  }
-
-  /** The sentences or phrases change: passage practice stops, and the article starts its passage over. */
-  setUnit(unit: RepeatUnit) {
-    if (this.current.mode === "passage") {
-      this.clearTimers();
-      this.loadId++;
-      this.audio.pause();
-      this.update({ ...STOPPED, unit });
-      return;
-    }
-    this.update({ unit });
-    if (this.isArticleGoing()) this.start("article", this.current.index);
-  }
-
-  // -- Either mode ----------------------------------------------------------
 
   /**
    * Moves within the passage in the player, to the sentence or phrase at that
@@ -281,8 +236,7 @@ export class ShadowingPlayer {
     this.clearTimers();
     const currentTime = Math.min(Math.max(seconds, 0), s.duration);
     this.audio.currentTime = currentTime;
-    const startedClips = this.clips().filter((clip) => clip.start <= currentTime);
-    const segment = Math.max(0, startedClips.length - 1);
+    const segment = this.segmentAt(currentTime);
     const isPaused = s.isPaused || s.phase === "ended";
     this.update({ phase: "audio", segment, currentTime, isPaused, turnRemainingMs: 0, turnTotalMs: 0 });
     if (isPaused) return;
@@ -290,11 +244,36 @@ export class ShadowingPlayer {
     else this.play();
   }
 
+  // -- Choices --------------------------------------------------------------
+
+  /** Stays on the current part until turned off; then the article carries on from it. */
+  toggleLoop() {
+    const s = this.current;
+    if (isUnderway(s)) this.update({ isSegmentLooping: !s.isSegmentLooping });
+    else this.start(s.index, { segment: s.segment, isSegmentLooping: true });
+  }
+
+  setRepeatPause(repeatPause: RepeatPause) {
+    this.update({ repeatPause });
+  }
+
+  /**
+   * Carries on from the new part at the same point, so that a learner stuck
+   * in a passage can switch to sentences and stay on the one they are in.
+   */
+  setUnit(unit: RepeatUnit) {
+    const s = this.current;
+    this.update({ unit });
+    if (isUnderway(s)) {
+      this.start(s.index, { atTime: s.currentTime, isSegmentLooping: s.isSegmentLooping });
+    }
+  }
+
   /** Loads the failed passage again and plays it. */
   retry() {
     const s = this.current;
-    if (s.phase !== "failed" || s.mode === "idle") return;
-    this.start(s.mode, s.index, { segment: s.segment, isPassageLooping: s.isPassageLooping });
+    if (s.phase !== "failed") return;
+    this.start(s.index, { segment: s.segment, isSegmentLooping: s.isSegmentLooping });
   }
 
   setSpeed(speed: number) {
@@ -330,40 +309,24 @@ export class ShadowingPlayer {
 
   // -- Internals ------------------------------------------------------------
 
-  private isInPlayer(index: number): boolean {
-    return this.current.mode !== "idle" && this.current.index === index;
-  }
-
-  private isArticleGoing(): boolean {
-    return this.current.mode === "article" && this.current.phase !== "ended";
-  }
-
-  /** Playback carries on by default; Continue stays off while its passage stays in the player. */
-  private playbackMode(index: number): "article" | "passage" {
-    return this.isInPlayer(index) && this.current.mode === "passage" ? "passage" : "article";
-  }
-
   /**
-   * Makes `index` the current passage in `mode` and plays it from the start
-   * of `segment`. Whatever was playing or counting down stops first.
+   * Makes `index` the current passage and plays it from the start of a part.
+   * Whatever was playing or counting down stops first.
    */
-  private start(
-    mode: "article" | "passage",
-    index: number,
-    { segment = 0, isPassageLooping = false } = {},
-  ) {
+  private start(index: number, { segment = 0, atTime, isSegmentLooping = false }: StartOptions = {}) {
     this.clearTimers();
     const loadId = ++this.loadId;
     const { unit } = this.current;
     const unitToFind = unit !== "passage" && !this.knownClips.has(clipsKey(index, unit)) ? unit : null;
     const hasAudio = this.loadedIndex === index;
     const isReady = hasAudio && unitToFind === null;
+    // Which part is at `atTime` depends on the sentences or phrases being loaded.
+    const firstSegment = () => (atTime === undefined ? segment : this.segmentAt(atTime));
     this.update({
-      mode,
       index,
       segment,
       isPaused: false,
-      isPassageLooping,
+      isSegmentLooping,
       phase: isReady ? "audio" : "loading",
       currentTime: 0,
       duration: hasAudio ? this.current.duration : 0,
@@ -373,7 +336,7 @@ export class ShadowingPlayer {
     });
 
     if (isReady) {
-      this.cue(segment);
+      this.cue(firstSegment());
       this.play();
       return;
     }
@@ -388,7 +351,7 @@ export class ShadowingPlayer {
         if (loadId !== this.loadId) return;
         // Without clips it plays whole this time, and tries again next time.
         if (unitToFind && clips?.length) this.knownClips.set(clipsKey(index, unitToFind), clips);
-        this.loaded(index, url);
+        this.loaded(index, url, firstSegment());
       },
       (error: unknown) => {
         if (loadId !== this.loadId) return;
@@ -399,12 +362,12 @@ export class ShadowingPlayer {
   }
 
   /** `url` is null when the passage's audio was in the player already. */
-  private loaded(index: number, url: string | null) {
+  private loaded(index: number, url: string | null, segment: number) {
     if (url !== null) {
       this.loadedIndex = index;
       this.audio.src = url;
     }
-    this.cue(this.current.segment);
+    this.cue(segment);
     // The learner may have paused while it was loading.
     if (!this.current.isPaused) this.play();
     this.preloadAfter(index);
@@ -413,7 +376,6 @@ export class ShadowingPlayer {
   /** Fetches (or generates) the passage the article plays next, so it starts without a wait. */
   private preloadAfter(index: number) {
     const s = this.current;
-    if (s.mode !== "article") return;
     const next = index + 1 < this.passageCount ? index + 1 : s.isArticleLooping ? 0 : index;
     // A failure shows up, with a retry, once the article reaches that passage.
     if (next !== index) this.passageUrl(next).catch(() => undefined);
@@ -421,8 +383,8 @@ export class ShadowingPlayer {
 
   /** The clips of the passage in the player: its sentences or phrases, or the whole of it. */
   private clips(): readonly Clip[] {
-    const { mode, index, unit } = this.current;
-    if (mode === "idle" || unit === "passage") return WHOLE_PASSAGE;
+    const { index, unit } = this.current;
+    if (unit === "passage") return WHOLE_PASSAGE;
     return this.knownClips.get(clipsKey(index, unit)) ?? WHOLE_PASSAGE;
   }
 
@@ -430,9 +392,10 @@ export class ShadowingPlayer {
     return this.current.segment + 1 < this.clips().length;
   }
 
-  /** The article gives a turn after every clip, even its last; a passage on its own stops there. */
-  private goesOnAfterClip(): boolean {
-    return this.current.mode === "article" || this.hasNextSegment();
+  /** The sentence or phrase of the current passage at this point of its audio. */
+  private segmentAt(seconds: number): number {
+    const startedClips = this.clips().filter((clip) => clip.start <= seconds);
+    return Math.max(0, startedClips.length - 1);
   }
 
   /** Moves the audio to the start of a sentence or phrase, without playing it. */
@@ -517,20 +480,18 @@ export class ShadowingPlayer {
     this.finishClip();
   }
 
-  /** After a clip: the learner's turn, or the end of a passage played on its own. */
+  /** Every clip is followed by the learner's turn, which is skipped when there is no pause. */
   private finishClip() {
     this.clearClipTimer();
     this.audio.pause();
-    const s = this.current;
-    if (s.isPassageLooping || this.goesOnAfterClip()) this.startTurn();
-    // Playing it again starts over.
-    else this.update({ phase: "ended", segment: 0, currentTime: s.duration });
+    this.startTurn();
   }
 
   private advanceArticle() {
     const s = this.current;
-    if (s.index + 1 < this.passageCount) this.start("article", s.index + 1);
-    else if (s.isArticleLooping) this.start("article", 0);
+    if (s.index + 1 < this.passageCount) this.start(s.index + 1);
+    else if (s.isArticleLooping) this.start(0);
+    // Playing it again starts over.
     else this.update({ phase: "ended", segment: 0, currentTime: s.duration });
   }
 
@@ -563,23 +524,17 @@ export class ShadowingPlayer {
 
   /**
    * The learner's turn is over: the same clip plays again while looping,
-   * otherwise the next one, or the article's next passage after the last one.
+   * otherwise the next one, or the next passage after a passage's last one.
    */
   private endTurn() {
     const s = this.current;
     this.update({ turnRemainingMs: 0, turnTotalMs: 0 });
-    if (!s.isPassageLooping && !this.hasNextSegment()) {
+    if (!s.isSegmentLooping && !this.hasNextSegment()) {
       this.advanceArticle();
       return;
     }
-    this.cue(s.isPassageLooping ? s.segment : s.segment + 1);
+    this.cue(s.isSegmentLooping ? s.segment : s.segment + 1);
     this.play();
-  }
-
-  /** Nothing follows the learner's turn any more, so it stops where it is. */
-  private stopTurn() {
-    this.clearTurnTimer();
-    this.update({ isPassageLooping: false, phase: "ended", isPaused: false, turnRemainingMs: 0 });
   }
 
   private turnRemaining(): number {
