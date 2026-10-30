@@ -15,8 +15,8 @@ export type RepeatUnit = "passage" | SegmentUnit;
 
 /**
  * - `idle`: nothing has been played yet.
- * - `article`: every passage in lesson order.
- * - `passage`: one passage on its own.
+ * - `article`: passages in lesson order, from wherever playback started. The usual mode.
+ * - `passage`: one passage on its own, once its Continue is turned off.
  *
  * Both play by the chosen `unit`, with `repeatPause` for repeating each part aloud.
  * With the defaults, the article plays straight through for reading along.
@@ -198,22 +198,21 @@ export class ShadowingPlayer {
   // -- Single passages ------------------------------------------------------
 
   /**
-   * Plays or pauses the passage in the player. Any other passage plays on its
-   * own, leaving the article if it was running. Once stopped, it goes on from
-   * the sentence or phrase where it stopped, or starts over after the end of
-   * the passage.
+   * Plays or pauses the passage in the player. Any other passage starts from
+   * its beginning and carries on after it. Once stopped, it goes on from the
+   * sentence or phrase where it stopped, or starts over after the end of the
+   * passage.
    */
   togglePassage(index: number) {
     const s = this.current;
-    if (!this.isInPlayer(index)) this.start("passage", index);
+    if (!this.isInPlayer(index)) this.start("article", index);
     else if (s.phase === "ended") this.playSegment(index, s.segment);
     else this.togglePause();
   }
 
   /**
-   * Whether playback carries on after this passage, by being the article from
-   * here on. Audio already playing is not interrupted; a passage that has
-   * ended goes on to the next one.
+   * Turns off, or back on, carrying on after this passage. Audio already
+   * playing is not interrupted; a passage that has ended goes on to the next one.
    */
   togglePassageContinue(index: number) {
     const s = this.current;
@@ -237,15 +236,15 @@ export class ShadowingPlayer {
   /** Plays one sentence or phrase of a passage, and goes on from there. */
   playSegment(index: number, segment: number) {
     const isPassageLooping = this.isInPlayer(index) && this.current.isPassageLooping;
-    this.start(this.controlsMode(), index, { segment, isPassageLooping });
+    this.start(this.playbackMode(index), index, { segment, isPassageLooping });
   }
 
   togglePassageLoop(index: number) {
     const s = this.current;
     if (!this.isInPlayer(index)) {
-      this.start(this.controlsMode(), index, { isPassageLooping: true });
+      this.start("article", index, { isPassageLooping: true });
     } else if (!s.isPassageLooping && s.phase === "ended") {
-      this.start("passage", index, { segment: s.segment, isPassageLooping: true });
+      this.start(this.playbackMode(index), index, { segment: s.segment, isPassageLooping: true });
     } else if (s.isPassageLooping && s.phase === "yourTurn" && !this.goesOnAfterClip()) {
       this.stopTurn();
     } else {
@@ -339,9 +338,9 @@ export class ShadowingPlayer {
     return this.current.mode === "article" && this.current.phase !== "ended";
   }
 
-  /** A passage's controls keep a running article going from wherever they point. */
-  private controlsMode(): "article" | "passage" {
-    return this.isArticleGoing() ? "article" : "passage";
+  /** Playback carries on by default; Continue stays off while its passage stays in the player. */
+  private playbackMode(index: number): "article" | "passage" {
+    return this.isInPlayer(index) && this.current.mode === "passage" ? "passage" : "article";
   }
 
   /**

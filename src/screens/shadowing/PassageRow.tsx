@@ -67,7 +67,7 @@ export default function PassageRow({
             type="button"
             className="primary play"
             onClick={commands.togglePlay}
-            title={playback ? "Play / Pause" : "Practice this passage on its own"}
+            title={playback ? "Play / Pause" : "Play from this passage onward"}
           >
             {isLoading ? "Loading…" : isPlaying ? "❚❚ Pause" : "▶ Play"}
           </button>

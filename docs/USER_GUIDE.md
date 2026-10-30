@@ -235,7 +235,8 @@ Dictation shortcuts; Shadowing uses its visible player controls.
 
 ## Practice shadowing
 
-Text starts visible. Click a passage's **Play** to practice it alone, or its replay icon to restart.
+Text starts visible. Click a passage's **Play** to start there and carry on through the passages after
+it, or its replay icon to restart. Loop stays on the passage; turning off its **Continue** stops at its end.
 Enable **Loop passage** and choose **Time to repeat aloud**:
 
 | Option | After each repetition |
@@ -264,7 +265,7 @@ When a passage is too long to follow, change **Practice by** from **Whole passag
 
 Dotted underlines show where the text is cut. Click a sentence or phrase to play it; **‹** and **›**
 move to the previous or next one, and work while the text is hidden. **Play** goes through the
-passage one piece at a time, with **Your turn** after each. **Loop sentence** (or **Loop phrase**)
+passage one piece at a time, with **Your turn** after each, and on to the next passage. **Loop sentence** (or **Loop phrase**)
 repeats the current piece until you turn it off or move to another; the loop stays on as you move.
 Replay starts the current piece again.
 
@@ -285,14 +286,15 @@ aloud**:
 During the article, a passage's replay icon, **‹** / **›**, loop button and clickable text keep the
 article going from that point. Changing **Practice by** starts the current passage over.
 
-**Continue** on a passage starts the article from there, or, if that passage is already playing,
-carries on after it without restarting. On a passage that has finished, it goes on to the next one.
-When a sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to carry on.
-Turn **Continue** off to stop after the current passage. **Play** on the current passage pauses and
-resumes it.
+**Play** on any passage starts from there and carries on through the passages after it. When a
+sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to carry on. **Play**
+on the current passage pauses and resumes it.
 
-**Play** on another passage switches away from article playback, and **Play article** switches away
-from passage practice. They share one player and cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
+To stop at the end of a passage instead, turn off its **Continue**; this lasts until you move to
+another passage. Turning it back on carries on without restarting, and on a passage that has
+finished, it goes on to the next one.
+
+Starting a passage or the article replaces whatever was playing. They share one player and cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
 **Retry**. Leaving the screen stops playback and repeat timers.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation

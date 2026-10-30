@@ -299,7 +299,8 @@ use the visible player controls in **Shadowing**.
 ### Work on a difficult passage
 
 1. Open **Shadowing**. The passage text is visible, ready to read aloud.
-2. Click that passage's **Play** button to hear it, or the replay icon to start it again.
+2. Click that passage's **Play** button to hear it, or the replay icon to start it again. It carries on
+   through the passages after it unless you loop it or turn its **Continue** off.
 3. Enable **Loop passage** to practice it repeatedly.
 4. Set **Time to repeat aloud**: **No pause**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or **Match the audio's length**.
    During a repeat pause, **Your turn** shows a countdown: say the passage aloud before it plays again.
@@ -323,13 +324,11 @@ passages in order, following **Practice by** and **Time to repeat aloud**:
 
 Use **Pause/Resume**, **Restart**, or **Loop article** as needed.
 
-To start somewhere else, click **Continue** on any passage. It plays from there through the passages
-after it, or, if that passage is already playing, carries on after it without restarting. When a
-sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to carry on. Turn
-**Continue** off to stop after the current passage.
+To start somewhere else, click **Play** on any passage. It plays from there through the passages
+after it. When a sentence holds you up, turn on **Loop sentence** to repeat it, then turn it off to
+carry on. To stop at the end of a passage instead, turn off its **Continue**.
 
-**Play** on another passage switches away from article playback; starting the article switches away
-from passage practice. They do not play over each other. During the article, a passage's replay icon,
+Starting a passage or the article replaces whatever was playing, so they do not play over each other. During the article, a passage's replay icon,
 **‹** / **›**, loop button and clickable text keep the article going from that point. **Hide text / Show text** lets you
 practice with or without the transcript.
 
