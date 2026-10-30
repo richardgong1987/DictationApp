@@ -169,15 +169,8 @@ let timers: FakeTimers;
 let failingPassages: Set<number>;
 let clipRequests: [number, SegmentUnit][];
 
-function createPlayer(
-  choices: {
-    speed?: number;
-    repeatPause?: RepeatPause;
-    unit?: RepeatUnit;
-    isArticleLooping?: boolean;
-  } = {},
-) {
-  const player = new ShadowingPlayer({
+function newPlayer() {
+  return new ShadowingPlayer({
     audio,
     timers,
     passageCount: PASSAGE_SECONDS.length,
@@ -190,9 +183,21 @@ function createPlayer(
       return Promise.resolve(clipsOf(index));
     },
   });
+}
+
+/** Plays whole passages unless a test chooses otherwise; most rules do not depend on the unit. */
+function createPlayer(
+  choices: {
+    speed?: number;
+    repeatPause?: RepeatPause;
+    unit?: RepeatUnit;
+    isArticleLooping?: boolean;
+  } = {},
+) {
+  const player = newPlayer();
   if (choices.speed) player.setSpeed(choices.speed);
   if (choices.repeatPause) player.setRepeatPause(choices.repeatPause);
-  if (choices.unit) player.setUnit(choices.unit);
+  player.setUnit(choices.unit ?? "passage");
   if (choices.isArticleLooping) player.setArticleLooping(true);
   return player;
 }
@@ -215,6 +220,18 @@ beforeEach(() => {
   audio = new FakeAudio(timers);
   failingPassages = new Set();
   clipRequests = [];
+});
+
+describe("a new player", () => {
+  it("goes by sentence until another unit is chosen", async () => {
+    const player = newPlayer();
+    assert.equal(player.getState().unit, "sentence");
+
+    player.toggleArticle();
+
+    await loadPassage(0);
+    assert.deepEqual(clipRequests, [[0, "sentence"]]);
+  });
 });
 
 describe("playing the article", () => {

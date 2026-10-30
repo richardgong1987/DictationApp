@@ -114,7 +114,7 @@ const INITIAL_STATE: ShadowingState = {
   isArticleLooping: false,
   speed: 1,
   repeatPause: 0,
-  unit: "passage",
+  unit: "sentence",
 };
 
 /** A whole passage is one clip, which ends where its audio does. */

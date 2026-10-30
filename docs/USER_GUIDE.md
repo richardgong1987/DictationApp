@@ -245,7 +245,7 @@ to the top, and **Loop article** starts over after the last passage.
 | Option | Parts |
 |---|---|
 | **Whole passage** | Each paragraph. |
-| **Sentence** | Each sentence. |
+| **Sentence** | Each sentence. This is the default. |
 | **Phrase** | Also the pieces inside sentences, at commas, semicolons, colons and dashes. Very short pieces such as list items ("Three, Four, and Five") stay with their neighbors. |
 
 **Time to repeat aloud** chooses how long you get after each part:
@@ -270,9 +270,10 @@ after the audio, the way a class repeats after its teacher, use **Sentence** and
 
 ### When a sentence holds you up
 
-Switch **Practice by** to **Sentence** (or **Phrase**); playback stays on the sentence you are in.
 Turn on **Loop sentence** to repeat it as often as you need, then turn it off and the article carries
-on from there. The loop stays on if you move to another part, so you can repeat that one instead.
+on from there. The loop stays on if you move to another part, so you can repeat that one instead. If
+**Practice by** is on **Whole passage**, switch it to **Sentence** first; playback stays on the
+sentence you are in.
 
 Dotted underlines show where the text is cut. Click a part to play from it. **‹** and **›** move to
 the previous or next part, into the neighboring passages too, and work while the text is hidden. The

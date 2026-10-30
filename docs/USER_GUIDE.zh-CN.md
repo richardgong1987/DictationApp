@@ -106,7 +106,7 @@ If I had known about the problem, I would have called you.
 | 选项 | 每次播放 |
 |---|---|
 | **Whole passage** | 一整段。 |
-| **Sentence** | 一句。 |
+| **Sentence** | 一句。这是默认选项。 |
 | **Phrase** | 句子内部的一个短语，在逗号、分号、冒号和破折号处切开。像 “Three, Four, and Five” 这样过短的列举项会并入相邻部分，不会被切得太碎。 |
 
 **Time to repeat aloud** 决定每次播放之后留给你朗读的时间：
@@ -129,7 +129,7 @@ If I had known about the problem, I would have called you.
 
 ### 遇到读不好的句子
 
-把 **Practice by** 切换为 **Sentence**（或 **Phrase**），播放会停留在你正在听的这一句，不会回到段落开头。打开 **Loop sentence** 反复练习，需要练多少遍都可以；关掉循环后，程序从这里继续往下。
+打开 **Loop sentence** 反复练习，需要练多少遍都可以；关掉循环后，程序从这里继续往下。如果 **Practice by** 当前是 **Whole passage**，先切换为 **Sentence**，播放会停留在你正在听的这一句，不会回到段落开头。
 
 原文下方的虚线显示切分位置，点击某一部分就从那里开始播放。
 

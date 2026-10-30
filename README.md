@@ -299,7 +299,7 @@ use the visible player controls in **Shadowing**.
 1. Open **Shadowing**. The whole article is on screen, with one player that stays at the top of the window.
 2. Click **Play article**, or click anywhere in the text to start there. It plays through to the end
    and keeps the current part in view.
-3. Choose **Practice by**: **Whole passage**, **Sentence** or **Phrase**.
+3. Choose **Practice by**: **Whole passage**, **Sentence** (the default) or **Phrase**.
 4. Set **Time to repeat aloud**: **No pause**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or
    **Match the audio's length**, which gives you as long as the part takes at the selected speed.
    During the pause, **Your turn** shows a countdown: say the part aloud before the audio goes on.
@@ -314,9 +314,9 @@ Two combinations cover most practice:
 
 ### When a sentence holds you up
 
-Switch **Practice by** to **Sentence**; playback stays on the sentence you are in. Turn on
-**Loop sentence** to repeat it as often as you need, then turn it off and the article carries on from
-there.
+Turn on **Loop sentence** to repeat it as often as you need, then turn it off and the article carries
+on from there. If **Practice by** is on **Whole passage**, switch it to **Sentence** first; playback
+stays on the sentence you are in.
 
 **‹** and **›** move to the previous or next part, into the neighboring passages too, and the replay
 icon starts the current part again. **Loop article** starts over after the last passage, and
