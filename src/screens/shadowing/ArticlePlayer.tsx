@@ -6,7 +6,10 @@ interface Props {
   passageCount: number;
 }
 
-/** Plays every passage in order, without pauses, for reading along with the whole article. */
+/**
+ * Plays every passage in order: straight through for reading along, or a part
+ * at a time for repeating after it, as chosen for the passages below.
+ */
 export default function ArticlePlayer({ state, player, passageCount }: Props) {
   return (
     <section className="card article-player" aria-label="Full article">
@@ -66,7 +69,9 @@ function articleStatus(state: ShadowingState, passageCount: number): string {
   const passage = `Passage ${state.index + 1} of ${passageCount}`;
   switch (state.mode) {
     case "idle":
-      return "Play every passage in order and read along.";
+      return state.repeatPause === "none"
+        ? "Play every passage in order and read along."
+        : `Play every passage in order, repeating each ${state.unit} aloud after it.`;
     case "passage":
       return `Practicing passage ${state.index + 1} on its own.`;
     case "article":

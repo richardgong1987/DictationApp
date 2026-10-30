@@ -301,23 +301,31 @@ use the visible player controls in **Shadowing**.
 1. Open **Shadowing**. The passage text is visible, ready to read aloud.
 2. Click that passage's **Play** button to hear it, or the replay icon to start it again.
 3. Enable **Loop passage** to practice it repeatedly.
-4. Set **Time to repeat aloud**: **No pause**, **3 seconds**, **5 seconds**, or **Match passage length**.
+4. Set **Time to repeat aloud**: **No pause**, **2 seconds**, **3 seconds**, **5 seconds**, or **Match the audio's length**.
    During a repeat pause, **Your turn** shows a countdown: say the passage aloud before it plays again.
 5. Adjust **Speed** if needed. Both practice modes offer 0.60× to 2.00×: 0.60×, 0.75×, 0.90×, 1.00×,
    1.10×, 1.25×, 1.50×, 1.75× and 2.00×.
 
-The repeat pause applies to **passage looping**. **Match passage length** gives you time based on the
-clip's duration at the selected playback speed. Choose **No pause** to read along continuously with
-that passage's repeated audio.
+The repeat pause applies to **passage looping**, to sentences and phrases, and to the whole article.
+**Match the audio's length** gives you time based on the clip's duration at the selected playback
+speed. Choose **No pause** to read along continuously with that passage's repeated audio.
 
 ### Move on to the whole article
 
 When the individual passages feel comfortable, click **Play article** at the top. It plays all
-passages in order without the deliberate repeat-aloud pauses. Read along to practice rhythm and
-continuity. Use **Pause/Resume**, **Restart**, or **Loop article** as needed.
+passages in order, following **Practice by** and **Time to repeat aloud**:
 
-Starting an individual passage switches away from article playback; starting the article switches
-away from passage practice. They do not play over each other. **Hide text / Show text** lets you
+- **Read along:** with **Whole passage** and **No pause** it plays straight through, for rhythm and
+  continuity.
+- **Repeat after the audio:** with **Sentence** and **3 seconds**, the whole article goes one sentence
+  at a time, the way a class repeats after its teacher, with **Your turn** after every sentence.
+  Choose **Whole passage** or **Phrase** to repeat in longer or shorter parts.
+
+Use **Pause/Resume**, **Restart**, or **Loop article** as needed.
+
+A passage's **Play** switches away from article playback; starting the article switches away from
+passage practice. They do not play over each other. During the article, a passage's replay icon,
+**‹** / **›**, loop button and clickable text keep the article going from that point. **Hide text / Show text** lets you
 practice with or without the transcript.
 
 Shadowing is self-directed speaking practice: it does not record your voice or score pronunciation.

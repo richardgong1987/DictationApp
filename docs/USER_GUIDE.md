@@ -241,6 +241,7 @@ Enable **Loop passage** and choose **Time to repeat aloud**:
 | Option | After each repetition |
 |---|---|
 | **No pause** | The audio goes on immediately. |
+| **2 seconds** | Two seconds to speak. |
 | **3 seconds** | Three seconds to speak. |
 | **5 seconds** | Five seconds to speak. |
 | **Match the audio's length** | As long as what you just heard takes at the selected playback speed. |
@@ -268,12 +269,21 @@ The app finds each piece in the audio by the speaker's pauses, so it works with 
 any voice, without extra speech requests. Where the voice runs two pieces together without a pause,
 they stay one piece.
 
-For fluent continuous reading, choose **Play article**. It plays passages in order, scrolls to the
-current passage, and offers **Pause/Resume**, **Restart**, and **Loop article**. Article playback
-always plays whole passages and does not insert the repeat-aloud pause.
+**Play article** plays passages in order, scrolls to the current passage, and offers
+**Pause/Resume**, **Restart**, and **Loop article**. It follows **Practice by** and **Time to repeat
+aloud**:
 
-Starting a passage switches away from article playback and vice versa. They share one player and
-cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
+- For fluent continuous reading, use **Whole passage** and **No pause**. It plays straight through.
+- To repeat the whole article after the audio, the way a class repeats after its teacher, choose
+  **Sentence** and a pause such as **3 seconds**. **Your turn** follows every sentence, including the
+  last one of each passage. **Whole passage** and **Phrase** work the same way, in longer or shorter
+  parts.
+
+During the article, a passage's replay icon, **‹** / **›**, loop button and clickable text keep the
+article going from that point. Changing **Practice by** starts the current passage over.
+
+A passage's **Play** switches away from article playback, and **Play article** switches away from
+passage practice. They share one player and cannot overlap. **Hide text / Show text** applies to all passages. A failed passage or article shows
 **Retry**. Leaving the screen stops playback and repeat timers.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation

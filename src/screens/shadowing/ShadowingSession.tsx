@@ -21,6 +21,7 @@ const REPEAT_UNITS: { value: RepeatUnit; label: string }[] = [
 
 const REPEAT_PAUSES: { value: RepeatPause; label: string }[] = [
   { value: "none", label: "No pause" },
+  { value: "twoSeconds", label: "2 seconds" },
   { value: "threeSeconds", label: "3 seconds" },
   { value: "fiveSeconds", label: "5 seconds" },
   { value: "clipLength", label: "Match the audio's length" },
@@ -107,7 +108,7 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
         <div className="actions">
           <label
             className="inline-field"
-            title="Practice a passage whole, one sentence at a time, or in short phrases split at commas"
+            title="Play passages and the article whole, one sentence at a time, or in short phrases split at commas"
           >
             Practice by
             <select value={unit} onChange={(e) => player.setUnit(e.target.value as RepeatUnit)}>
@@ -120,7 +121,7 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
           </label>
           <label
             className="inline-field"
-            title="Pause after each sentence or phrase, and between repetitions while looping"
+            title="Pause after each part of the article, each sentence or phrase, and between repetitions while looping"
           >
             Time to repeat aloud
             <select

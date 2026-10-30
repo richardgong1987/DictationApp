@@ -40,14 +40,14 @@ export default function PassageRow({
   const isPractising = playback?.mode === "passage";
   const isInArticle = playback?.mode === "article";
   const isPlaying = isPractising && isRunning(playback);
-  const isLooping = isPractising && playback.isPassageLooping;
+  const isLooping = playback?.isPassageLooping ?? false;
   const isLoading = isPractising && playback.phase === "loading" && !playback.isPaused;
   const length = playback && playback.duration > 0 ? playback.duration : (knownDuration ?? 0);
   const currentTime = playback?.currentTime ?? 0;
   const canSeek =
     playback !== null && length > 0 && playback.phase !== "loading" && playback.phase !== "failed";
   const hasParts = segments !== null && segments.length > 1;
-  const currentSegment = isPractising ? playback.segment : null;
+  const currentSegment = playback?.segment ?? null;
 
   // Follow the article as it moves from passage to passage.
   useEffect(() => {
