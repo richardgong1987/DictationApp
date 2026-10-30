@@ -69,7 +69,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 | **Settings** | Choose the TTS provider and its credentials, voice and model. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
 
 The layout uses the available window width and wraps controls on smaller screens. Colors follow
-reading-app themes: warm Sepia by day, and dark-gray Night from 19:00 to 07:00 local time or
+Kindle's reading themes: warm Sepia by day, and dark-gray Night from 19:00 to 07:00 local time or
 whenever the system is set to dark. Original text and typed answers use different shades of the
 page color. Their position, labels and controls identify them in either theme.
 

@@ -1,26 +1,31 @@
-/* Reader-app tones, chosen to be easy on the eyes for long sessions: warm
-   paper by day (this block) and dark grey at night (the block below). No
-   background is green or blue, not even for success or information. */
+/* Kindle's reading themes. Unless a line says otherwise, a colour is Amazon's
+   own, taken from the Kindle web reader's stylesheet and scripts: Sepia here
+   and Night below. Like Kindle, buttons are the colour of the text, and blue
+   appears only as a thin ring on what is selected. Text sits at 7:1 to 8:1 on
+   the page, much softer than black on white at 21:1. */
 :root {
-  --bg: #f4ecd8;
-  --surface: #fbf5e6;
-  --text: #43372b;
-  --muted: #6b5a47;
-  --border: #e1d6be;
-  --accent: #85562a;
-  --accent-text: #fdf8ec;
-  --ok: #56662a;
-  --ok-bg: #ece6cb;
-  --bad: #a13d28;
-  --bad-bg: #f6e0d3;
-  --warn: #7f5b08;
-  --warn-bg: #f7e7bd;
-  --info-bg: #ecdfc4;
-  /* Practice: a paper tone for the original text, a deeper one for typing. */
-  --reveal-bg: #f1e7cf;
-  --reveal-border: #e1d4b8;
-  --typing-bg: #e9dcbf;
-  --typing-border: #cfbc94;
+  --bg: #e7dec7; /* the Sepia page */
+  --surface: #fbefd8; /* the Sepia swatch */
+  --text: #5d4232;
+  --muted: #6d5444; /* the text, lifted as far as 4.5:1 on the page allows */
+  --border: #dfd0ba; /* the text at 18% on --surface */
+  --accent: var(--text);
+  --accent-text: #fbefd8;
+  --selected: #1e78ba;
+  --ok: #3a4b43; /* the Green theme's text; Kindle has no success colour */
+  --ok-bg: var(--info-bg);
+  --bad: #b12704;
+  --bad-bg: #fbc9cc; /* the pink highlight on --surface */
+  --warn: #6f5200; /* not Kindle's: dark amber to read on the yellow highlight */
+  --warn-bg: #fcea93; /* the yellow highlight on --surface */
+  --info-bg: #dcd1b7; /* not Kindle's: one step deeper than the page */
+  --highlight: #efdf87; /* the yellow highlight on the page */
+  /* Practice: a paper tone for the original text (Kindle for PC's older
+     Sepia), and the Sepia page itself for typing. */
+  --reveal-bg: #f1e7d0;
+  --reveal-border: var(--border);
+  --typing-bg: var(--bg);
+  --typing-border: #cbc391; /* the Sepia search border */
   --radius: 10px;
   /* Left and right space at the window edge and inside cards, banners and
      text boxes: kept tiny so the content gets nearly the whole width. */
@@ -38,24 +43,23 @@
    the dark appearance then (src-tauri/src/appearance.rs). */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1e1e1e;
-    --surface: #282828;
-    --text: #c8c8c8;
-    --muted: #a3a3a3;
-    --border: #3b3b3b;
-    --accent: #c4a27c;
-    --accent-text: #1e1e1e;
-    --ok: #a6b389;
-    --ok-bg: #31312a;
-    --bad: #e39c8c;
-    --bad-bg: #3c2a26;
-    --warn: #dcbc72;
-    --warn-bg: #373022;
-    --info-bg: #363330;
-    --reveal-bg: #2f2f2f;
-    --reveal-border: #404040;
-    --typing-bg: #373737;
-    --typing-border: #505050;
+    --bg: #121212; /* the Night page */
+    --surface: #262626;
+    --text: #acacac;
+    --muted: #999999;
+    --border: #404040;
+    --accent-text: #121212;
+    --selected: #29abe2;
+    --ok: #9db0a6; /* not Kindle's: the Green theme's text, lifted to read here */
+    --bad: #ef5350;
+    --bad-bg: #2d1e21; /* the dark pink highlight, eased back so --bad reads on it */
+    --warn: #dcc67a; /* not Kindle's */
+    --warn-bg: #34300a; /* the dark yellow highlight, eased back */
+    --info-bg: #333333;
+    --highlight: #443d0e; /* the dark yellow highlight, eased back so --text reads on it */
+    --reveal-bg: #1a1a1a;
+    --reveal-border: #333333;
+    --typing-border: #4d4d4d;
   }
 }
 
@@ -198,6 +202,7 @@ button.toggle {
 
 button.toggle.on {
   background: var(--info-bg);
+  border-color: var(--selected);
   font-weight: 600;
 }
 
@@ -427,7 +432,7 @@ textarea {
 textarea:focus,
 input:focus,
 select:focus {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--selected);
   outline-offset: -1px;
 }
 
@@ -483,7 +488,7 @@ select:focus {
 
 /* The current item: loaded in the player, and what the shortcuts act on. */
 .practice-card.active {
-  border-color: var(--accent);
+  border-color: var(--selected);
 }
 
 .item-number {
@@ -775,7 +780,7 @@ button.text-toggle {
 
 /* The one in the player. */
 .segment.current {
-  background: var(--info-bg);
+  background: var(--highlight);
   text-decoration: none;
   box-shadow: inset 0 -2px 0 var(--accent);
 }
