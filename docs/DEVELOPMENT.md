@@ -238,7 +238,7 @@ src/
     │   ├── ShadowingSession.tsx      the player in the sticky header, above the whole article
     │   ├── ArticlePlayer.tsx         its controls, "Your turn" countdown and practice choices
     │   ├── ArticleText.tsx           the article as one text; clicking a part plays from there
-    │   ├── shadowingPlayer.ts        the one player: passages in order, parts, repeat pause, loops
+    │   ├── shadowingPlayer.ts        the one player: passages in order, parts, repeat pause, turn order, loops
     │   ├── useShadowingPlayer.ts     creates it, renders its state, stops it on leaving
     │   ├── passageSegments.ts        cuts a passage into sentences or phrases at the audio's pauses
     │   └── usePassageTimings.ts      decodes each passage's audio to find those pauses

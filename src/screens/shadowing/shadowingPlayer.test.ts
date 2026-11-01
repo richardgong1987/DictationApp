@@ -4,6 +4,7 @@ import type { Clip, SegmentUnit } from "./passageSegments.ts";
 import {
   repeatPauseMs,
   ShadowingPlayer,
+  turnPause,
   type AudioOutput,
   type RepeatPause,
   type RepeatUnit,
@@ -97,6 +98,11 @@ class FakeAudio implements AudioOutput {
     this.emit("loadedmetadata");
   }
 
+  /** The browser cannot use the audio. */
+  fail() {
+    this.emit("error");
+  }
+
   /** Playback reaches the end. */
   finish() {
     this.paused = true;
@@ -185,20 +191,25 @@ function newPlayer() {
   });
 }
 
-/** Plays whole passages unless a test chooses otherwise; most rules do not depend on the unit. */
+/**
+ * Plays whole passages, audio first and without pauses, unless a test chooses
+ * otherwise; most rules do not depend on these.
+ */
 function createPlayer(
   choices: {
     speed?: number;
     repeatPause?: RepeatPause;
     unit?: RepeatUnit;
     isArticleLooping?: boolean;
+    isLearnerFirst?: boolean;
   } = {},
 ) {
   const player = newPlayer();
   if (choices.speed) player.setSpeed(choices.speed);
-  if (choices.repeatPause) player.setRepeatPause(choices.repeatPause);
+  player.setRepeatPause(choices.repeatPause ?? 0);
   player.setUnit(choices.unit ?? "passage");
   if (choices.isArticleLooping) player.setArticleLooping(true);
+  if (!choices.isLearnerFirst) player.toggleLearnerFirst();
   return player;
 }
 
@@ -223,6 +234,29 @@ beforeEach(() => {
 });
 
 describe("a new player", () => {
+  it("has the learner read first, for as long as the audio takes", async () => {
+    const player = newPlayer();
+    player.playSegment(1, 1);
+    await loadPassage(1);
+
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+    assert.equal(player.getState().turnTotalMs, 1500);
+    assert.equal(audio.isPlaying, false);
+  });
+
+  it("leaves time to repeat after the audio once switched to it", async () => {
+    const player = newPlayer();
+    player.toggleLearnerFirst();
+    player.playSegment(1, 1);
+    await loadPassage(1);
+    assert.deepEqual(position(player), at(1, 1, "audio"));
+
+    timers.advance(1500);
+
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+    assert.equal(player.getState().turnTotalMs, 1500);
+  });
+
   it("goes by sentence until another unit is chosen", async () => {
     const player = newPlayer();
     assert.equal(player.getState().unit, "sentence");
@@ -457,6 +491,187 @@ describe("the learner's turn", () => {
     assert.equal(player.getState().phase, "audio");
     timers.advance(1);
     assert.equal(player.getState().phase, "yourTurn");
+  });
+});
+
+describe("reading first", () => {
+  const readingFirst = { unit: "sentence", repeatPause: 3, isLearnerFirst: true } as const;
+
+  it("gives the learner each sentence before its audio", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 0);
+    await loadPassage(1);
+    assert.deepEqual(position(player), at(1, 0, "yourTurn"));
+    assert.equal(audio.isPlaying, false);
+
+    timers.advance(2999);
+    assert.deepEqual(position(player), at(1, 0, "yourTurn"));
+    timers.advance(1);
+    assert.deepEqual(position(player), at(1, 0, "audio"));
+    assert.equal(audio.currentTime, 0);
+    assert.equal(audio.isPlaying, true);
+
+    timers.advance(1250);
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+    assert.equal(audio.isPlaying, false);
+
+    timers.advance(3000);
+    assert.deepEqual(position(player), at(1, 1, "audio"));
+    assert.equal(audio.currentTime, 1);
+  });
+
+  it("carries on into the next passage and ends without a turn after the last audio", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 2);
+    await loadPassage(1);
+    timers.advance(3000);
+    audio.finish();
+
+    await loadPassage(2);
+    assert.deepEqual(position(player), at(2, 0, "yourTurn"));
+
+    timers.advance(3000);
+    audio.finish();
+    assert.equal(player.getState().phase, "ended");
+    assert.equal(timers.pendingCount, 0);
+  });
+
+  it("waits for the audio's length, and takes no pause to mean as long as the audio", async () => {
+    const player = createPlayer({ isLearnerFirst: true });
+    player.toggleArticle();
+    await settle();
+    assert.equal(player.getState().phase, "loading");
+
+    audio.loadMetadata(2);
+
+    assert.equal(player.getState().phase, "yourTurn");
+    assert.equal(player.getState().turnTotalMs, 2000);
+    assert.equal(audio.isPlaying, false);
+  });
+
+  it("stays paused when paused while the audio's length is awaited", async () => {
+    const player = createPlayer({ isLearnerFirst: true });
+    player.toggleArticle();
+    await settle();
+
+    player.toggleArticle();
+    audio.loadMetadata(2);
+    assert.equal(timers.pendingCount, 0);
+    timers.advance(60_000);
+    assert.equal(player.getState().phase, "yourTurn");
+
+    player.toggleArticle();
+    timers.advance(2000);
+    assert.deepEqual(position(player), at(0, 0, "audio"));
+    assert.equal(audio.isPlaying, true);
+  });
+
+  it("does not skip the learner when paused during the load", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 0);
+    player.toggleArticle();
+    await loadPassage(1);
+    assert.equal(audio.isPlaying, false);
+
+    player.toggleArticle();
+
+    assert.deepEqual(position(player), at(1, 0, "yourTurn"));
+    assert.equal(audio.isPlaying, false);
+    timers.advance(3000);
+    assert.equal(audio.isPlaying, true);
+  });
+
+  it("plays the audio at once when the learner is done early", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 1);
+    await loadPassage(1);
+
+    player.finishTurn();
+
+    assert.deepEqual(position(player), at(1, 1, "audio"));
+    assert.equal(audio.isPlaying, true);
+    assert.equal(audio.currentTime, 1);
+    assert.equal(timers.pendingCount, 1, "only the end of the clip is still timed");
+  });
+
+  it("alternates between the learner and the audio on one sentence while looping", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 1);
+    player.toggleLoop();
+    await loadPassage(1);
+
+    for (let round = 0; round < 3; round++) {
+      assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+      timers.advance(3000);
+      assert.deepEqual(position(player), at(1, 1, "audio"));
+      timers.advance(1500);
+    }
+  });
+
+  it("starts the current sentence over when turned on or off", async () => {
+    const player = createPlayer({ unit: "sentence", repeatPause: 3 });
+    player.playSegment(1, 1);
+    await loadPassage(1);
+    timers.advance(500);
+
+    player.toggleLearnerFirst();
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+    assert.equal(audio.isPlaying, false);
+
+    player.toggleLearnerFirst();
+    assert.deepEqual(position(player), at(1, 1, "audio"));
+    assert.equal(audio.currentTime, 1);
+    assert.equal(audio.isPlaying, true);
+    timers.advance(1500);
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+    timers.advance(3000);
+    assert.deepEqual(position(player), at(1, 2, "audio"));
+  });
+
+  it("silences the audio when the learner moves to another sentence during it", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 0);
+    await loadPassage(1);
+    player.finishTurn();
+    assert.equal(audio.isPlaying, true);
+
+    player.playSegment(1, 2);
+
+    assert.deepEqual(position(player), at(1, 2, "yourTurn"));
+    assert.equal(audio.isPlaying, false);
+    assert.equal(timers.pendingCount, 1, "only the countdown is still timed");
+  });
+
+  it("stays on the sentence being read when the unit changes", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 1);
+    await loadPassage(1);
+
+    player.setUnit("phrase");
+    await settle();
+
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+  });
+
+  it("stops at audio that breaks while the learner reads", async () => {
+    const player = createPlayer(readingFirst);
+    player.playSegment(1, 0);
+    await loadPassage(1);
+
+    audio.fail();
+
+    assert.equal(player.getState().phase, "failed");
+    assert.equal(timers.pendingCount, 0);
+  });
+
+  it("stops at audio that breaks before its length is known", async () => {
+    const player = createPlayer({ isLearnerFirst: true });
+    player.toggleArticle();
+    await settle();
+
+    audio.fail();
+
+    assert.equal(player.getState().phase, "failed");
   });
 });
 
@@ -775,6 +990,23 @@ describe("leaving the screen", () => {
     assert.equal(audio.isPlaying, false);
     assert.equal(audio.src, "", "the load of passage 2 never lands");
     assert.equal(player.getState().phase, "idle");
+  });
+});
+
+describe("turnPause", () => {
+  const stateWith = (repeatPause: RepeatPause, isLearnerFirst: boolean) => ({
+    ...newPlayer().getState(),
+    repeatPause,
+    isLearnerFirst,
+  });
+
+  it("leaves time to read when the learner goes first, even with no pause chosen", () => {
+    assert.equal(turnPause(stateWith(0, true)), "clipLength");
+  });
+
+  it("keeps the chosen pause otherwise", () => {
+    assert.equal(turnPause(stateWith(0, false)), 0);
+    assert.equal(turnPause(stateWith(5, true)), 5);
   });
 });
 

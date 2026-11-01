@@ -109,23 +109,30 @@ If I had known about the problem, I would have called you.
 | **Sentence** | 一句。这是默认选项。 |
 | **Phrase** | 句子内部的一个短语，在逗号、分号、冒号和破折号处切开。像 “Three, Four, and Five” 这样过短的列举项会并入相邻部分，不会被切得太碎。 |
 
-**Time to repeat aloud** 决定每次播放之后留给你朗读的时间：
+菜单旁边的按钮显示谁先读，点击即可切换，当前部分会从头开始：
 
-| 停顿选项 | 含义 |
+| 按钮 | 顺序 |
 |---|---|
-| No pause | 不留停顿，连续播放，适合与音频同时跟读 |
-| 2 seconds | 每次播放后留 2 秒自己朗读 |
-| 3 seconds | 每次播放后留 3 秒自己朗读 |
-| 5 seconds | 每次播放后留 5 秒自己朗读 |
-| 6 seconds | 每次播放后留 6 秒自己朗读 |
-| 7 seconds | 每次播放后留 7 秒自己朗读 |
-| 8 seconds | 每次播放后留 8 秒自己朗读 |
-| Match the audio's length | 按当前播放速度下刚听到的音频时长留出朗读时间 |
+| **Read first** | 默认模式。你先读：当前部分高亮，**Your turn** 倒计时期间你自己朗读；然后音频读同一部分，你对照着纠正，接着进入下一部分。读完了不想等，点 **Hear it** 立刻听音频。 |
+| **Listen first** | 音频先读：播放当前部分，然后 **Your turn** 倒计时，你跟着复述。 |
 
-看到 **Your turn** 倒计时，就开口复述；倒计时结束后继续往下播放。
+**Time to read aloud**（**Listen first** 下显示为 **Time to repeat aloud**）决定每次留给你朗读的时间：
 
-- **连贯朗读：**选择 **Whole passage** 和 **No pause**，从头到尾连续播放，跟着音频一起读。
-- **老师读一句，学生跟一句：**选择 **Sentence** 和一个停顿（例如 **3 seconds**），整篇文章一句一句播放，每句之后都有 **Your turn** 倒计时。
+| 选项 | 含义 |
+|---|---|
+| No pause | 不留时间，连续播放，适合与音频同时跟读。只有 **Listen first** 下才有；在 **Read first** 下按 **Match the audio's length** 计时 |
+| 1 second | 每次留 1 秒自己朗读 |
+| 2 seconds | 每次留 2 秒自己朗读 |
+| 3 seconds | 每次留 3 秒自己朗读 |
+| 5 seconds | 每次留 5 秒自己朗读 |
+| 6 seconds | 每次留 6 秒自己朗读 |
+| 7 seconds | 每次留 7 秒自己朗读 |
+| 8 seconds | 每次留 8 秒自己朗读 |
+| Match the audio's length | 默认选项。按当前播放速度下这部分音频的时长留出朗读时间 |
+
+- **学生先读，老师再纠正：**默认就是这种方式。选择 **Sentence**，整篇文章一句一句进行，每句都是你先读、音频后读。请保持原文显示，因为你要看着原文读。打开 **Loop sentence** 时，你和音频会在同一句上轮流朗读，直到关闭循环。
+- **老师读一句，学生跟一句：**切换到 **Listen first**，选择 **Sentence**，每句之后都有 **Your turn** 倒计时。
+- **连贯朗读：**切换到 **Listen first**，选择 **Whole passage** 和 **No pause**，从头到尾连续播放，跟着音频一起读。
 
 ### 遇到读不好的句子
 

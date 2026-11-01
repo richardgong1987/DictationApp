@@ -19,7 +19,8 @@ export type RepeatUnit = "passage" | SegmentUnit;
  * - `idle`: nothing has been played yet;
  * - `loading`: its audio is being fetched, or generated first;
  * - `audio`: its audio is playing, or paused;
- * - `yourTurn`: the pause after each part, for the learner to repeat it aloud;
+ * - `yourTurn`: the pause for the learner to say a part aloud: after its audio,
+ *   or before it when the learner goes first;
  * - `ended`: stopped at the end of the article;
  * - `failed`: its audio could not be loaded or played (see `error`).
  */
@@ -40,6 +41,8 @@ export interface ShadowingState {
   isSegmentLooping: boolean;
   /** Start the article over after its last passage. */
   isArticleLooping: boolean;
+  /** The learner reads each part aloud before its audio, which then corrects them. */
+  isLearnerFirst: boolean;
   speed: number;
   repeatPause: RepeatPause;
   unit: RepeatUnit;
@@ -112,8 +115,9 @@ const STOPPED = {
 const INITIAL_STATE: ShadowingState = {
   ...STOPPED,
   isArticleLooping: false,
+  isLearnerFirst: true,
   speed: 1,
-  repeatPause: 0,
+  repeatPause: "clipLength",
   unit: "sentence",
 };
 
@@ -142,6 +146,11 @@ export function repeatPauseMs(pause: RepeatPause, clipSeconds: number, speed: nu
   return (pause === "clipLength" ? clipSeconds / speed : pause) * 1000;
 }
 
+/** The pause in force: "no pause" is for reading along, and going first needs time to read. */
+export function turnPause({ repeatPause, isLearnerFirst }: ShadowingState): RepeatPause {
+  return isLearnerFirst && repeatPause === 0 ? "clipLength" : repeatPause;
+}
+
 export class ShadowingPlayer {
   private readonly audio: AudioOutput;
   private readonly timers: Timers;
@@ -158,6 +167,8 @@ export class ShadowingPlayer {
   private readonly knownClips = new Map<string, readonly Clip[]>();
   private turnTimer: number | null = null;
   private turnEndsAt = 0;
+  /** A turn before the audio is due as soon as the browser reports the audio's length. */
+  private isTurnAwaitingDuration = false;
   /** Stops the audio at the end of a sentence or phrase. */
   private clipTimer: number | null = null;
 
@@ -269,6 +280,23 @@ export class ShadowingPlayer {
     }
   }
 
+  /** Starts the current part over in the new order, so that the change shows at once. */
+  toggleLearnerFirst() {
+    const s = this.current;
+    this.update({ isLearnerFirst: !s.isLearnerFirst });
+    if (isUnderway(s)) {
+      this.start(s.index, { segment: s.segment, isSegmentLooping: s.isSegmentLooping });
+    }
+  }
+
+  /** The learner is ready before the countdown is over. */
+  finishTurn() {
+    if (this.current.phase !== "yourTurn") return;
+    this.clearTurnTimer();
+    this.update({ isPaused: false });
+    this.endTurn();
+  }
+
   /** Loads the failed passage again and plays it. */
   retry() {
     const s = this.current;
@@ -337,7 +365,7 @@ export class ShadowingPlayer {
 
     if (isReady) {
       this.cue(firstSegment());
-      this.play();
+      this.beginPart();
       return;
     }
 
@@ -368,8 +396,7 @@ export class ShadowingPlayer {
       this.audio.src = url;
     }
     this.cue(segment);
-    // The learner may have paused while it was loading.
-    if (!this.current.isPaused) this.play();
+    this.beginPart();
     this.preloadAfter(index);
   }
 
@@ -405,6 +432,26 @@ export class ShadowingPlayer {
     const currentTime = clips[cued].start;
     this.audio.currentTime = currentTime;
     this.update({ phase: "audio", segment: cued, currentTime });
+  }
+
+  /** Starts the part just cued, with the learner's reading or with its audio. */
+  private beginPart() {
+    const s = this.current;
+    this.isTurnAwaitingDuration = false;
+    if (!s.isLearnerFirst) {
+      // The learner may have paused while it was loading.
+      if (!s.isPaused) this.play();
+      return;
+    }
+    // Moving within a passage leaves its audio playing.
+    this.audio.pause();
+    if (s.duration > 0) {
+      this.startTurn();
+    } else {
+      // The turn can last as long as the audio, which the browser is still measuring.
+      this.isTurnAwaitingDuration = true;
+      this.update({ phase: "loading" });
+    }
   }
 
   private togglePause() {
@@ -480,11 +527,12 @@ export class ShadowingPlayer {
     this.finishClip();
   }
 
-  /** Every clip is followed by the learner's turn, which is skipped when there is no pause. */
+  /** Unless the learner went first, their turn follows the clip; no pause skips it. */
   private finishClip() {
     this.clearClipTimer();
     this.audio.pause();
-    this.startTurn();
+    if (this.current.isLearnerFirst) this.moveOn();
+    else this.startTurn();
   }
 
   private advanceArticle() {
@@ -499,18 +547,18 @@ export class ShadowingPlayer {
     const s = this.current;
     const clip = this.clips()[s.segment];
     const clipEnd = Math.min(clip.end, s.duration);
-    const turnMs = repeatPauseMs(s.repeatPause, clipEnd - clip.start, s.speed);
+    const turnMs = repeatPauseMs(turnPause(s), clipEnd - clip.start, s.speed);
     if (turnMs <= 0) {
       this.endTurn();
       return;
     }
     this.update({
       phase: "yourTurn",
-      currentTime: clipEnd,
+      currentTime: s.isLearnerFirst ? clip.start : clipEnd,
       turnRemainingMs: turnMs,
       turnTotalMs: turnMs,
     });
-    this.runTurnTimer(turnMs);
+    if (!s.isPaused) this.runTurnTimer(turnMs);
   }
 
   private runTurnTimer(ms: number) {
@@ -522,19 +570,30 @@ export class ShadowingPlayer {
     }, ms);
   }
 
-  /**
-   * The learner's turn is over: the same clip plays again while looping,
-   * otherwise the next one, or the next passage after a passage's last one.
-   */
+  /** The learner has spoken: the audio now plays what they read, or the article moves on. */
   private endTurn() {
     const s = this.current;
     this.update({ turnRemainingMs: 0, turnTotalMs: 0 });
+    if (s.isLearnerFirst) {
+      this.cue(s.segment);
+      this.play();
+    } else {
+      this.moveOn();
+    }
+  }
+
+  /**
+   * The same clip again while looping, otherwise the next one, or the next
+   * passage after a passage's last one.
+   */
+  private moveOn() {
+    const s = this.current;
     if (!s.isSegmentLooping && !this.hasNextSegment()) {
       this.advanceArticle();
       return;
     }
     this.cue(s.isSegmentLooping ? s.segment : s.segment + 1);
-    this.play();
+    this.beginPart();
   }
 
   private turnRemaining(): number {
@@ -544,6 +603,7 @@ export class ShadowingPlayer {
   private clearTimers() {
     this.clearTurnTimer();
     this.clearClipTimer();
+    this.isTurnAwaitingDuration = false;
   }
 
   private clearTurnTimer() {
@@ -563,11 +623,14 @@ export class ShadowingPlayer {
     if (this.loadedIndex !== s.index) return;
     const duration = Number.isFinite(this.audio.duration) ? this.audio.duration : 0;
     this.update({ duration });
+    if (this.isTurnAwaitingDuration && duration > 0) this.beginPart();
   }
 
   private onAudioError() {
     const s = this.current;
-    if (this.loadedIndex !== s.index || s.phase !== "audio") return;
+    const isAudioNeeded =
+      s.phase === "audio" || s.phase === "yourTurn" || this.isTurnAwaitingDuration;
+    if (this.loadedIndex !== s.index || !isAudioNeeded) return;
     this.fail(`The audio of passage ${s.index + 1} could not be played.`);
   }
 

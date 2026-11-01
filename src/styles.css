@@ -740,6 +740,12 @@ button.text-toggle {
   gap: 8px 14px;
 }
 
+/* No taller than the menus beside it, so that the sticky header stays low. */
+.player-options button {
+  flex: none;
+  padding: 0 12px;
+}
+
 /* The passages are paragraphs of one text. */
 .article-text {
   display: grid;
@@ -815,7 +821,7 @@ button.text-toggle {
 }
 
 .countdown {
-  min-width: 5.5em;
+  min-width: 2em;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

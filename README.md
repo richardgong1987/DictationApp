@@ -154,7 +154,7 @@ language-aware assessment.
 | | Dictation — listening and typing | Shadowing — listening and speaking |
 |---|---|---|
 | Open it | **Dictation** on a lesson card or lesson detail page | **Shadowing** on a lesson card or lesson detail page |
-| Practice | Listen, replay, type, then reveal the original | Read aloud with the audio or during the repeat pause |
+| Practice | Listen, replay, type, then reveal the original | Read aloud first and hear the audio correct you, or repeat after it |
 | Focus on a hard passage | Replay, loop, seek and slow it down | Switch to **Sentence** or **Phrase** and **Loop** the part that holds you up, with time to repeat aloud |
 | Review | Word-by-word feedback and accuracy | Listen and judge your own fluency; no recording or pronunciation score |
 | Continue | Answers save automatically; resume your dictation | **Play article** for all passages in order; **Loop article** to repeat |
@@ -300,17 +300,23 @@ use the visible player controls in **Shadowing**.
 2. Click **Play article**, or click anywhere in the text to start there. It plays through to the end
    and keeps the current part in view.
 3. Choose **Practice by**: **Whole passage**, **Sentence** (the default) or **Phrase**.
-4. Set **Time to repeat aloud**: **No pause**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or
-   **Match the audio's length**, which gives you as long as the part takes at the selected speed.
-   During the pause, **Your turn** shows a countdown: say the part aloud before the audio goes on.
-5. Adjust **Speed** if needed. Both practice modes offer 0.60× to 2.00×: 0.60×, 0.75×, 0.90×, 1.00×,
+4. **Read first** is the default: **Your turn** counts down while you read the highlighted part aloud,
+   then the audio plays it so you can hear what to fix. **Hear it** skips the rest of the countdown.
+   Click the button to switch to **Listen first**: the audio plays each part and you repeat after it.
+5. Set your time for each part: **1**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or
+   **Match the audio's length** (the default), which gives you as long as the part takes at the selected
+   speed. **Listen first** also offers **No pause**.
+6. Adjust **Speed** if needed. Both practice modes offer 0.60× to 2.00×: 0.60×, 0.75×, 0.90×, 1.00×,
    1.10×, 1.25×, 1.50×, 1.75× and 2.00×.
 
-Two combinations cover most practice:
+Three combinations cover most practice:
 
-- **Read along:** **Whole passage** and **No pause** play straight through, for rhythm and continuity.
-- **Repeat after the audio:** **Sentence** and **3 seconds** go through the whole article one sentence
-  at a time, the way a class repeats after its teacher.
+- **Read, then get corrected:** the default. **Sentence** and **Read first** go through the whole
+  article with you reading each sentence before the audio does.
+- **Repeat after the audio:** **Listen first** and **Sentence** go through it the way a class repeats
+  after its teacher.
+- **Read along:** **Listen first**, **Whole passage** and **No pause** play straight through, for rhythm
+  and continuity.
 
 ### When a sentence holds you up
 

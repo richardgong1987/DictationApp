@@ -2,6 +2,7 @@ import { formatTime } from "../../format";
 import {
   isRunning,
   isUnderway,
+  turnPause,
   type RepeatPause,
   type RepeatUnit,
   type ShadowingPlayer,
@@ -16,6 +17,7 @@ const REPEAT_UNITS: { value: RepeatUnit; label: string }[] = [
 
 const REPEAT_PAUSES: { value: RepeatPause; label: string }[] = [
   { value: 0, label: "No pause" },
+  { value: 1, label: "1 second" },
   ...[2, 3, 5, 6, 7, 8].map((seconds) => ({ value: seconds, label: `${seconds} seconds` })),
   { value: "clipLength", label: "Match the audio's length" },
 ];
@@ -41,7 +43,7 @@ export default function ArticlePlayer({
   segmentCount,
   knownDuration,
 }: Props) {
-  const { unit, repeatPause, currentTime } = state;
+  const { unit, currentTime } = state;
   const length = state.duration > 0 ? state.duration : (knownDuration ?? 0);
   const canSeek =
     state.phase !== "idle" && state.phase !== "loading" && state.phase !== "failed" && length > 0;
@@ -89,6 +91,7 @@ export default function ArticlePlayer({
             remainingMs={state.turnRemainingMs}
             totalMs={state.turnTotalMs}
             isPaused={state.isPaused}
+            onReady={state.isLearnerFirst ? () => player.finishTurn() : undefined}
           />
         ) : (
           <div className="timeline">
@@ -127,42 +130,7 @@ export default function ArticlePlayer({
         </button>
       </div>
 
-      <div className="player-options">
-        <span className="article-status muted small wide-only" role="status">
-          {articleStatus(state, passageCount)}
-        </span>
-        <label
-          className="inline-field"
-          title="Play the article whole, one sentence at a time, or in short phrases split at commas"
-        >
-          <span className="wide-only">Practice by</span>
-          <select value={unit} onChange={(e) => player.setUnit(e.target.value as RepeatUnit)}>
-            {REPEAT_UNITS.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label
-          className="inline-field"
-          title="Pause after each part for repeating it aloud, also between repetitions while looping"
-        >
-          <span className="wide-only">Time to repeat aloud</span>
-          <select
-            value={repeatPause}
-            onChange={({ target: { value } }) =>
-              player.setRepeatPause(value === "clipLength" ? value : Number(value))
-            }
-          >
-            {REPEAT_PAUSES.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <PracticeChoices state={state} player={player} passageCount={passageCount} />
 
       {state.phase === "failed" && (
         <div className="banner error" role="alert">
@@ -173,6 +141,72 @@ export default function ArticlePlayer({
         </div>
       )}
     </section>
+  );
+}
+
+/** What a part is, how long the learner has for it and who goes first, beside where the article is. */
+function PracticeChoices({
+  state,
+  player,
+  passageCount,
+}: Pick<Props, "state" | "player" | "passageCount">) {
+  const { unit, isLearnerFirst } = state;
+  const pauses = isLearnerFirst ? REPEAT_PAUSES.filter(({ value }) => value !== 0) : REPEAT_PAUSES;
+  return (
+    <div className="player-options">
+      <span className="article-status muted small wide-only" role="status">
+        {articleStatus(state, passageCount)}
+      </span>
+      <label
+        className="inline-field"
+        title="Play the article whole, one sentence at a time, or in short phrases split at commas"
+      >
+        <span className="wide-only">Practice by</span>
+        <select value={unit} onChange={(e) => player.setUnit(e.target.value as RepeatUnit)}>
+          {REPEAT_UNITS.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label
+        className="inline-field"
+        title={
+          isLearnerFirst
+            ? "Time to read each part aloud before hearing it"
+            : "Pause after each part for repeating it aloud, also between repetitions while looping"
+        }
+      >
+        <span className="wide-only">
+          {isLearnerFirst ? "Time to read aloud" : "Time to repeat aloud"}
+        </span>
+        <select
+          value={turnPause(state)}
+          onChange={({ target: { value } }) =>
+            player.setRepeatPause(value === "clipLength" ? value : Number(value))
+          }
+        >
+          {pauses.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="button"
+        className="toggle"
+        onClick={() => player.toggleLearnerFirst()}
+        title={
+          isLearnerFirst
+            ? `You read each ${unit} aloud, then hear it read. Click to hear it first instead.`
+            : `You hear each ${unit}, then repeat it. Click to read it first instead.`
+        }
+      >
+        {isLearnerFirst ? "Read first" : "Listen first"}
+      </button>
+    </div>
   );
 }
 
@@ -217,15 +251,18 @@ function SegmentStepper({
   );
 }
 
-/** Takes the timeline's place while the learner repeats what they heard aloud. */
+/** Takes the timeline's place while the learner says the part aloud. */
 function YourTurn({
   remainingMs,
   totalMs,
   isPaused,
+  onReady,
 }: {
   remainingMs: number;
   totalMs: number;
   isPaused: boolean;
+  /** Goes straight to the audio; only when the learner reads before it. */
+  onReady: (() => void) | undefined;
 }) {
   const share = totalMs > 0 ? remainingMs / totalMs : 0;
   return (
@@ -238,6 +275,11 @@ function YourTurn({
         {Math.ceil(remainingMs / 1000)}
         {isPaused && " · paused"}
       </span>
+      {onReady && (
+        <button type="button" onClick={onReady} title="Hear it now, without waiting for the countdown">
+          Hear it
+        </button>
+      )}
     </div>
   );
 }
@@ -252,6 +294,7 @@ function articleStatus(state: ShadowingState, passageCount: number): string {
   const passage = `Passage ${state.index + 1} of ${passageCount}`;
   switch (state.phase) {
     case "idle":
+      if (state.isLearnerFirst) return `Read each ${state.unit} aloud, then hear it.`;
       return state.repeatPause === 0
         ? "Play every passage in order and read along, or click the text to start there."
         : `Play every passage in order, repeating each ${state.unit} aloud after it.`;

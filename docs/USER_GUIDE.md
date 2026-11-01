@@ -65,7 +65,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 | **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, pin/rename/delete lessons, or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
 | **Lesson detail** | Click a lesson title in the library. Read passages, inspect word counts and audio badges, generate audio, and see attempt counts/best accuracy. Click the heading to rename; click a passage's **▶** to start dictation at that item. |
 | **Dictation** | Listen, type, reveal/check, and review word differences. All items appear as cards; the active card has an accent border and highlighted number. Untouched inactive cards keep their answer boxes collapsed. |
-| **Shadowing** | The whole article under one player. Play it whole, sentence by sentence or phrase by phrase; click the text to start anywhere, and loop a hard sentence. Show/hide the text, choose playback speed, and leave time to repeat aloud. |
+| **Shadowing** | The whole article under one player. Read each part aloud first and hear the audio correct you, or switch to repeating after the audio. Play it whole, sentence by sentence or phrase by phrase; click the text to start anywhere, and loop a hard sentence. Show/hide the text, choose playback speed, and set your time to speak. |
 | **Settings** | Choose the TTS provider and its credentials, voice and model. Click **Save** and wait for **Saved.**; **Back** returns to the screen you came from. |
 
 The layout uses the available window width and wraps controls on smaller screens. Colors follow
@@ -248,30 +248,43 @@ to the top, and **Loop article** starts over after the last passage.
 | **Sentence** | Each sentence. This is the default. |
 | **Phrase** | Also the pieces inside sentences, at commas, semicolons, colons and dashes. Very short pieces such as list items ("Three, Four, and Five") stay with their neighbors. |
 
-**Time to repeat aloud** chooses how long you get after each part:
+### Read first or listen first
 
-| Option | After each part |
+Each part is one exchange between you and the audio, and the button beside the menus shows who goes
+first. Clicking it switches, and starts the current part over.
+
+| Button | Order |
 |---|---|
-| **No pause** | The audio goes on immediately. |
+| **Read first** | The default. The part is highlighted and **Your turn** counts down while you read it aloud on your own. The audio then plays it, so you can hear what to fix, and the article moves on. **Hear it** ends the countdown as soon as you are done. |
+| **Listen first** | The audio plays the part, then **Your turn** counts down while you repeat it. |
+
+Keep the text shown for **Read first**, since it is what you read from.
+
+**Time to read aloud** (**Time to repeat aloud** in **Listen first**) chooses how long you get:
+
+| Option | Your time for each part |
+|---|---|
+| **No pause** | None; the audio goes on immediately. Only in **Listen first**. In **Read first** it counts as **Match the audio's length**. |
+| **1 second** | One second to speak. |
 | **2 seconds** | Two seconds to speak. |
 | **3 seconds** | Three seconds to speak. |
 | **5 seconds** | Five seconds to speak. |
 | **6 seconds** | Six seconds to speak. |
 | **7 seconds** | Seven seconds to speak. |
 | **8 seconds** | Eight seconds to speak. |
-| **Match the audio's length** | As long as what you just heard takes at the selected playback speed. |
+| **Match the audio's length** | The default: as long as the part takes at the selected playback speed. |
 
-During the pause, **Your turn** replaces the timeline with a countdown, and **Pause** also pauses it.
-For fluent continuous reading, use **Whole passage** and **No pause**. To repeat the whole article
-after the audio, the way a class repeats after its teacher, use **Sentence** and a pause such as
-**3 seconds**.
+**Your turn** replaces the timeline with a countdown, and **Pause** also pauses it. For fluent
+continuous reading, use **Listen first**, **Whole passage** and **No pause**. To repeat the whole
+article after the audio, the way a class repeats after its teacher, use **Listen first** and
+**Sentence**.
 
 **Speed** offers 0.60×, 0.75×, 0.90×, 1.00×, 1.10×, 1.25×, 1.50×, 1.75× and 2.00×, as in Dictation.
 
 ### When a sentence holds you up
 
 Turn on **Loop sentence** to repeat it as often as you need, then turn it off and the article carries
-on from there. The loop stays on if you move to another part, so you can repeat that one instead. If
+on from there. In **Read first**, you and the audio take turns on it. The loop stays on if you move to another part, so you can repeat that one instead. If
 **Practice by** is on **Whole passage**, switch it to **Sentence** first; playback stays on the
 sentence you are in.
 
@@ -288,7 +301,8 @@ screen stops playback and repeat timers. On a phone the title and status line ar
 menus lose their labels, to leave more of the screen to the article.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation
-answers/statistics. Its speed, practice unit, pause and loop choices last for the current visit.
+answers/statistics. Its speed, practice unit, pause, loop and Read first/Listen first choices last for
+the current visit.
 
 ## Transfer lessons and audio
 

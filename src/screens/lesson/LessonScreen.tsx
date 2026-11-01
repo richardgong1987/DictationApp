@@ -196,7 +196,7 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
             <button
               className="primary"
               onClick={() => navigate({ name: "shadowing", lessonId })}
-              title="Listen and read aloud along with the audio"
+              title="Read aloud and compare with the audio"
             >
               Shadowing
             </button>

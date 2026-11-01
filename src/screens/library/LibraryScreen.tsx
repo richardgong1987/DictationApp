@@ -221,7 +221,7 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                   <button
                     className="primary"
                     onClick={() => navigate({ name: "shadowing", lessonId: lesson.id })}
-                    title="Listen and read aloud along with the audio"
+                    title="Read aloud and compare with the audio"
                   >
                     Shadowing
                   </button>
