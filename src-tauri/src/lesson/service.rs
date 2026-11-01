@@ -12,7 +12,7 @@ use crate::lesson::{
     is_too_long, DictationItem, ItemDetail, Lesson, LessonDetail, LessonHeader, LessonSummary,
 };
 use crate::practice::repository::PracticeRepository;
-use crate::practice::ItemStats;
+use crate::practice::{neighbor_item_id, ItemStats};
 
 #[derive(Clone)]
 pub struct LessonService {
@@ -156,11 +156,20 @@ impl LessonService {
     /// that cannot be spoken, with its audio and practice history. The other
     /// passages keep their numbers, and with them their audio files. A
     /// lesson keeps at least one passage; deleting the lesson removes the last.
+    ///
+    /// A shadowing place in this passage moves to a neighboring one first. Were
+    /// the delete then to fail, the place is one passage off, not lost.
     pub fn delete_item(&self, item_id: i64) -> AppResult<()> {
         let item = self.lessons.get_item(item_id)?;
-        if self.lessons.items(&item.lesson_id)?.len() == 1 {
-            return Err(AppError::LastItemOfLesson);
-        }
+        let item_ids: Vec<i64> = self
+            .lessons
+            .items(&item.lesson_id)?
+            .iter()
+            .map(|item| item.id)
+            .collect();
+        let neighbor_id = neighbor_item_id(&item_ids, item.id).ok_or(AppError::LastItemOfLesson)?;
+        self.practice
+            .move_shadowing_position(item.id, neighbor_id)?;
         self.lessons.delete_item(item_id)?;
         if let Some(audio_path) = &item.audio_path {
             self.files.delete_audio(audio_path)?;

@@ -10,7 +10,7 @@ use crate::app_state::AppState;
 use crate::audio::{AudioGenerationProgress, AudioGenerationSummary, GENERATION_PROGRESS_EVENT};
 use crate::error::{AppError, AppResult};
 use crate::lesson::{ItemDetail, Lesson, LessonDetail, LessonSummary};
-use crate::practice::{CheckResult, PracticeProgress};
+use crate::practice::{CheckResult, PracticeProgress, ShadowingPosition};
 use crate::settings::{Settings, SettingsDetail};
 use crate::transfer::{ExportSummary, ImportSummary};
 
@@ -164,6 +164,30 @@ pub fn get_practice_progress(
 #[tauri::command]
 pub fn clear_answers(state: State<'_, AppState>, lesson_id: String) -> AppResult<()> {
     state.practice.clear_answers(&lesson_id)
+}
+
+#[tauri::command]
+pub fn get_shadowing_position(
+    state: State<'_, AppState>,
+    lesson_id: String,
+) -> AppResult<Option<ShadowingPosition>> {
+    state.practice.shadowing_position(&lesson_id)
+}
+
+#[tauri::command]
+pub fn save_shadowing_position(
+    state: State<'_, AppState>,
+    item_id: i64,
+    audio_seconds: f64,
+) -> AppResult<()> {
+    state
+        .practice
+        .save_shadowing_position(item_id, audio_seconds)
+}
+
+#[tauri::command]
+pub fn clear_shadowing_position(state: State<'_, AppState>, lesson_id: String) -> AppResult<()> {
+    state.practice.clear_shadowing_position(&lesson_id)
 }
 
 // ---------------------------------------------------------------------------

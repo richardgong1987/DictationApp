@@ -78,8 +78,22 @@ const SCHEMA_V4: &str = "
 ALTER TABLE lessons ADD COLUMN pinned_at TEXT;
 ";
 
+/// Where the learner stopped shadowing each lesson: one row per lesson at most,
+/// overwritten as they go and gone once the article is finished or the lesson
+/// deleted. Deleting the passage it points at moves it to a neighboring passage
+/// first (`LessonService::delete_item`), so that cascade only guards integrity.
+const SCHEMA_V5: &str = "
+CREATE TABLE shadowing_positions (
+    lesson_id     TEXT PRIMARY KEY REFERENCES lessons(id) ON DELETE CASCADE,
+    item_id       INTEGER NOT NULL REFERENCES dictation_items(id) ON DELETE CASCADE,
+    audio_seconds REAL NOT NULL,
+    created_at    TEXT NOT NULL,
+    updated_at    TEXT NOT NULL
+);
+";
+
 /// Applied in order; `PRAGMA user_version` counts how many already ran.
-const MIGRATIONS: [&str; 4] = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4];
+const MIGRATIONS: [&str; 5] = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5];
 
 /// Shared handle to the application database; cloning it is cheap.
 #[derive(Clone)]

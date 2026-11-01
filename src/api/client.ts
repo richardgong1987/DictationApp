@@ -13,6 +13,7 @@ import type {
   PracticeProgress,
   Settings,
   SettingsDetail,
+  ShadowingPosition,
 } from "./types";
 
 /** Typed wrappers for the Tauri commands in src-tauri/src/commands.rs. */
@@ -53,6 +54,13 @@ export const api = {
     invoke<PracticeProgress>("get_practice_progress", { lessonId }),
   /** Deletes every saved answer in the lesson; statistics are kept. */
   clearAnswers: (lessonId: string) => invoke<void>("clear_answers", { lessonId }),
+
+  getShadowingPosition: (lessonId: string) =>
+    invoke<ShadowingPosition | null>("get_shadowing_position", { lessonId }),
+  saveShadowingPosition: (itemId: number, audioSeconds: number) =>
+    invoke<void>("save_shadowing_position", { itemId, audioSeconds }),
+  clearShadowingPosition: (lessonId: string) =>
+    invoke<void>("clear_shadowing_position", { lessonId }),
 
   getSettings: () => invoke<SettingsDetail>("get_settings"),
   saveSettings: (settings: Settings) => invoke<SettingsDetail>("save_settings", { settings }),

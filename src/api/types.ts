@@ -32,6 +32,12 @@ export interface ItemDetail {
   lastAccuracy: number | null;
 }
 
+/** Where the learner stopped shadowing a lesson; `null` when it starts from the top. */
+export interface ShadowingPosition {
+  itemId: number;
+  audioSeconds: number;
+}
+
 export interface LessonDetail {
   lesson: Lesson;
   items: ItemDetail[];

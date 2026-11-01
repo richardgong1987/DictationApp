@@ -621,6 +621,154 @@ fn answers_are_kept_and_practice_resumes_where_it_stopped() {
 }
 
 #[test]
+fn shadowing_continues_where_it_stopped_after_a_restart() {
+    let h = Harness::new();
+    let detail = h.paste_lesson("Lesson", LESSON);
+    let lesson_id = detail["lesson"]["id"].clone();
+    let second_item = detail["items"][1]["id"].as_i64().unwrap();
+    let third_item = detail["items"][2]["id"].as_i64().unwrap();
+    let position = |h: &Harness| {
+        h.call("get_shadowing_position", json!({ "lessonId": lesson_id }))
+            .unwrap()
+    };
+    assert_eq!(position(&h), Value::Null);
+
+    h.call(
+        "save_shadowing_position",
+        json!({ "itemId": second_item, "audioSeconds": 2.5 }),
+    )
+    .unwrap();
+    h.call(
+        "save_shadowing_position",
+        json!({ "itemId": third_item, "audioSeconds": 1.25 }),
+    )
+    .unwrap();
+
+    let h = h.restart();
+    assert_eq!(
+        position(&h),
+        json!({ "itemId": third_item, "audioSeconds": 1.25 })
+    );
+
+    h.call("clear_shadowing_position", json!({ "lessonId": lesson_id }))
+        .unwrap();
+    assert_eq!(position(&h), Value::Null);
+}
+
+#[test]
+fn deleting_a_lesson_leaves_nothing_of_it_behind() {
+    let h = Harness::new();
+    let deleted = h.paste_lesson("Deleted", LESSON);
+    let kept = h.paste_lesson("Kept", LESSON);
+    let first_item = &deleted["items"][0]["id"];
+    h.call(
+        "check_answer",
+        json!({ "itemId": first_item, "answer": "typed", "replayCount": 0 }),
+    )
+    .unwrap();
+    h.call(
+        "save_answer",
+        json!({ "itemId": deleted["items"][1]["id"], "answer": "draft" }),
+    )
+    .unwrap();
+    for lesson in [&deleted, &kept] {
+        h.call(
+            "save_shadowing_position",
+            json!({ "itemId": lesson["items"][0]["id"], "audioSeconds": 1.5 }),
+        )
+        .unwrap();
+    }
+    let stored_lessons = |h: &Harness| -> Vec<String> {
+        let connection = h.database.connection();
+        let mut statement = connection
+            .prepare("SELECT lesson_id FROM shadowing_positions")
+            .unwrap();
+        let lessons = statement.query_map([], |row| row.get(0)).unwrap();
+        lessons.map(Result::unwrap).collect()
+    };
+    let row_count = |h: &Harness, table: &str| -> i64 {
+        h.database
+            .connection()
+            .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                row.get(0)
+            })
+            .unwrap()
+    };
+    assert_eq!(stored_lessons(&h).len(), 2);
+
+    h.call(
+        "delete_lesson",
+        json!({ "lessonId": deleted["lesson"]["id"] }),
+    )
+    .unwrap();
+
+    assert_eq!(stored_lessons(&h), [kept["lesson"]["id"].as_str().unwrap()]);
+    assert_eq!(row_count(&h, "answers"), 0);
+    assert_eq!(row_count(&h, "attempts"), 0);
+    assert_eq!(
+        row_count(&h, "dictation_items"),
+        kept["items"].as_array().unwrap().len() as i64
+    );
+    let err = h
+        .call(
+            "get_shadowing_position",
+            json!({ "lessonId": deleted["lesson"]["id"] }),
+        )
+        .unwrap_err();
+    assert_eq!(err, "Lesson not found");
+}
+
+/// Saves a place in the passage at `saved`, deletes the one at `deleted`, and
+/// returns the place afterwards with the lesson's item ids.
+fn shadowing_position_after_deleting(saved: usize, deleted: usize) -> (Value, Vec<Value>) {
+    let h = Harness::new();
+    let detail = h.paste_lesson("Lesson", LESSON);
+    let ids: Vec<Value> = detail["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["id"].clone())
+        .collect();
+    h.call(
+        "save_shadowing_position",
+        json!({ "itemId": ids[saved], "audioSeconds": 7.5 }),
+    )
+    .unwrap();
+
+    h.call("delete_item", json!({ "itemId": ids[deleted] }))
+        .unwrap();
+
+    let position = h
+        .call(
+            "get_shadowing_position",
+            json!({ "lessonId": detail["lesson"]["id"] }),
+        )
+        .unwrap();
+    (position, ids)
+}
+
+#[test]
+fn deleting_the_passage_of_a_shadowing_position_moves_it_to_the_next_passage() {
+    let (position, ids) = shadowing_position_after_deleting(1, 1);
+    assert_eq!(position, json!({ "itemId": ids[2], "audioSeconds": 0.0 }));
+
+    let (position, ids) = shadowing_position_after_deleting(0, 0);
+    assert_eq!(position, json!({ "itemId": ids[1], "audioSeconds": 0.0 }));
+}
+
+#[test]
+fn deleting_the_last_passage_moves_a_shadowing_position_back() {
+    let (position, ids) = shadowing_position_after_deleting(2, 2);
+    assert_eq!(position, json!({ "itemId": ids[1], "audioSeconds": 0.0 }));
+}
+
+#[test]
+fn deleting_another_passage_leaves_a_shadowing_position_where_it_is() {
+    let (position, ids) = shadowing_position_after_deleting(2, 0);
+    assert_eq!(position, json!({ "itemId": ids[2], "audioSeconds": 7.5 }));
+}
+
+#[test]
 fn lessons_move_between_devices_and_importing_only_adds() {
     let phone = Harness::new();
     let a = phone.paste_lesson("A", LESSON);

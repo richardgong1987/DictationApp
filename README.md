@@ -328,6 +328,14 @@ stays on the sentence you are in.
 icon starts the current part again. **Loop article** starts over after the last passage, and
 **Hide text / Show text** lets you practice with or without the transcript.
 
+### Coming back later
+
+Each lesson remembers the part you reached, even if you close the app or switch off the computer or
+phone without warning. Open **Shadowing** again and that part is highlighted, with **Continue** in
+place of **Play article**. **Restart** goes back to the top. If you delete the passage you stopped in,
+the place moves to the next passage, or to the previous one if it was the last. Finishing the article
+forgets the place, and deleting the lesson deletes it. The place stays on the device where you practiced.
+
 Shadowing is self-directed speaking practice: it does not record your voice or score pronunciation.
 Its speed and pause choices last for the current visit; it does not change your dictation answers or statistics.
 

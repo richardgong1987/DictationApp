@@ -4,7 +4,9 @@ use crate::error::AppResult;
 use crate::lesson::repository::LessonRepository;
 use crate::practice::comparison::{compare_answer, normalize_whitespace};
 use crate::practice::repository::{NewAttempt, PracticeRepository};
-use crate::practice::{resume_item_id, AnswerStatus, CheckResult, PracticeProgress, SavedAnswer};
+use crate::practice::{
+    resume_item_id, AnswerStatus, CheckResult, PracticeProgress, SavedAnswer, ShadowingPosition,
+};
 
 pub struct PracticeService {
     lessons: LessonRepository,
@@ -82,6 +84,29 @@ impl PracticeService {
             answers,
             resume_item_id,
         })
+    }
+
+    /// Where shadowing the lesson continues; `None` when it starts from the top.
+    pub fn shadowing_position(&self, lesson_id: &str) -> AppResult<Option<ShadowingPosition>> {
+        let lesson = self.lessons.get(lesson_id)?;
+        self.practice.shadowing_position(&lesson.id)
+    }
+
+    /// The lesson comes from the item, so a place can never point into another lesson.
+    pub fn save_shadowing_position(&self, item_id: i64, audio_seconds: f64) -> AppResult<()> {
+        let item = self.lessons.get_item(item_id)?;
+        let position = ShadowingPosition {
+            item_id: item.id,
+            audio_seconds: audio_seconds.max(0.0),
+        };
+        self.practice
+            .save_shadowing_position(&item.lesson_id, &position)
+    }
+
+    /// The article was read to its end, so the next visit starts from the top.
+    pub fn clear_shadowing_position(&self, lesson_id: &str) -> AppResult<()> {
+        let lesson = self.lessons.get(lesson_id)?;
+        self.practice.delete_shadowing_position(&lesson.id)
     }
 }
 

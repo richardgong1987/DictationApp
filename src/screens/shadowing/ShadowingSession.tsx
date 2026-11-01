@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { PLAYBACK_SPEEDS } from "../../api/constants";
-import type { ItemDetail, Lesson } from "../../api/types";
+import type { ItemDetail, Lesson, ShadowingPosition } from "../../api/types";
 import { useAudioUrls } from "../../audio/itemAudio";
 import { EyeIcon, EyeOffIcon } from "../../components/EyeIcons";
 import PageHeader from "../../components/PageHeader";
@@ -9,21 +9,23 @@ import type { Navigate } from "../../navigation";
 import ArticlePlayer from "./ArticlePlayer";
 import ArticleText from "./ArticleText";
 import { segmentPassage, type Segment } from "./passageSegments";
-import { isUnderway } from "./shadowingPlayer";
+import { hasSavedPlace, isUnderway } from "./shadowingPlayer";
 import { usePassageTimings } from "./usePassageTimings";
 import { useShadowingPlayer } from "./useShadowingPlayer";
 
 interface Props {
   lesson: Lesson;
   initialItems: ItemDetail[];
+  savedPosition: ShadowingPosition | null;
   navigate: Navigate;
 }
 
 /**
- * The player stays at the top of the window, above the whole article.
- * Speed and the other choices last for this visit only.
+ * The player stays at the top of the window, above the whole article. The
+ * learner's place is kept between visits; speed and the other choices last
+ * for this visit only.
  */
-export default function ShadowingSession({ lesson, initialItems, navigate }: Props) {
+export default function ShadowingSession({ lesson, initialItems, savedPosition, navigate }: Props) {
   const [items, setItems] = useState(initialItems);
   const [isTextShown, setIsTextShown] = useState(true);
 
@@ -32,7 +34,13 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
   }, []);
   const audioUrlFor = useAudioUrls(updateItem);
   const { timings, timingFor } = usePassageTimings(items, audioUrlFor);
-  const { state, player } = useShadowingPlayer(items, audioUrlFor, timingFor);
+  const { state, player } = useShadowingPlayer({
+    lessonId: lesson.id,
+    items,
+    audioUrlFor,
+    timingFor,
+    savedPosition,
+  });
 
   const { unit } = state;
   // Kept between renders: the player re-renders the screen on every frame while audio plays.
@@ -105,7 +113,7 @@ export default function ShadowingSession({ lesson, initialItems, navigate }: Pro
           items={items}
           segmentsById={segmentsById}
           unit={unit}
-          currentIndex={isUnderway(state) ? state.index : null}
+          currentIndex={isUnderway(state) || hasSavedPlace(state) ? state.index : null}
           currentSegment={state.segment}
           playSegment={playSegment}
         />

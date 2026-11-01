@@ -155,8 +155,8 @@ The current archive format is `dictation-app-lessons`, version `1`, implemented 
 `lessons`; each lesson has `id`, `title`, `createdAt`, `sourceText`, and `items`; each item has
 `position`, `text`, and nullable `audioCacheKey`. Audio entries are
 `audio/<lesson-id>/<position padded to three digits>.mp3`. A null key means that no audio for that
-item was exported. API credentials, region, source paths, answers, attempts and player preferences
-are absent. This is not a database backup.
+item was exported. API credentials, region, source paths, answers, attempts, shadowing positions
+and player preferences are absent. This is not a database backup.
 
 Export copies every existing audio file, whatever settings made it. `voice` holds the exporting
 device's provider, voices and model, plus `speakingRate: 0` and `pitch: 0`; it is still written,
@@ -260,8 +260,14 @@ text" checks the answer before revealing it; hiding it again makes the answer ed
 it again re-checks only if the answer changed. Answers are kept between sessions, and "Dictation"
 continues where you stopped; the ▶ on an item in the lesson screen starts from that item instead.
 
-The shadowing screen uses the same items and cached audio but keeps nothing: no answers, no
-statistics, and its speed and pause choices last for the visit only. One `ShadowingPlayer` owns its
+The shadowing screen uses the same items and cached audio but keeps only the learner's place: no
+answers, no statistics, and its speed and pause choices last for the visit only. The place is one row
+per lesson in `shadowing_positions` (schema v5): a passage and a moment in its audio, so it holds in
+any unit. The player reports each part it reaches, because the app can be closed without warning, so
+the row is rewritten as the learner goes. The primary key on the lesson keeps it to one row per lesson:
+finishing the article deletes it, a foreign key deletes it with the lesson, and deleting the passage
+it points at moves it to the next passage, or the previous one at the end (`neighbor_item_id`). One
+`ShadowingPlayer` owns its
 single audio element and the "Your turn" timer, and leaving the screen stops both. The article reads
 as one text, but each passage keeps its own audio; the player moves from one to the next.
 

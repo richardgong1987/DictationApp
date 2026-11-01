@@ -1,5 +1,6 @@
 import { formatTime } from "../../format";
 import {
+  hasSavedPlace,
   isRunning,
   isUnderway,
   turnPause,
@@ -285,6 +286,7 @@ function YourTurn({
 }
 
 function playLabel(state: ShadowingState): string {
+  if (hasSavedPlace(state)) return "▶ Continue";
   if (!isUnderway(state) || state.phase === "failed") return "▶ Play article";
   if (state.phase === "loading" && !state.isPaused) return "Loading…";
   return isRunning(state) ? "❚❚ Pause" : "▶ Resume";
@@ -294,6 +296,7 @@ function articleStatus(state: ShadowingState, passageCount: number): string {
   const passage = `Passage ${state.index + 1} of ${passageCount}`;
   switch (state.phase) {
     case "idle":
+      if (hasSavedPlace(state)) return `Last time you stopped in passage ${state.index + 1}.`;
       if (state.isLearnerFirst) return `Read each ${state.unit} aloud, then hear it.`;
       return state.repeatPause === 0
         ? "Play every passage in order and read along, or click the text to start there."

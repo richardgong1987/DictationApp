@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import type { Clip, SegmentUnit } from "./passageSegments.ts";
 import {
+  hasSavedPlace,
   repeatPauseMs,
   ShadowingPlayer,
   turnPause,
+  type ArticlePlace,
   type AudioOutput,
   type RepeatPause,
   type RepeatUnit,
@@ -174,8 +176,9 @@ let audio: FakeAudio;
 let timers: FakeTimers;
 let failingPassages: Set<number>;
 let clipRequests: [number, SegmentUnit][];
+let reportedPlaces: (ArticlePlace | null)[];
 
-function newPlayer() {
+function newPlayer(resumeFrom: ArticlePlace | null = null) {
   return new ShadowingPlayer({
     audio,
     timers,
@@ -188,6 +191,8 @@ function newPlayer() {
       clipRequests.push([index, unit]);
       return Promise.resolve(clipsOf(index));
     },
+    resumeFrom,
+    onPlaceReached: (place) => reportedPlaces.push(place),
   });
 }
 
@@ -225,12 +230,14 @@ const position = (player: ShadowingPlayer) => {
   return { index, segment, phase };
 };
 const at = (index: number, segment: number, phase: string) => ({ index, segment, phase });
+const lastOf = <T>(list: T[]) => list[list.length - 1];
 
 beforeEach(() => {
   timers = new FakeTimers();
   audio = new FakeAudio(timers);
   failingPassages = new Set();
   clipRequests = [];
+  reportedPlaces = [];
 });
 
 describe("a new player", () => {
@@ -963,6 +970,8 @@ describe("slow loads", () => {
           ? new Promise((resolve) => (resolveFirst = resolve))
           : Promise.resolve(urlOf(index)),
       passageClips: (index) => Promise.resolve(clipsOf(index)),
+      resumeFrom: null,
+      onPlaceReached: () => undefined,
     });
     player.playSegment(0, 0);
     player.playSegment(1, 0);
@@ -971,6 +980,160 @@ describe("slow loads", () => {
     await settle();
     assert.equal(audio.src, urlOf(1));
     assert.equal(player.getState().index, 1);
+  });
+});
+
+describe("coming back after an earlier visit", () => {
+  const secondSentence = { index: 1, seconds: 1 };
+
+  it("shows the saved sentence without playing anything", async () => {
+    const player = newPlayer(secondSentence);
+    await settle();
+
+    assert.deepEqual(position(player), at(1, 1, "idle"));
+    assert.equal(hasSavedPlace(player.getState()), true);
+    assert.equal(audio.src, "");
+    assert.equal(audio.isPlaying, false);
+  });
+
+  it("continues from the saved sentence, with the learner reading it first", async () => {
+    const player = newPlayer(secondSentence);
+    await settle();
+
+    player.toggleArticle();
+
+    assert.equal(player.getState().segment, 1, "stays on it while the audio loads");
+    await loadPassage(1);
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+    assert.equal(audio.currentTime, 1);
+    assert.equal(hasSavedPlace(player.getState()), false);
+  });
+
+  it("continues at once, even before the saved sentence has been found", async () => {
+    const player = newPlayer(secondSentence);
+
+    player.toggleArticle();
+
+    await loadPassage(1);
+    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
+  });
+
+  it("stays at the same point when the unit changes first", async () => {
+    const player = newPlayer(secondSentence);
+    await settle();
+
+    player.setUnit("passage");
+    assert.deepEqual(position(player), at(1, 0, "idle"));
+
+    player.setUnit("phrase");
+    await settle();
+    assert.deepEqual(lastOf(clipRequests), [1, "phrase"]);
+    assert.deepEqual(position(player), at(1, 1, "idle"));
+  });
+
+  it("asks for no audio when only the passage is known, which could generate it", async () => {
+    const player = newPlayer({ index: 1, seconds: 0 });
+    await settle();
+
+    assert.deepEqual(clipRequests, []);
+    assert.deepEqual(position(player), at(1, 0, "idle"));
+    assert.equal(hasSavedPlace(player.getState()), true);
+  });
+
+  it("starts from the top on a first visit", async () => {
+    const player = createPlayer();
+    assert.equal(hasSavedPlace(player.getState()), false);
+
+    player.toggleArticle();
+
+    await loadPassage(0);
+    assert.deepEqual(position(player), at(0, 0, "audio"));
+  });
+
+  it("can still start the article over", async () => {
+    const player = newPlayer(secondSentence);
+    await settle();
+
+    player.restartArticle();
+
+    await loadPassage(0);
+    assert.equal(player.getState().index, 0);
+    assert.deepEqual(reportedPlaces, [{ index: 0, seconds: 0 }]);
+  });
+
+  it("keeps the place through the stop of React's development mode", async () => {
+    const player = newPlayer(secondSentence);
+    await settle();
+
+    player.stop();
+
+    assert.deepEqual(position(player), at(1, 1, "idle"));
+    assert.equal(hasSavedPlace(player.getState()), true);
+  });
+});
+
+describe("keeping the learner's place", () => {
+  it("reports each sentence once, as the learner reaches it", async () => {
+    const player = newPlayer();
+    player.playSegment(1, 0);
+    await loadPassage(1);
+    assert.deepEqual(reportedPlaces, [{ index: 1, seconds: 0 }]);
+
+    player.finishTurn();
+    assert.equal(reportedPlaces.length, 1, "hearing the audio is still the same sentence");
+
+    timers.advance(1250);
+    assert.deepEqual(lastOf(reportedPlaces), { index: 1, seconds: 1 });
+    assert.equal(reportedPlaces.length, 2);
+  });
+
+  it("reports the next passage when the article moves on", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.playSegment(1, 2);
+    await loadPassage(1);
+
+    audio.finish();
+    await loadPassage(2);
+
+    assert.deepEqual(reportedPlaces, [
+      { index: 1, seconds: 2.25 },
+      { index: 2, seconds: 0 },
+    ]);
+  });
+
+  it("reports seeking into another sentence, but not moving within one", async () => {
+    const player = createPlayer({ unit: "sentence" });
+    player.playSegment(1, 0);
+    await loadPassage(1);
+    reportedPlaces.length = 0;
+
+    player.seek(0.5);
+    assert.deepEqual(reportedPlaces, []);
+
+    player.seek(2);
+    assert.deepEqual(reportedPlaces, [{ index: 1, seconds: 1 }]);
+  });
+
+  it("forgets the place at the end of the article, so the next visit starts over", async () => {
+    const player = createPlayer();
+    player.playSegment(2, 0);
+    await loadPassage(2);
+
+    audio.finish();
+
+    assert.equal(player.getState().phase, "ended");
+    assert.equal(lastOf(reportedPlaces), null);
+  });
+
+  it("keeps the place while the article loops", async () => {
+    const player = createPlayer({ isArticleLooping: true });
+    player.playSegment(2, 0);
+    await loadPassage(2);
+
+    audio.finish();
+    await loadPassage(0);
+
+    assert.deepEqual(lastOf(reportedPlaces), { index: 0, seconds: 0 });
   });
 });
 

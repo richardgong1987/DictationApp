@@ -28,10 +28,20 @@ export default memo(function ArticleText({
   playSegment,
 }: Props) {
   const currentRef = useRef<HTMLSpanElement>(null);
+  const hasShownCurrent = useRef(false);
+  // A sentence can be current before its passage is split, and only then does it appear.
+  const currentPartCount =
+    currentIndex === null ? 0 : (segmentsById.get(items[currentIndex].id)?.length ?? 1);
 
   useEffect(() => {
-    currentRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [currentIndex, currentSegment]);
+    const current = currentRef.current;
+    if (!current) return;
+    // Coming back to a place far down the article jumps there at once.
+    current.scrollIntoView(
+      hasShownCurrent.current ? { block: "nearest", behavior: "smooth" } : { block: "center" },
+    );
+    hasShownCurrent.current = true;
+  }, [currentIndex, currentSegment, currentPartCount]);
 
   return (
     <article className={unit === "passage" ? "article-text whole" : "article-text"}>

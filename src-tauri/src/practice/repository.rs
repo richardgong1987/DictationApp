@@ -1,14 +1,15 @@
-//! SQLite access for practice: `attempts`, the history of checks, and
-//! `answers`, the latest answer to each item.
+//! SQLite access for practice: `attempts`, the history of checks, `answers`,
+//! the latest answer to each item, and `shadowing_positions`, the place
+//! reached in each lesson.
 
 use std::collections::HashMap;
 
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef};
-use rusqlite::{params, Row};
+use rusqlite::{params, OptionalExtension, Row};
 
 use crate::database::{timestamp_now, Database};
 use crate::error::AppResult;
-use crate::practice::{Answer, AnswerStatus, ItemStats};
+use crate::practice::{Answer, AnswerStatus, ItemStats, ShadowingPosition};
 
 /// One check of an answer, as it goes into the statistics.
 pub struct NewAttempt {
@@ -104,6 +105,67 @@ impl PracticeRepository {
             .query_map([lesson_id], answer_from_row)?
             .collect::<Result<_, _>>()?;
         Ok(answers)
+    }
+
+    pub fn shadowing_position(&self, lesson_id: &str) -> AppResult<Option<ShadowingPosition>> {
+        let position = self
+            .database
+            .connection()
+            .query_row(
+                "SELECT item_id, audio_seconds FROM shadowing_positions WHERE lesson_id = ?1",
+                [lesson_id],
+                |row| {
+                    Ok(ShadowingPosition {
+                        item_id: row.get(0)?,
+                        audio_seconds: row.get(1)?,
+                    })
+                },
+            )
+            .optional()?;
+        Ok(position)
+    }
+
+    /// A lesson has one place, so this replaces the one stored before.
+    pub fn save_shadowing_position(
+        &self,
+        lesson_id: &str,
+        position: &ShadowingPosition,
+    ) -> AppResult<()> {
+        self.database.connection().execute(
+            "INSERT INTO shadowing_positions (lesson_id, item_id, audio_seconds, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?4)
+             ON CONFLICT(lesson_id) DO UPDATE
+             SET item_id = excluded.item_id,
+                 audio_seconds = excluded.audio_seconds,
+                 updated_at = excluded.updated_at",
+            params![
+                lesson_id,
+                position.item_id,
+                position.audio_seconds,
+                timestamp_now()
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// A place in `from_item_id`, if there is one, moves to the start of
+    /// `to_item_id`: its moment belonged to the other passage's audio.
+    pub fn move_shadowing_position(&self, from_item_id: i64, to_item_id: i64) -> AppResult<()> {
+        self.database.connection().execute(
+            "UPDATE shadowing_positions
+             SET item_id = ?2, audio_seconds = 0, updated_at = ?3
+             WHERE item_id = ?1",
+            params![from_item_id, to_item_id, timestamp_now()],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_shadowing_position(&self, lesson_id: &str) -> AppResult<()> {
+        self.database.connection().execute(
+            "DELETE FROM shadowing_positions WHERE lesson_id = ?1",
+            [lesson_id],
+        )?;
+        Ok(())
     }
 
     /// Statistics for the lesson's items, keyed by item id. Items without

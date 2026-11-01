@@ -296,13 +296,27 @@ The app finds each piece in the audio by the speaker's pauses, so it works with 
 any voice, without extra speech requests. Where the voice runs two pieces together without a pause,
 they stay one piece.
 
+### Come back later
+
+Each lesson remembers the part you reached, even if you close the app or switch off the computer or
+phone without warning. Open **Shadowing** again and that part is highlighted and in view, with
+**Continue** in place of **Play article**. **Restart** goes back to the top instead.
+
+If you delete the passage you stopped in, the place moves to the start of the next passage, or of the
+previous one if it was the last. Deleting any other passage leaves it where it is. Finishing the
+article forgets the place, so the next visit starts from the top. Deleting the lesson deletes the
+place with everything else of that lesson. The place stays on the device where you practiced: it is
+not in lesson exports.
+
+### Other controls
+
 **Hide text / Show text** applies to the whole article. A failed passage shows **Retry**. Leaving the
 screen stops playback and repeat timers. On a phone the title and status line are hidden, and the two
 menus lose their labels, to leave more of the screen to the article.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation
 answers/statistics. Its speed, practice unit, pause, loop and Read first/Listen first choices last for
-the current visit.
+the current visit; only your place in the article is kept.
 
 ## Transfer lessons and audio
 

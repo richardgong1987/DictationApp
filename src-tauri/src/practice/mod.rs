@@ -1,5 +1,5 @@
-//! Practice: checking typed answers, keeping them between sessions, and
-//! per-item statistics.
+//! Practice: checking typed answers, keeping them between sessions, per-item
+//! statistics, and the place reached in shadowing.
 
 pub mod comparison;
 pub mod repository;
@@ -64,6 +64,15 @@ pub struct PracticeProgress {
     pub resume_item_id: Option<i64>,
 }
 
+/// Where the learner stopped shadowing a lesson: a moment in one passage's
+/// audio, so that it holds whether they practise by sentence or by phrase.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShadowingPosition {
+    pub item_id: i64,
+    pub audio_seconds: f64,
+}
+
 /// Where to continue: the item answered last, or the one after it once that
 /// answer is checked (staying on the last item at the end of the lesson).
 /// `item_ids` are in lesson order.
@@ -75,6 +84,17 @@ pub fn resume_item_id(item_ids: &[i64], latest: Option<&Answer>) -> Option<i64> 
         AnswerStatus::Checked => (position + 1).min(item_ids.len() - 1),
     };
     Some(item_ids[resume_position])
+}
+
+/// Where a place in a passage goes when that passage is deleted: to the one
+/// after it, which then stands where it stood, or to the one before it at the
+/// end of the lesson. `None` for a lesson's only passage. `item_ids` are in
+/// lesson order.
+pub fn neighbor_item_id(item_ids: &[i64], item_id: i64) -> Option<i64> {
+    let position = item_ids.iter().position(|&id| id == item_id)?;
+    let after = item_ids.get(position + 1).copied();
+    let before = position.checked_sub(1).map(|previous| item_ids[previous]);
+    after.or(before)
 }
 
 #[cfg(test)]
@@ -112,5 +132,21 @@ mod tests {
     fn stays_on_the_last_item_once_it_is_checked() {
         let latest = answer(12, AnswerStatus::Checked);
         assert_eq!(resume_item_id(&ITEMS, Some(&latest)), Some(12));
+    }
+
+    #[test]
+    fn a_place_in_a_deleted_passage_moves_to_the_passage_after_it() {
+        assert_eq!(neighbor_item_id(&ITEMS, 10), Some(11));
+        assert_eq!(neighbor_item_id(&ITEMS, 11), Some(12));
+    }
+
+    #[test]
+    fn a_place_in_the_deleted_last_passage_moves_back() {
+        assert_eq!(neighbor_item_id(&ITEMS, 12), Some(11));
+    }
+
+    #[test]
+    fn the_only_passage_has_no_neighbor() {
+        assert_eq!(neighbor_item_id(&[10], 10), None);
     }
 }

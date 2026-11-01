@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../../api/client";
-import type { LessonDetail } from "../../api/types";
+import type { LessonDetail, ShadowingPosition } from "../../api/types";
 import LoadingPage from "../../components/LoadingPage";
 import type { Navigate } from "../../navigation";
 import ShadowingSession from "./ShadowingSession";
@@ -10,21 +10,24 @@ interface Props {
   navigate: Navigate;
 }
 
-/** Loads the lesson, then starts a session. */
+/** Loads the lesson and where the learner stopped, then starts a session. */
 export default function ShadowingScreen({ lessonId, navigate }: Props) {
-  const [detail, setDetail] = useState<LessonDetail | null>(null);
+  const [loaded, setLoaded] = useState<{
+    detail: LessonDetail;
+    savedPosition: ShadowingPosition | null;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const backToLesson = () => navigate({ name: "lesson", lessonId });
 
   useEffect(() => {
-    api
-      .getLesson(lessonId)
-      .then(setDetail)
+    Promise.all([api.getLesson(lessonId), api.getShadowingPosition(lessonId)])
+      .then(([detail, savedPosition]) => setLoaded({ detail, savedPosition }))
       .catch((e) => setError(errorMessage(e)));
   }, [lessonId]);
 
-  if (!detail) return <LoadingPage backLabel="Lesson" onBack={backToLesson} error={error} />;
+  if (!loaded) return <LoadingPage backLabel="Lesson" onBack={backToLesson} error={error} />;
 
+  const { detail, savedPosition } = loaded;
   if (detail.items.length === 0) {
     return (
       <main className="page">
@@ -35,5 +38,12 @@ export default function ShadowingScreen({ lessonId, navigate }: Props) {
       </main>
     );
   }
-  return <ShadowingSession lesson={detail.lesson} initialItems={detail.items} navigate={navigate} />;
+  return (
+    <ShadowingSession
+      lesson={detail.lesson}
+      initialItems={detail.items}
+      savedPosition={savedPosition}
+      navigate={navigate}
+    />
+  );
 }
