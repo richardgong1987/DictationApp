@@ -260,6 +260,7 @@ src/
     │   ├── shadowingPlayer.ts        the one player: passages in order, parts, repeat pause, turn order, loops
     │   ├── useShadowingPlayer.ts     creates it, renders its state, stops it on leaving
     │   ├── passageSegments.ts        cuts a passage into sentences or phrases at the audio's pauses
+    │   ├── passageText.ts            where its sentences and phrases end, from the text alone
     │   └── usePassageTimings.ts      decodes each passage's audio to find those pauses
     └── practice/     dictation
         ├── PracticeScreen.tsx        loads the lesson and player preferences
@@ -292,11 +293,18 @@ as one text, but each passage keeps its own audio; the player moves from one to 
 
 Practising by sentence or phrase needs no extra TTS requests and no timestamps from the provider.
 `usePassageTimings` decodes each passage's cached MP3 with Web Audio and `findPauses` lists its
-silences. `segmentPassage` splits the text at sentence ends (and, for phrases, at commas, semicolons,
-colons and dashes) and matches each boundary to a pause near where its share of the letters puts
-it. A pause must last as long as saying about 2.5 letters at that passage's measured speaking rate,
-so the closures inside words like "act" never count, at any speed. Boundaries without a pause are
-dropped, so a clip never starts or stops inside a word. The player then plays a passage as a list of
+pauses: frames 35 dB or more below the voice's usual level. That takes in the quiet end of the
+breath Gemini draws between sentences; a silence-only threshold (−45 dB) saw too little of it.
+`passageText` splits the text at sentence ends, commas, semicolons, colons and dashes, and marks
+which of those ends a clip can stop at (phrases under four words join the next). `segmentPassage`
+then matches all of them to pauses at once, with dynamic programming: each stretch between two cuts
+should last as long as its letters take at the passage's own pace, longer pauses fit better (most of
+all at sentence ends), and leaving a boundary out has a cost. Measuring each stretch from the cut
+before it, rather than placing boundaries by their share of the whole passage, keeps a long passage
+in step; giving every comma a turn stops a comma's pause from being taken for a sentence end. A pause
+must last as long as saying about 2.5 letters at that passage's speaking rate, so the closures inside
+words like "act" never count, at any speed. Boundaries without a fitting pause are dropped, so a clip
+never starts or stops inside a word: two sentences then play as one. The player then plays a passage as a list of
 clips (one clip when practised whole) and stops each one with a timer that it checks against the
 audio's position.
 
