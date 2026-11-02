@@ -49,7 +49,7 @@ install_frontend_dependencies() {
 
 # $1: "universal" or "native"
 build_dmg() {
-  local build_args=(--bundles dmg)
+  local build_args=(--bundles app,dmg)
   local bundle_dir="src-tauri/target/release/bundle/dmg"
   if [[ "$1" == universal ]]; then
     build_args+=(--target universal-apple-darwin)
@@ -67,6 +67,7 @@ build_dmg() {
   echo
   echo "DMG ready:"
   ls -1 "$PWD/$bundle_dir"/*.dmg
+  
 }
 
 # $1: "device" or "simulator"
