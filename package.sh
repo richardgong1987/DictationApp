@@ -71,6 +71,8 @@ build_dmg() {
     return 1
   fi
 
+  rm -fr /Applications/DictationApp.app
+
   /usr/bin/osascript \
     -e 'on run argv' \
     -e '  set appBundle to (POSIX file (item 1 of argv)) as alias' \
@@ -125,6 +127,8 @@ build_ios() {
     echo
     echo "IPA ready:"
     find "$PWD/$output_dir" -name "*.ipa"
+    rm "$HOME/Library/Mobile Documents/com~apple~CloudDocs/DictationApp.ipa"
+
     cp "$PWD/$output_dir"/arm64/DictationApp.ipa "$HOME/Library/Mobile Documents/com~apple~CloudDocs"
   else
     pnpm tauri ios build --ci --target "$tauri_target" --no-sign
