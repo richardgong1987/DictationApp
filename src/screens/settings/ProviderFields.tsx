@@ -1,7 +1,9 @@
 // The Settings fields of each text-to-speech provider.
 
-import { useId, type ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { Settings, SettingsDetail, TtsProvider } from "../../api/types";
+import GeminiVoiceField from "./GeminiVoiceField";
+import SuggestionField from "./SuggestionField";
 
 /** Suggestions only; any Azure neural voice name can be typed in. */
 const AZURE_VOICES = [
@@ -13,7 +15,7 @@ const AZURE_VOICES = [
   "en-GB-RyanNeural",
   "en-AU-NatashaNeural",
   "en-AU-WilliamNeural",
-];
+].map((id) => ({ id, label: id }));
 
 /** Suggestions only; any voice ID from the ElevenLabs voice library can be pasted in. */
 const ELEVENLABS_VOICES = [
@@ -26,18 +28,6 @@ const ELEVENLABS_MODELS = [
   { id: "eleven_multilingual_v2", label: "Multilingual v2: lifelike and stable" },
   { id: "eleven_flash_v2_5", label: "Flash v2.5: faster, half the credits" },
   { id: "eleven_v4", label: "v4: most expressive" },
-];
-
-/** Suggestions only; any voice from the Gemini voice list can be typed in. */
-const GEMINI_VOICES = [
-  { id: "Kore", label: "Kore: firm" },
-  { id: "Charon", label: "Charon: informative" },
-  { id: "Iapetus", label: "Iapetus: clear" },
-  { id: "Erinome", label: "Erinome: clear" },
-  { id: "Schedar", label: "Schedar: even" },
-  { id: "Achird", label: "Achird: friendly" },
-  { id: "Sulafat", label: "Sulafat: warm" },
-  { id: "Puck", label: "Puck: upbeat" },
 ];
 
 /** Suggestions only; any Gemini text-to-speech model ID can be typed in. */
@@ -96,20 +86,12 @@ function AzureFields({ form, detail, update }: ProviderFieldsProps) {
         precedence. A key entered here is stored unencrypted in the app's local data folder on this
         computer.
       </p>
-      <label>
-        Voice name
-        <input
-          list="azure-voices"
-          value={form.azureVoice}
-          onChange={(e) => update("azureVoice", e.target.value)}
-          spellCheck={false}
-        />
-        <datalist id="azure-voices">
-          {AZURE_VOICES.map((voice) => (
-            <option key={voice} value={voice} />
-          ))}
-        </datalist>
-      </label>
+      <SuggestionField
+        label="Voice name"
+        value={form.azureVoice}
+        suggestions={AZURE_VOICES}
+        onChange={(voice) => update("azureVoice", voice)}
+      />
     </fieldset>
   );
 }
@@ -161,13 +143,11 @@ function GeminiFields({ form, detail, update }: ProviderFieldsProps) {
         Create a key in Google AI Studio. On the free tier, Google may use the text you send to
         improve its products, so avoid private material.
       </p>
-      <SuggestionField
-        label="Voice"
+      <GeminiVoiceField
+        detail={detail}
         value={form.geminiVoice}
-        suggestions={GEMINI_VOICES}
         onChange={(voice) => update("geminiVoice", voice)}
       />
-      <p className="muted small">Gemini detects the language from the text.</p>
       <SuggestionField
         label="Model"
         value={form.geminiModel}
@@ -216,33 +196,5 @@ function ApiKeyField({
         stored unencrypted in the app's local data folder on this computer.
       </p>
     </>
-  );
-}
-
-interface SuggestionFieldProps {
-  label: string;
-  value: string;
-  suggestions: { id: string; label: string }[];
-  onChange: (value: string) => void;
-}
-
-function SuggestionField({ label, value, suggestions, onChange }: SuggestionFieldProps) {
-  const listId = useId();
-  return (
-    <label>
-      {label}
-      <input
-        list={listId}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete="off"
-        spellCheck={false}
-      />
-      <datalist id={listId}>
-        {suggestions.map((suggestion) => (
-          <option key={suggestion.id} value={suggestion.id} label={suggestion.label} />
-        ))}
-      </datalist>
-    </label>
   );
 }

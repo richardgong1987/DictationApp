@@ -95,6 +95,18 @@ export interface PracticeProgress {
 /** `tts::TtsProviderKind` */
 export type TtsProvider = "azure" | "elevenlabs" | "gemini";
 
+/** `tts::gemini::GeminiVoice` */
+export interface GeminiVoice {
+  /** What Settings stores: a speaker such as "Puck", or "voice_...". */
+  id: string;
+  displayName: string | null;
+  languageCode: string | null;
+  accent: string | null;
+  gender: string | null;
+  pitch: string | null;
+  description: string | null;
+}
+
 export interface Settings {
   ttsProvider: TtsProvider;
   azureVoice: string;

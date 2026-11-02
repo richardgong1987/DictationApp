@@ -14,7 +14,7 @@ use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 use crate::tts::azure::AzureTts;
 use crate::tts::elevenlabs::ElevenLabsTts;
-use crate::tts::gemini::GeminiTts;
+use crate::tts::gemini::{GeminiTts, GeminiVoice};
 use crate::tts::{TtsClient, TtsProviderKind};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
@@ -100,6 +100,16 @@ impl AudioService {
         self.ensure_item_audio(client.as_ref(), &settings, &item, force)
             .await?;
         self.write_metadata(&item.lesson_id)
+    }
+
+    /// The voices the saved Gemini key can use, for the Settings screen.
+    pub async fn gemini_voices(&self) -> AppResult<Vec<GeminiVoice>> {
+        let settings = self.settings.load()?;
+        let key = self
+            .settings
+            .gemini_key(&settings)
+            .ok_or(AppError::MissingSpeechCredentials(TtsProviderKind::Gemini))?;
+        Ok(GeminiTts::new(self.http.clone(), key).list_voices().await?)
     }
 
     /// Raw MP3 bytes; playback itself happens in the WebView.

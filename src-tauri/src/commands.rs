@@ -13,6 +13,7 @@ use crate::lesson::{ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::{CheckResult, PracticeProgress, ShadowingPosition};
 use crate::settings::{Settings, SettingsDetail};
 use crate::transfer::{ExportSummary, ImportSummary};
+use crate::tts::gemini::GeminiVoice;
 
 // ---------------------------------------------------------------------------
 // Lessons
@@ -125,6 +126,11 @@ pub async fn generate_item_audio(
 ) -> AppResult<ItemDetail> {
     state.audio.generate_item(item_id, force).await?;
     state.lessons.item_detail(item_id)
+}
+
+#[tauri::command]
+pub async fn list_gemini_voices(state: State<'_, AppState>) -> AppResult<Vec<GeminiVoice>> {
+    state.audio.gemini_voices().await
 }
 
 /// Responds with raw MP3 bytes rather than JSON.

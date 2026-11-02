@@ -169,18 +169,27 @@ Open **Lessons → Settings → Text-to-speech → Provider → Google Gemini**.
 | App field | What to enter | First-test value |
 |---|---|---|
 | **API key** | Your private key from Google AI Studio | Your own key |
-| **Voice** | A voice name, exactly as Google writes it | `Kore` |
 | **Model** | An exact Gemini text-to-speech model ID | `gemini-3.8-flash-tts` |
 
-Click **Save**, wait for **Saved.**, then **Back**. Gemini needs no region.
+Click **Save** and wait for **Saved.** Gemini needs no region.
 
 ### 3. Choose a voice and model
 
-The app suggests eight of Gemini's voices, such as `Kore`, `Iapetus` and `Achird`. The field is
-editable, so you can type any name from Google's
-[voice list](https://ai.google.dev/gemini-api/docs/speech-generation#voices) or the `voice_...` ID
-of a voice you made with Voice design. Listen to the voices in
-[AI Studio](https://aistudio.google.com/generate-speech) first.
+Once your API key is saved, Settings loads Gemini's full voice list from Google, including any
+voices you made with Voice design. Narrow it with **Language**, **Accent** and **Gender**, pick a
+**Voice**, and click **Save**. For a British woman's voice, for example, choose Language
+**English (UK)** and Gender **female**.
+
+Google's accents are specific, so there is no plain "British" accent: they are named after places,
+such as **Bristol English**, **Manchester English** or **Liverpool English**, and many are strong
+regional accents. **Accent** lists only those of the language you chose. The accent belongs to the
+voice: Gemini has no separate accent setting, and Google advises against asking for one in a style
+instruction.
+
+Without a saved key, or if the list cannot load, the app offers a few suggestions such as `Kore`
+instead, and **Other…** lets you type a name from Google's
+[voice list](https://ai.google.dev/gemini-api/docs/speech-generation#voices). Listen to voices in
+[AI Studio](https://aistudio.google.com/generate-speech) before generating a whole lesson.
 
 | Model | Good for |
 |---|---|
@@ -329,6 +338,7 @@ free generation. Reusing audio across devices is covered in the
 | ElevenLabs access denied / HTTP 403 | Check Text to Speech scope, account/voice access and any IP allowlist on the key. |
 | Gemini "API key not valid" / HTTP 400 | Recopy the key from Google AI Studio. An older key may need API restrictions; see [step 1](#google-gemini). |
 | Daily Gemini quota used up | Wait for the reset at midnight Pacific time, then click **Generate missing audio**. Check your limits in AI Studio. |
+| Voice list says it could not load | Read the message, fix the key if it names one, and click **Save** to try again. The suggested voices still work meanwhile. |
 | Gemini says "no audio", or the voice is rejected | Check the exact voice name and model ID. Try `Kore` with `gemini-3.8-flash-tts`, then **Regenerate** the passage. |
 | Too many requests / HTTP 429 | Let the provider's rate limit recover, then retry. The app retries transient failures with backoff and generates lesson clips sequentially. |
 | Network or provider server failure | Check connectivity and retry. Cached ready clips remain usable locally. |

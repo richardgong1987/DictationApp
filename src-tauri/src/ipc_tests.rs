@@ -602,6 +602,16 @@ fn generating_with_gemini_without_a_key_says_what_is_missing() {
 }
 
 #[test]
+fn listing_gemini_voices_needs_a_saved_key() {
+    let h = Harness::new();
+    let error = h.call("list_gemini_voices", json!({})).unwrap_err();
+    assert!(error
+        .as_str()
+        .unwrap()
+        .contains("Gemini API key is not configured"));
+}
+
+#[test]
 fn answers_are_kept_and_practice_resumes_where_it_stopped() {
     let h = Harness::new();
     let path = h.write_lesson_file("lesson01.txt", LESSON);

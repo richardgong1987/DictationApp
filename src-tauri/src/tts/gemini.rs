@@ -10,12 +10,15 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use reqwest::StatusCode;
 use rusty_mp3::{Mp3Encoder, Mp3EncoderConfig};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::tts::http::{fetch_body, ErrorReading, RetryAdvice};
 use crate::tts::{TtsError, TtsProvider, TtsProviderKind, TtsRequest};
 
-const ENDPOINT: &str = "https://generativelanguage.googleapis.com/v1beta/interactions";
+const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
+/// The most the voice list returns per page.
+const VOICE_PAGE_SIZE: &str = "1000";
 
 /// Records in the cache key what [`SAMPLE_RATE`] and [`MP3_BITRATE_KBPS`] make.
 pub const OUTPUT_FORMAT: &str = "mp3_24000_64";
@@ -32,7 +35,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
 pub struct GeminiTts {
     client: reqwest::Client,
     api_key: String,
-    endpoint: String,
+    api_base: String,
 }
 
 impl GeminiTts {
@@ -40,17 +43,78 @@ impl GeminiTts {
         Self {
             client,
             api_key,
-            endpoint: ENDPOINT.to_string(),
+            api_base: API_BASE.to_string(),
+        }
+    }
+
+    /// Every voice this key can use: its custom voices, then Google's catalog.
+    /// Accents live here, as separate voices, rather than in the request.
+    pub async fn list_voices(&self) -> Result<Vec<GeminiVoice>, TtsError> {
+        let url = format!("{}/voices", self.api_base);
+        let mut voices = Vec::new();
+        let mut page_token: Option<String> = None;
+        loop {
+            let build = || {
+                let mut query = vec![("page_size", VOICE_PAGE_SIZE)];
+                if let Some(token) = &page_token {
+                    query.push(("page_token", token.as_str()));
+                }
+                self.client
+                    .get(&url)
+                    .query(&query)
+                    .header("x-goog-api-key", &self.api_key)
+                    .header("User-Agent", "DictationApp")
+            };
+            let body = fetch_body(TtsProviderKind::Gemini, build, read_error).await?;
+            let page: VoicePage = serde_json::from_slice(&body)
+                .map_err(|_| TtsError::UnreadableResponse(TtsProviderKind::Gemini))?;
+            voices.extend(page.voices.into_iter().filter(|voice| !voice.id.is_empty()));
+            match page.next_page_token.filter(|token| !token.is_empty()) {
+                Some(token) => page_token = Some(token),
+                None => return Ok(voices),
+            }
         }
     }
 }
 
+/// One voice in the list, as the Settings screen receives it. The documentation
+/// spells these fields in snake_case, but Google's REST APIs also answer in
+/// camelCase, so both are read.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all(serialize = "camelCase"))]
+pub struct GeminiVoice {
+    /// What a request names: a speaker such as `Puck`, or `voice_...`.
+    #[serde(default)]
+    pub id: String,
+    #[serde(default, alias = "displayName")]
+    pub display_name: Option<String>,
+    #[serde(default, alias = "languageCode")]
+    pub language_code: Option<String>,
+    #[serde(default)]
+    pub accent: Option<String>,
+    #[serde(default)]
+    pub gender: Option<String>,
+    #[serde(default)]
+    pub pitch: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct VoicePage {
+    #[serde(default)]
+    voices: Vec<GeminiVoice>,
+    #[serde(default, alias = "nextPageToken")]
+    next_page_token: Option<String>,
+}
+
 impl TtsProvider for GeminiTts {
     async fn synthesize(&self, request: &TtsRequest) -> Result<Vec<u8>, TtsError> {
+        let url = format!("{}/interactions", self.api_base);
         let body = request_body(request).to_string();
         let build = || {
             self.client
-                .post(&self.endpoint)
+                .post(&url)
                 .timeout(REQUEST_TIMEOUT)
                 .header("x-goog-api-key", &self.api_key)
                 .header("Content-Type", "application/json")
@@ -188,6 +252,7 @@ fn json_array(value: &Value) -> impl Iterator<Item = &Value> {
 mod tests {
     use super::*;
     use rusty_mp3::{Error, Mp3Decoder};
+    use std::sync::{Arc, Mutex};
 
     use crate::tts::http::test_server::{http_response, serve};
 
@@ -210,6 +275,17 @@ mod tests {
             })
             .flat_map(i16::to_le_bytes)
             .collect()
+    }
+
+    /// A client whose API is a local server giving these responses.
+    fn gemini_server(responses: Vec<String>) -> (GeminiTts, Arc<Mutex<Vec<String>>>) {
+        let (url, requests) = serve(responses);
+        let gemini = GeminiTts {
+            client: reqwest::Client::new(),
+            api_key: "secret-key".into(),
+            api_base: url.trim_end_matches('/').to_string(),
+        };
+        (gemini, requests)
     }
 
     fn response_with_audio(pcm: &[u8]) -> Vec<u8> {
@@ -327,26 +403,69 @@ mod tests {
         } })
         .to_string();
         let audio = String::from_utf8(response_with_audio(&tone_pcm())).unwrap();
-        let (endpoint, requests) = serve(vec![
+        let (gemini, requests) = gemini_server(vec![
             http_response("429 Too Many Requests", &rate_limited),
             http_response("200 OK", &audio),
         ]);
-        let gemini = GeminiTts {
-            client: reqwest::Client::new(),
-            api_key: "secret-key".into(),
-            endpoint,
-        };
 
         let mp3 = gemini.synthesize(&request()).await.unwrap();
 
         assert!((decoded_seconds(&mp3) - 1.0).abs() < 0.1);
         let requests = requests.lock().unwrap();
         assert_eq!(requests.len(), 2);
-        assert!(requests[1].starts_with("POST /"));
+        assert!(requests[1].starts_with("POST /interactions "));
         assert!(requests[1]
             .to_lowercase()
             .contains("x-goog-api-key: secret-key"));
         assert!(requests[1].contains(r#""voice":"Kore""#));
+    }
+
+    #[tokio::test]
+    async fn list_voices_follows_every_page_and_keeps_what_settings_shows() {
+        let first = json!({
+            "voices": [{
+                "id": "Rosalind", "type": "prebuilt", "display_name": "Rosalind",
+                "language_code": "en-GB", "accent": "British", "gender": "female",
+                "pitch": "medium", "description": "Warm and clear",
+            }],
+            "next_page_token": "page-2",
+        })
+        .to_string();
+        let second = json!({
+            "voices": [
+                { "id": "voice_abc", "displayName": "Mine", "languageCode": "fr-FR" },
+                { "type": "prebuilt" },
+            ],
+        })
+        .to_string();
+        let (gemini, requests) = gemini_server(vec![
+            http_response("200 OK", &first),
+            http_response("200 OK", &second),
+        ]);
+
+        let voices = gemini.list_voices().await.unwrap();
+
+        let ids: Vec<&str> = voices.iter().map(|voice| voice.id.as_str()).collect();
+        assert_eq!(ids, ["Rosalind", "voice_abc"]);
+        assert_eq!(voices[0].accent.as_deref(), Some("British"));
+        assert_eq!(voices[0].gender.as_deref(), Some("female"));
+        assert_eq!(voices[1].display_name.as_deref(), Some("Mine"));
+        assert_eq!(voices[1].language_code.as_deref(), Some("fr-FR"));
+        let requests = requests.lock().unwrap();
+        assert!(requests[0].starts_with("GET /voices?page_size=1000 "));
+        assert!(requests[0]
+            .to_lowercase()
+            .contains("x-goog-api-key: secret-key"));
+        assert!(requests[1].starts_with("GET /voices?page_size=1000&page_token=page-2 "));
+    }
+
+    #[test]
+    fn voices_reach_the_frontend_in_camel_case() {
+        let voice: GeminiVoice =
+            serde_json::from_value(json!({ "id": "Puck", "display_name": "Puck" })).unwrap();
+        let sent = serde_json::to_value(voice).unwrap();
+        assert_eq!(sent["displayName"], "Puck");
+        assert_eq!(sent["languageCode"], Value::Null);
     }
 
     #[test]

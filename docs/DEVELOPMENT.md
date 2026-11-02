@@ -111,6 +111,10 @@ Decisions made while implementing V1, where the specification left room:
   keeps its exact length and its pauses when decoded by WebKit. Requests get a 120-second timeout,
   because nothing arrives until the whole clip exists. The Interactions API is used because Google's
   speech guide documents it end to end for these models; it was checked on 2 November 2026.
+  Accents belong to voices, so Settings loads `GET /v1beta/voices` (`list_gemini_voices`) with the
+  saved key and filters it client-side. Filter values come from the response, not a fixed list:
+  real `accent` values are places ("Liverpool English"), not the "British" of Google's reference, so
+  British voices are found through `language_code` (`en-GB`).
 - **Speed**: the player's speed (0.6×–2×) is the only speed control; it changes local playback
   and never calls the provider.
 - All providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). A provider can read
@@ -244,7 +248,7 @@ src/
 ├── format.ts         time/speed/percent formatting
 └── screens/
     ├── library/      LibraryScreen, LessonTransfer (export and import between devices)
-    ├── settings/     SettingsScreen, ProviderFields (each provider's form)
+    ├── settings/     SettingsScreen, ProviderFields (each provider's form), GeminiVoiceField (voice list)
     ├── lesson/       LessonScreen, item row, audio generation hook and status
     ├── shadowing/
     │   ├── ShadowingScreen.tsx       loads the lesson
