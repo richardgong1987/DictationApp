@@ -207,13 +207,6 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
       <AudioGenerationStatus progress={generation.progress} summary={generation.summary} />
 
-      {longCount > 0 && (
-        <div className="banner warn">
-          {longCount} {longCount === 1 ? "passage is" : "passages are"} longer than{" "}
-          {MAX_RECOMMENDED_WORDS} words. Shorter passages are easier to practice.
-        </div>
-      )}
-
       <ol className="item-list">
         {items.map((item, index) => (
           <LessonItemRow

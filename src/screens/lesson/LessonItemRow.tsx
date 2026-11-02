@@ -31,7 +31,7 @@ export default function LessonItemRow({
         <div className="item-text">{item.text}</div>
         <div className="muted small item-meta">
           <span className={item.tooLong ? "warn-text" : undefined}>
-            {item.wordCount} words{item.tooLong && ` — over ${MAX_RECOMMENDED_WORDS}`}
+            {item.wordCount} words{item.tooLong}
           </span>
           <AudioBadge status={item.audioStatus} isBusy={isBusy} />
           {item.attemptCount > 0 && (
