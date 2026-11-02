@@ -27,7 +27,6 @@ export default function LessonItemRow({
 }: Props) {
   return (
     <li className="card item-row">
-      <span className="item-pos">{item.position}</span>
       <div className="item-body">
         <div className="item-text">{item.text}</div>
         <div className="muted small item-meta">

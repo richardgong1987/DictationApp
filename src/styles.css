@@ -256,12 +256,6 @@ button.toggle.on {
 /* Lesson items: the number starts the first line and the text wraps under
    it; the counts and buttons below span the card's whole width. Nothing
    keeps a column of its own. */
-.item-pos {
-  float: left;
-  margin-right: 8px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
 
 .item-row .actions {
   margin-top: 8px;
@@ -477,34 +471,10 @@ select:focus {
   min-width: 0;
 }
 
-.practice-card > .item-number {
-  grid-column: 1;
-}
-
-.practice-card > .player-bar {
-  grid-column: 2;
-}
 
 /* The current item: loaded in the player, and what the shortcuts act on. */
 .practice-card.active {
   border-color: var(--selected);
-}
-
-.item-number {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  margin-top: 1px;
-  border-radius: 50%;
-  background: var(--info-bg);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.practice-card.active .item-number {
-  background: var(--accent);
-  color: var(--accent-text);
 }
 
 .player-bar {

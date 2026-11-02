@@ -52,7 +52,6 @@ export default function PracticeItemCard({
 
   return (
     <li ref={cardRef} className={`card practice-card ${isActive ? "active" : ""}`}>
-      <span className="item-number">{item.position}</span>
       {playerPanel}
 
       <ControlButton
