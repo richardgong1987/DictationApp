@@ -138,7 +138,10 @@ require pnpm "Install pnpm: corepack enable pnpm"
 require cargo "Install Rust from https://rustup.rs"
 
 case "${1:-}" in
-  "") build_dmg universal ;;
+  "")
+  build_dmg universal
+  build_ios device
+  ;;
   --native) build_dmg native ;;
   --ios) build_ios device ;;
   --ios-simulator) build_ios simulator ;;
