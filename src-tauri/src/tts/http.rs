@@ -11,6 +11,10 @@ use crate::tts::{TtsError, TtsProviderKind};
 const MAX_ATTEMPTS: u32 = 4;
 /// Longest single backoff, so a struggling service cannot freeze generation.
 const MAX_RETRY_DELAY: Duration = Duration::from_secs(20);
+/// The longest all of a request's retries can wait, which is as long as a
+/// per-minute limit lasts. A rate limit that goes beyond it is a used-up quota.
+const MAX_TOTAL_RETRY_DELAY: Duration =
+    Duration::from_secs(MAX_RETRY_DELAY.as_secs() * (MAX_ATTEMPTS as u64 - 1));
 const NETWORK_RETRY_DELAY: Duration = Duration::from_secs(1);
 /// Used when a 429/5xx response carries no `Retry-After` header.
 const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(2);
@@ -42,8 +46,8 @@ pub enum RetryAdvice {
     ByStatus,
     /// The wait named in the response body. Still limited by the backoff.
     After(Duration),
-    /// Retrying cannot help, whatever the status suggests.
-    Never,
+    /// The quota is used up, so neither this request nor the next can succeed.
+    QuotaExhausted,
 }
 
 pub type ReadError = fn(StatusCode, &str) -> ErrorReading;
@@ -56,6 +60,7 @@ pub async fn fetch_body(
     read_error: ReadError,
 ) -> Result<Vec<u8>, TtsError> {
     let mut attempt = 1;
+    let mut waited = Duration::ZERO;
     loop {
         match fetch_once(provider, build(), read_error).await {
             Ok(body) => return Ok(body),
@@ -64,10 +69,12 @@ pub async fn fetch_body(
                 ..
             }) if attempt < MAX_ATTEMPTS => {
                 // Back off a little more on each retry.
-                tokio::time::sleep((delay * attempt).min(MAX_RETRY_DELAY)).await;
+                let backoff = (delay * attempt).min(MAX_RETRY_DELAY);
+                tokio::time::sleep(backoff).await;
+                waited += backoff;
                 attempt += 1;
             }
-            Err(failed) => return Err(failed.error),
+            Err(failed) => return Err(failed.final_error(waited)),
         }
     }
 }
@@ -114,6 +121,19 @@ impl FailedAttempt {
         }
     }
 
+    /// A rate limit still there after the longest wait is no per-minute limit.
+    /// This finds a used-up quota however the provider words its error.
+    fn final_error(self, waited: Duration) -> TtsError {
+        match self.error {
+            TtsError::Api {
+                provider,
+                status: 429,
+                message,
+            } if waited >= MAX_TOTAL_RETRY_DELAY => TtsError::QuotaExhausted { provider, message },
+            error => error,
+        }
+    }
+
     /// Rate limits (429) and server errors are retried, unless the provider
     /// knows better from the response.
     async fn from_error_response(
@@ -122,26 +142,30 @@ impl FailedAttempt {
         read_error: ReadError,
     ) -> Self {
         let status = response.status();
-        let retry_after_header = response
-            .headers()
-            .get("Retry-After")
-            .and_then(|value| value.to_str().ok())
-            .and_then(|value| value.parse::<u64>().ok())
-            .map(Duration::from_secs);
+        let retry_after_header = retry_after_header(&response);
         let body = response.text().await.unwrap_or_default();
         let reading = read_error(status, &body);
         let message = reading.message.unwrap_or_else(|| match body.trim() {
             "" => status.canonical_reason().unwrap_or("error").to_string(),
             text => text.chars().take(MAX_ERROR_BODY_CHARS).collect(),
         });
-        let is_retryable = status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error();
+        let is_rate_limited = status == StatusCode::TOO_MANY_REQUESTS;
+        let is_retryable = is_rate_limited || status.is_server_error();
         let retry_after = match reading.retry {
             RetryAdvice::ByStatus => {
                 is_retryable.then(|| retry_after_header.unwrap_or(DEFAULT_RETRY_DELAY))
             }
             RetryAdvice::After(delay) => Some(delay),
-            RetryAdvice::Never => None,
+            RetryAdvice::QuotaExhausted => None,
         };
+        let outlasts_retries =
+            is_rate_limited && retry_after.is_some_and(|wait| wait > MAX_TOTAL_RETRY_DELAY);
+        if reading.retry == RetryAdvice::QuotaExhausted || outlasts_retries {
+            return Self {
+                error: TtsError::QuotaExhausted { provider, message },
+                retry_after: None,
+            };
+        }
         Self {
             error: TtsError::Api {
                 provider,
@@ -151,6 +175,17 @@ impl FailedAttempt {
             retry_after,
         }
     }
+}
+
+fn retry_after_header(response: &Response) -> Option<Duration> {
+    response
+        .headers()
+        .get("Retry-After")?
+        .to_str()
+        .ok()?
+        .parse()
+        .ok()
+        .map(Duration::from_secs)
 }
 
 /// A local server that plays the provider's part over a real connection.
@@ -238,18 +273,60 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn advice_never_to_retry_beats_a_retryable_status() {
+    async fn a_used_up_quota_is_not_retried_despite_a_retryable_status() {
         let (url, requests) = serve(vec![rate_limited()]);
         let read_error: ReadError = |_, _| ErrorReading {
             message: Some("daily quota".into()),
-            retry: RetryAdvice::Never,
+            retry: RetryAdvice::QuotaExhausted,
         };
         let error = fetch(&url, read_error).await.unwrap_err();
+        assert!(matches!(error, TtsError::QuotaExhausted { .. }));
         assert_eq!(
             error.to_string(),
             "Gemini TTS request failed (429): daily quota"
         );
         assert_eq!(requests.lock().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_wait_longer_than_the_retries_can_cover_is_a_used_up_quota() {
+        let hours_away =
+            "HTTP/1.1 429 Too Many Requests\r\nretry-after: 12600\r\ncontent-length: 0\r\n\r\n";
+        let (url, requests) = serve(vec![hours_away.to_string()]);
+        let error = fetch(&url, |_, _| ErrorReading::worded(None))
+            .await
+            .unwrap_err();
+        assert!(matches!(error, TtsError::QuotaExhausted { .. }));
+        assert_eq!(requests.lock().unwrap().len(), 1);
+    }
+
+    fn failed_with(status: u16) -> FailedAttempt {
+        FailedAttempt {
+            error: TtsError::Api {
+                provider: TtsProviderKind::Gemini,
+                status,
+                message: "refused".into(),
+            },
+            retry_after: None,
+        }
+    }
+
+    #[test]
+    fn a_rate_limit_that_outlasts_every_retry_is_a_used_up_quota() {
+        let error = failed_with(429).final_error(MAX_TOTAL_RETRY_DELAY);
+        assert!(matches!(error, TtsError::QuotaExhausted { .. }));
+    }
+
+    #[test]
+    fn a_short_wait_proves_nothing_about_the_quota() {
+        let error = failed_with(429).final_error(Duration::from_secs(12));
+        assert!(matches!(error, TtsError::Api { .. }));
+    }
+
+    #[test]
+    fn a_server_error_is_never_a_used_up_quota() {
+        let error = failed_with(503).final_error(MAX_TOTAL_RETRY_DELAY);
+        assert!(matches!(error, TtsError::Api { .. }));
     }
 
     #[tokio::test]

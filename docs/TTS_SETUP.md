@@ -203,8 +203,9 @@ current models.
 
 - **Requests, not characters, are what you usually run out of.** Each passage is one request, and
   a free-tier project may allow only a few a minute. When Google asks the app to wait it does, then
-  tries again, so a lesson can take several minutes. Once the daily limit is reached, the remaining
-  passages fail straight away; they can be generated after the reset with **Generate missing audio**.
+  tries again, so a lesson can take several minutes. Once the daily limit is reached the app stops,
+  within about a minute, and reports how many passages it did not try. Generate them after the
+  reset with **Generate missing audio**.
 - **Text in angle brackets can be performed rather than read.** Gemini treats tags such as `<laugh>`
   and `<short pause>` as sounds to make, so remove them from dictation text.
 - **Google returns uncompressed audio.** The app converts it to a 24 kHz, 64 kbps mono MP3 on your

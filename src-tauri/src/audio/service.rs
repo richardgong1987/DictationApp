@@ -14,8 +14,8 @@ use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 use crate::tts::azure::AzureTts;
 use crate::tts::elevenlabs::ElevenLabsTts;
-use crate::tts::gemini::{GeminiTts, GeminiVoice};
-use crate::tts::{TtsClient, TtsProviderKind};
+use crate::tts::gemini::{self, GeminiTts, GeminiVoice};
+use crate::tts::{TtsClient, TtsError, TtsProviderKind};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -25,6 +25,7 @@ pub struct AudioService {
     files: LessonFiles,
     cache: AudioCache,
     http: reqwest::Client,
+    gemini_api_base: String,
     running: RunningGenerations,
 }
 
@@ -45,13 +46,20 @@ impl AudioService {
             files,
             cache,
             http,
+            gemini_api_base: gemini::API_BASE.to_string(),
             running: RunningGenerations::default(),
         }
     }
 
+    #[cfg(test)]
+    pub fn use_gemini_at(&mut self, api_base: &str) {
+        self.gemini_api_base = api_base.to_string();
+    }
+
     /// Generates audio for every item that has none (every item when
     /// `force`), one at a time to stay within free-tier rate limits.
-    /// Reports progress after each item and keeps going when one item fails.
+    /// Reports progress after each item and keeps going when one item fails,
+    /// unless the quota is used up: every later item would fail the same way.
     pub async fn generate_lesson(
         &self,
         lesson_id: &str,
@@ -75,6 +83,8 @@ impl AudioService {
             let result = self
                 .ensure_item_audio(client.as_ref(), &settings, item, force)
                 .await;
+            let is_quota_exhausted =
+                matches!(result, Err(AppError::Tts(TtsError::QuotaExhausted { .. })));
             let error = summary.record(item.position, result);
             let updated = self.lessons.get_item(item.id)?;
             on_progress(AudioGenerationProgress {
@@ -85,6 +95,10 @@ impl AudioService {
                 audio_status: self.cache.status(&updated),
                 error,
             });
+            if is_quota_exhausted {
+                summary.not_tried = items.len() - (index + 1);
+                break;
+            }
         }
 
         self.lessons.touch(lesson_id)?;
@@ -109,7 +123,7 @@ impl AudioService {
             .settings
             .gemini_key(&settings)
             .ok_or(AppError::MissingSpeechCredentials(TtsProviderKind::Gemini))?;
-        Ok(GeminiTts::new(self.http.clone(), key).list_voices().await?)
+        Ok(self.gemini(key).list_voices().await?)
     }
 
     /// Raw MP3 bytes; playback itself happens in the WebView.
@@ -150,9 +164,13 @@ impl AudioService {
             TtsProviderKind::Gemini => self
                 .settings
                 .gemini_key(settings)
-                .map(|key| TtsClient::Gemini(GeminiTts::new(self.http.clone(), key))),
+                .map(|key| TtsClient::Gemini(self.gemini(key))),
         };
         Ok(client)
+    }
+
+    fn gemini(&self, key: String) -> GeminiTts {
+        GeminiTts::new(self.http.clone(), key, self.gemini_api_base.clone())
     }
 
     fn write_metadata(&self, lesson_id: &str) -> AppResult<()> {

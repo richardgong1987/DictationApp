@@ -47,6 +47,8 @@ export interface AudioGenerationSummary {
   generated: number;
   cached: number;
   failed: number;
+  /** Items left alone because the run stopped early. */
+  notTried: number;
   errors: string[];
 }
 

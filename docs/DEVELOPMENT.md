@@ -118,10 +118,12 @@ Decisions made while implementing V1, where the specification left room:
 - **Speed**: the player's speed (0.6×–2×) is the only speed control; it changes local playback
   and never calls the provider.
 - All providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). A provider can read
-  more from an error's body (`ErrorReading`): Gemini names its wait in `RetryInfo.retryDelay` rather
-  than `Retry-After`, and a used-up daily quota (a `quotaId` containing `PerDay`) is not retried, since
-  that would stall every remaining passage. Lesson generation runs one item at a time to stay within
-  free-tier rate limits.
+  more from an error's body (`ErrorReading`). A used-up quota (`TtsError::QuotaExhausted`) is not
+  retried and stops a lesson's run, since every remaining passage would fail the same way. It is
+  recognized from Gemini naming a daily limit anywhere in its error (Interactions errors have only
+  `code` and `message`), from a named wait longer than the retries can cover, or, whatever the
+  wording, from a 429 that outlasts a full minute of retries. Lesson generation runs one item at a
+  time to stay within free-tier rate limits.
 - **Answer comparison** is implemented in Rust (`practice/comparison.rs`): case and surrounding punctuation are
   ignored, curly apostrophes are normalized, and every word counts. The diff is an LCS over words;
   missing and extra words between two matches are paired as "changed". Accuracy is

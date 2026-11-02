@@ -18,6 +18,8 @@ pub struct AudioGenerationSummary {
     pub generated: usize,
     pub cached: usize,
     pub failed: usize,
+    /// Items left alone because the run stopped early.
+    pub not_tried: usize,
     pub errors: Vec<String>,
 }
 

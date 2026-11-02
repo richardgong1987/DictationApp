@@ -6,7 +6,7 @@
 pub mod azure;
 pub mod elevenlabs;
 pub mod gemini;
-mod http;
+pub(crate) mod http;
 
 use std::fmt;
 use std::future::Future;
@@ -66,6 +66,12 @@ pub enum TtsError {
     Api {
         provider: TtsProviderKind,
         status: u16,
+        message: String,
+    },
+    /// Every later request would fail the same way until the quota resets.
+    #[error("{provider} TTS request failed (429): {message}")]
+    QuotaExhausted {
+        provider: TtsProviderKind,
         message: String,
     },
     #[error("{0} TTS returned empty audio")]

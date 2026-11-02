@@ -16,7 +16,7 @@ use serde_json::{json, Value};
 use crate::tts::http::{fetch_body, ErrorReading, RetryAdvice};
 use crate::tts::{TtsError, TtsProvider, TtsProviderKind, TtsRequest};
 
-const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
+pub const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
 /// The most the voice list returns per page.
 const VOICE_PAGE_SIZE: &str = "1000";
 
@@ -39,11 +39,11 @@ pub struct GeminiTts {
 }
 
 impl GeminiTts {
-    pub fn new(client: reqwest::Client, api_key: String) -> Self {
+    pub fn new(client: reqwest::Client, api_key: String, api_base: String) -> Self {
         Self {
             client,
             api_key,
-            api_base: API_BASE.to_string(),
+            api_base,
         }
     }
 
@@ -187,9 +187,10 @@ fn encode_mp3(pcm: &[u8]) -> Result<Vec<u8>, TtsError> {
     Ok(mp3)
 }
 
-/// Google explains errors in `{"error": {"message", "details"}}`, which the
-/// Interactions endpoint sometimes wraps in a one-element array. A bad API key
-/// arrives as 400, so only Google's own wording can identify it.
+/// Google explains errors in `{"error": {"message"}}`, which the Interactions
+/// endpoint sometimes wraps in a one-element array, and only some carry
+/// `details`. A bad API key arrives as 400, so only Google's own wording can
+/// identify it.
 fn read_error(status: StatusCode, body: &str) -> ErrorReading {
     let response: Value = serde_json::from_str(body).unwrap_or_default();
     let error = if response.is_array() {
@@ -197,12 +198,12 @@ fn read_error(status: StatusCode, body: &str) -> ErrorReading {
     } else {
         &response["error"]
     };
-    if is_daily_quota(error) {
+    if status == StatusCode::TOO_MANY_REQUESTS && is_daily_quota(error) {
         return ErrorReading {
             message: Some(
                 "daily Gemini quota used up - it resets at midnight Pacific time".to_string(),
             ),
-            retry: RetryAdvice::Never,
+            retry: RetryAdvice::QuotaExhausted,
         };
     }
     ErrorReading {
@@ -227,12 +228,15 @@ fn describe_status(status: StatusCode) -> Option<String> {
 }
 
 /// A used-up daily quota stays used up for hours, so waiting out the retries
-/// would only stall every remaining passage of a lesson.
+/// would only stall every remaining passage of a lesson. Interactions errors
+/// have just a `code` and a `message` ("limit: 100 requests per day"); other
+/// endpoints name the limit in `quotaId` or `quotaMetric`. So the whole error
+/// is searched rather than one field.
 fn is_daily_quota(error: &Value) -> bool {
-    json_array(&error["details"])
-        .flat_map(|detail| json_array(&detail["violations"]))
-        .filter_map(|violation| violation["quotaId"].as_str())
-        .any(|quota_id| quota_id.contains("PerDay"))
+    let text = error.to_string().to_lowercase();
+    ["per day", "perday", "per_day"]
+        .iter()
+        .any(|marker| text.contains(marker))
 }
 
 /// Google names the wait in the body as `"37s"` or `"0.5s"`. On a free tier a
@@ -511,8 +515,46 @@ mod tests {
         } })
         .to_string();
         let reading = read_error(StatusCode::TOO_MANY_REQUESTS, &body);
-        assert_eq!(reading.retry, RetryAdvice::Never);
+        assert_eq!(reading.retry, RetryAdvice::QuotaExhausted);
         assert!(reading.message.unwrap().contains("daily Gemini quota"));
+    }
+
+    #[test]
+    fn a_daily_limit_named_only_in_the_message_is_found() {
+        let body = json!({ "error": {
+            "code": "rate_limit_exceeded",
+            "message": "Rate limit exceeded for model gemini-3.8-flash-tts \
+                (limit: 100 requests per day on Tier 1). Please retry in 17h27m55s.",
+        } })
+        .to_string();
+        assert_eq!(
+            read_error(StatusCode::TOO_MANY_REQUESTS, &body).retry,
+            RetryAdvice::QuotaExhausted
+        );
+    }
+
+    #[test]
+    fn a_daily_limit_named_only_in_the_quota_metric_is_found() {
+        let body = json!({ "error": {
+            "message": "Quota exceeded.",
+            "details": [{ "violations": [{
+                "quotaMetric": "generativelanguage.googleapis.com/generate_requests_per_model_per_day",
+            }] }],
+        } })
+        .to_string();
+        assert_eq!(
+            read_error(StatusCode::TOO_MANY_REQUESTS, &body).retry,
+            RetryAdvice::QuotaExhausted
+        );
+    }
+
+    #[test]
+    fn only_a_rate_limit_can_be_a_daily_quota() {
+        let body = json!({ "error": { "message": "No more than 5 voices per day." } }).to_string();
+        assert_eq!(
+            read_error(StatusCode::BAD_REQUEST, &body).retry,
+            RetryAdvice::ByStatus
+        );
     }
 
     #[test]

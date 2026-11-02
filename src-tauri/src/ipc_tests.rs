@@ -15,6 +15,7 @@ use crate::database::Database;
 use crate::lesson::files::LessonFiles;
 use crate::lesson::repository::LessonRepository;
 use crate::settings::{EnvCredentials, Settings};
+use crate::tts::http::test_server::{http_response, serve};
 
 struct Harness {
     _app: tauri::App<MockRuntime>,
@@ -36,12 +37,30 @@ impl Harness {
     }
 
     fn open(dir: tempfile::TempDir) -> Self {
+        Self::open_adjusted(dir, |_| {})
+    }
+
+    /// An app with a saved Gemini key, whose Gemini is a local server.
+    fn with_gemini_at(url: &str) -> Self {
+        let h = Self::open_adjusted(tempfile::tempdir().unwrap(), |state| {
+            state.audio.use_gemini_at(url.trim_end_matches('/'));
+        });
+        let mut settings = h.call("get_settings", json!({})).unwrap()["settings"].clone();
+        settings["ttsProvider"] = json!("gemini");
+        settings["geminiKey"] = json!("key");
+        h.call("save_settings", json!({ "settings": settings }))
+            .unwrap();
+        h
+    }
+
+    fn open_adjusted(dir: tempfile::TempDir, adjust: impl FnOnce(&mut AppState)) -> Self {
         let database = Database::open(&dir.path().join("dictation.db")).unwrap();
-        let state = AppState::new(
+        let mut state = AppState::new(
             database.clone(),
             dir.path().to_path_buf(),
             EnvCredentials::default(),
         );
+        adjust(&mut state);
         let app = super::with_commands(mock_builder())
             .manage(state)
             .build(mock_context(noop_assets()))
@@ -599,6 +618,30 @@ fn generating_with_gemini_without_a_key_says_what_is_missing() {
         .as_str()
         .unwrap()
         .contains("Gemini API key is not configured"));
+}
+
+#[test]
+fn a_used_up_gemini_quota_stops_the_lesson_and_leaves_the_rest_for_later() {
+    let used_up = json!({ "error": { "message": "limit: 10 requests per day" } }).to_string();
+    let (url, requests) = serve(vec![http_response("429 Too Many Requests", &used_up)]);
+    let h = Harness::with_gemini_at(&url);
+    let lesson = h.paste_lesson("A", "One.\n\nTwo.\n\nThree.");
+
+    let summary = h
+        .call(
+            "generate_lesson_audio",
+            json!({ "lessonId": lesson["lesson"]["id"], "force": false }),
+        )
+        .unwrap();
+
+    assert_eq!(summary["generated"], 0);
+    assert_eq!(summary["failed"], 1);
+    assert_eq!(summary["notTried"], 2);
+    assert!(summary["errors"][0]
+        .as_str()
+        .unwrap()
+        .contains("daily Gemini quota"));
+    assert_eq!(requests.lock().unwrap().len(), 1);
 }
 
 #[test]

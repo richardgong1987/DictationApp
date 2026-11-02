@@ -24,7 +24,8 @@ export default function AudioGenerationStatus({ progress, summary }: Props) {
     <div className={`banner ${summary.failed > 0 ? "error" : "success"}`}>
       <div>
         Audio: {summary.generated} generated, {summary.cached} already cached
-        {summary.failed > 0 && `, ${summary.failed} failed`}.
+        {summary.failed > 0 && `, ${summary.failed} failed`}
+        {summary.notTried > 0 && `, ${summary.notTried} not tried`}.
       </div>
       {summary.errors.slice(0, MAX_ERRORS_SHOWN).map((error) => (
         <div key={error} className="small">
