@@ -3,7 +3,7 @@ import type { Route } from "./navigation";
 import LibraryScreen from "./screens/library/LibraryScreen";
 import LessonScreen from "./screens/lesson/LessonScreen";
 import PracticeScreen from "./screens/practice/PracticeScreen";
-import SettingsScreen from "./screens/SettingsScreen";
+import SettingsScreen from "./screens/settings/SettingsScreen";
 import ShadowingScreen from "./screens/shadowing/ShadowingScreen";
 
 export default function App() {

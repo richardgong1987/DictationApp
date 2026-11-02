@@ -14,6 +14,7 @@ use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 use crate::tts::azure::AzureTts;
 use crate::tts::elevenlabs::ElevenLabsTts;
+use crate::tts::gemini::GeminiTts;
 use crate::tts::{TtsClient, TtsProviderKind};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
@@ -136,6 +137,10 @@ impl AudioService {
                 .settings
                 .elevenlabs_key(settings)
                 .map(|key| TtsClient::ElevenLabs(ElevenLabsTts::new(self.http.clone(), key))),
+            TtsProviderKind::Gemini => self
+                .settings
+                .gemini_key(settings)
+                .map(|key| TtsClient::Gemini(GeminiTts::new(self.http.clone(), key))),
         };
         Ok(client)
     }

@@ -5,6 +5,7 @@
 
 pub mod azure;
 pub mod elevenlabs;
+pub mod gemini;
 mod http;
 
 use std::fmt;
@@ -14,6 +15,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tts::azure::AzureTts;
 use crate::tts::elevenlabs::ElevenLabsTts;
+use crate::tts::gemini::GeminiTts;
 
 /// The service that generates new audio.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,6 +24,7 @@ pub enum TtsProviderKind {
     #[default]
     Azure,
     ElevenLabs,
+    Gemini,
 }
 
 impl fmt::Display for TtsProviderKind {
@@ -29,6 +32,7 @@ impl fmt::Display for TtsProviderKind {
         f.write_str(match self {
             Self::Azure => "Azure",
             Self::ElevenLabs => "ElevenLabs",
+            Self::Gemini => "Gemini",
         })
     }
 }
@@ -40,9 +44,9 @@ impl fmt::Display for TtsProviderKind {
 pub struct TtsRequest {
     pub provider: TtsProviderKind,
     pub text: String,
-    /// Azure voice name or ElevenLabs voice ID.
+    /// Azure or Gemini voice name, or ElevenLabs voice ID.
     pub voice: String,
-    /// ElevenLabs model ID; empty for Azure, which has no model choice.
+    /// ElevenLabs or Gemini model ID; empty for Azure, which has no model choice.
     pub model: String,
     pub output_format: String,
 }
@@ -66,6 +70,15 @@ pub enum TtsError {
     },
     #[error("{0} TTS returned empty audio")]
     EmptyAudio(TtsProviderKind),
+    #[error("{provider} TTS returned no audio (status: {status})")]
+    NoAudio {
+        provider: TtsProviderKind,
+        status: String,
+    },
+    #[error("{0} TTS returned a response the app cannot read")]
+    UnreadableResponse(TtsProviderKind),
+    #[error("Could not encode the audio as MP3: {0}")]
+    Mp3Encoding(String),
 }
 
 /// Turns one text item into encoded audio bytes.
@@ -80,6 +93,7 @@ pub trait TtsProvider {
 pub enum TtsClient {
     Azure(AzureTts),
     ElevenLabs(ElevenLabsTts),
+    Gemini(GeminiTts),
 }
 
 impl TtsProvider for TtsClient {
@@ -87,6 +101,7 @@ impl TtsProvider for TtsClient {
         match self {
             Self::Azure(azure) => azure.synthesize(request).await,
             Self::ElevenLabs(elevenlabs) => elevenlabs.synthesize(request).await,
+            Self::Gemini(gemini) => gemini.synthesize(request).await,
         }
     }
 }

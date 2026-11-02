@@ -552,6 +552,55 @@ fn switching_provider_keeps_audio_until_it_is_regenerated() {
         .contains("ElevenLabs API key is not configured"));
 }
 
+/// These are the names `src/api/types.ts` reads; a mismatch would silently
+/// leave the Settings form blank.
+#[test]
+fn gemini_settings_reach_the_frontend_and_survive_a_restart() {
+    let h = Harness::new();
+    let mut settings = h.call("get_settings", json!({})).unwrap()["settings"].clone();
+    assert_eq!(settings["geminiVoice"], "Kore");
+    assert_eq!(settings["geminiModel"], "gemini-3.8-flash-tts");
+
+    settings["ttsProvider"] = json!("gemini");
+    settings["geminiVoice"] = json!("Puck");
+    settings["geminiKey"] = json!("  key  ");
+    let saved = h
+        .call("save_settings", json!({ "settings": settings }))
+        .unwrap();
+    assert_eq!(saved["settings"]["geminiKey"], "key");
+    assert_eq!(saved["geminiKeyFromEnv"], false);
+    assert_eq!(saved["geminiConfigured"], true);
+    assert_eq!(saved["credentialsConfigured"], true);
+
+    let h = h.restart();
+    let reloaded = h.call("get_settings", json!({})).unwrap();
+    assert_eq!(reloaded["settings"]["ttsProvider"], "gemini");
+    assert_eq!(reloaded["settings"]["geminiVoice"], "Puck");
+}
+
+#[test]
+fn generating_with_gemini_without_a_key_says_what_is_missing() {
+    let h = Harness::new();
+    let lesson = h.paste_lesson("A", "One.");
+    let mut settings = h.call("get_settings", json!({})).unwrap()["settings"].clone();
+    settings["ttsProvider"] = json!("gemini");
+    let saved = h
+        .call("save_settings", json!({ "settings": settings }))
+        .unwrap();
+    assert_eq!(saved["credentialsConfigured"], false);
+
+    let error = h
+        .call(
+            "generate_item_audio",
+            json!({ "itemId": lesson["items"][0]["id"], "force": false }),
+        )
+        .unwrap_err();
+    assert!(error
+        .as_str()
+        .unwrap()
+        .contains("Gemini API key is not configured"));
+}
+
 #[test]
 fn answers_are_kept_and_practice_resumes_where_it_stopped() {
     let h = Harness::new();

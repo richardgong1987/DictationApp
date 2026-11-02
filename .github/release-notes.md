@@ -4,7 +4,7 @@ Turn English articles, study notes or interview answers into listening and speak
 
 - **Dictation:** listen, type what you hear, reveal the original and get word-by-word feedback. Answers save automatically so you can continue later.
 - **Shadowing:** loop difficult passages with time to repeat aloud, then use **Play article** to read along with the whole text. Choose separate **Dictation** and **Shadowing** buttons on each lesson.
-- **Shared audio:** generate speech with your own Azure Speech or ElevenLabs credentials. Both modes reuse locally cached clips.
+- **Shared audio:** generate speech with your own Azure Speech, ElevenLabs or Google Gemini credentials. Both modes reuse locally cached clips.
 
 **英语听写 + 跟读：**听写时边听边打、逐词纠错；跟读时先把难句反复读顺，再整篇连贯朗读。
 
@@ -26,7 +26,7 @@ The installers are not code-signed yet:
 
 ## First practice
 
-1. Open **Settings**, choose **Microsoft Azure Speech** (your Key + Region + Voice name) or **ElevenLabs** (your API key + Voice ID + Model), and click **Save**.
+1. Open **Settings**, choose **Microsoft Azure Speech** (your Key + Region + Voice name) **ElevenLabs** (your API key + Voice ID + Model) or **Google Gemini** (your API key + Voice + Model), and click **Save**.
 2. In **Lessons**, use **Paste text → Create lesson** or **Import .txt lesson**. Separate passages with a **blank line**; each block becomes one audio clip.
 3. Audio generation starts automatically when credentials are configured. Use **Generate missing audio** if needed.
 4. Choose **Dictation** to listen and type, or **Shadowing** to read aloud.

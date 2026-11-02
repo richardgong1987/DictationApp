@@ -55,5 +55,6 @@ fn missing_credentials_message(provider: &TtsProviderKind) -> &'static str {
     match provider {
         TtsProviderKind::Azure => "Azure Speech credentials are not configured. Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION, or enter them in Settings.",
         TtsProviderKind::ElevenLabs => "The ElevenLabs API key is not configured. Set ELEVENLABS_API_KEY, or enter it in Settings.",
+        TtsProviderKind::Gemini => "The Gemini API key is not configured. Set GEMINI_API_KEY, or enter it in Settings.",
     }
 }

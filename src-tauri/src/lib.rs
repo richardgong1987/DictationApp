@@ -24,11 +24,6 @@ use app_state::AppState;
 use database::Database;
 use settings::EnvCredentials;
 
-/// Environment variables that take precedence over credentials stored in Settings.
-const ENV_AZURE_SPEECH_KEY: &str = "AZURE_SPEECH_KEY";
-const ENV_AZURE_SPEECH_REGION: &str = "AZURE_SPEECH_REGION";
-const ENV_ELEVENLABS_API_KEY: &str = "ELEVENLABS_API_KEY";
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Local development: pick up TTS credentials from a `.env` in the working
@@ -43,7 +38,8 @@ pub fn run() {
             // Installed builds can also read a `.env` from the app data directory.
             let _ = dotenvy::from_path(data_dir.join(".env"));
             let database = Database::open(&data_dir.join("dictation.db"))?;
-            app.manage(AppState::new(database, data_dir, read_env_credentials()));
+            let env_credentials = EnvCredentials::new(|name| std::env::var(name).ok());
+            app.manage(AppState::new(database, data_dir, env_credentials));
             appearance::follow_night_schedule(app.handle())?;
             Ok(())
         });
@@ -58,14 +54,6 @@ pub fn run() {
     builder
         .run(tauri::generate_context!())
         .expect("error while running DictationApp");
-}
-
-fn read_env_credentials() -> EnvCredentials {
-    EnvCredentials::new(
-        std::env::var(ENV_AZURE_SPEECH_KEY).ok(),
-        std::env::var(ENV_AZURE_SPEECH_REGION).ok(),
-        std::env::var(ENV_ELEVENLABS_API_KEY).ok(),
-    )
 }
 
 /// Registers every frontend-callable command.

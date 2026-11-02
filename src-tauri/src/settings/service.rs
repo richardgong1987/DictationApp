@@ -52,4 +52,9 @@ impl SettingsService {
     pub fn elevenlabs_key(&self, settings: &Settings) -> Option<String> {
         settings.elevenlabs_key(&self.env)
     }
+
+    /// `None` when neither the environment nor the stored settings provide a key.
+    pub fn gemini_key(&self, settings: &Settings) -> Option<String> {
+        settings.gemini_key(&self.env)
+    }
 }

@@ -40,6 +40,7 @@ pub fn cache_key(request: &TtsRequest) -> String {
         // audio is current, so audio exported from here still is to them.
         TtsProviderKind::Azure => {}
         TtsProviderKind::ElevenLabs => fields.extend(["elevenlabs", request.model.as_str()]),
+        TtsProviderKind::Gemini => fields.extend(["gemini", request.model.as_str()]),
     }
     let mut hasher = Sha256::new();
     for field in fields {
@@ -232,6 +233,20 @@ mod tests {
             cache_key(&elevenlabs("eleven_multilingual_v2")),
             cache_key(&elevenlabs("eleven_flash_v2_5"))
         );
+    }
+
+    #[test]
+    fn gemini_keys_depend_on_the_model_and_never_match_another_provider() {
+        let with = |provider, model: &str| TtsRequest {
+            provider,
+            model: model.into(),
+            ..request("Hello there.")
+        };
+        let flash = with(TtsProviderKind::Gemini, "gemini-3.8-flash-tts");
+        let lite = with(TtsProviderKind::Gemini, "gemini-3.8-flash-lite-tts");
+        let elevenlabs = with(TtsProviderKind::ElevenLabs, "gemini-3.8-flash-tts");
+        assert_ne!(cache_key(&flash), cache_key(&lite));
+        assert_ne!(cache_key(&flash), cache_key(&elevenlabs));
     }
 
     #[test]

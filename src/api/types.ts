@@ -93,7 +93,7 @@ export interface PracticeProgress {
 }
 
 /** `tts::TtsProviderKind` */
-export type TtsProvider = "azure" | "elevenlabs";
+export type TtsProvider = "azure" | "elevenlabs" | "gemini";
 
 export interface Settings {
   ttsProvider: TtsProvider;
@@ -103,6 +103,9 @@ export interface Settings {
   elevenlabsVoiceId: string;
   elevenlabsModel: string;
   elevenlabsKey: string;
+  geminiVoice: string;
+  geminiModel: string;
+  geminiKey: string;
   playbackSpeed: number;
   loopEnabled: boolean;
 }
@@ -125,8 +128,10 @@ export interface SettingsDetail {
   azureKeyFromEnv: boolean;
   azureRegionFromEnv: boolean;
   elevenlabsKeyFromEnv: boolean;
+  geminiKeyFromEnv: boolean;
   azureConfigured: boolean;
   elevenlabsConfigured: boolean;
+  geminiConfigured: boolean;
   /** Whether the selected provider can generate audio. */
   credentialsConfigured: boolean;
 }

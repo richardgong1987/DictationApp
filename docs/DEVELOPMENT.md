@@ -13,7 +13,7 @@ These instructions are for building from source. Installer users can follow the 
   pnpm 10 (`corepack enable pnpm`)
 - Tauri system dependencies for your OS — see <https://v2.tauri.app/start/prerequisites/>
   (on Debian/Ubuntu: `libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev`)
-- A Microsoft Azure Speech resource (key + region), or an ElevenLabs API key
+- A Microsoft Azure Speech resource (key + region), an ElevenLabs API key, or a Gemini API key
 
 ### Run
 
@@ -21,14 +21,14 @@ For provider account and voice configuration, see the [TTS setup guide](TTS_SETU
 
 ```bash
 pnpm install
-cp .env.example .env        # then put your Azure key/region or ElevenLabs key in .env
+cp .env.example .env        # then put your Azure key/region, ElevenLabs key or Gemini key in .env
 pnpm tauri dev
 ```
 
-Pick the text-to-speech provider (Azure Speech or ElevenLabs) in the app's **Settings** screen.
+Pick the text-to-speech provider (Azure Speech, ElevenLabs or Google Gemini) in the app's **Settings** screen.
 Credentials are resolved in this order:
 
-1. `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` and `ELEVENLABS_API_KEY` environment variables
+1. `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION`, `ELEVENLABS_API_KEY` and `GEMINI_API_KEY` environment variables
    (a `.env` file in the working directory or in the app data directory is loaded at startup);
 2. keys entered in the app's **Settings** screen (stored unencrypted in the local app data folder).
 
@@ -87,7 +87,7 @@ Decisions made while implementing V1, where the specification left room:
   which hands the MP3 over as an array of numbers instead of an `ArrayBuffer`, and installed builds
   play no audio (dev builds apply no CSP, so they still work).
 - **Cache key**: `SHA-256("v1", text, voice, "0", "0", output_format)`, fields separated by `0x1F`;
-  ElevenLabs keys append `"elevenlabs", model`. The two `"0"` fields are where speaking rate and
+  ElevenLabs keys append `"elevenlabs", model` and Gemini keys `"gemini", model`. The two `"0"` fields are where speaking rate and
   pitch used to go (`TtsRequest` no longer has either), so keys are identical to the ones older
   versions compute for default settings. Azure keys keep the original recipe, because older
   app versions still compare keys to decide whether imported audio is current. Audio is stored
@@ -103,15 +103,26 @@ Decisions made while implementing V1, where the specification left room:
 - **ElevenLabs**: REST endpoint `https://api.elevenlabs.io/v1/text-to-speech/<voice-id>`, output
   `mp3_44100_128`, model `eleven_multilingual_v2` by default. Requests send no `voice_settings`, so
   the voice speaks with the settings saved with it in the ElevenLabs account.
+- **Gemini**: `POST https://generativelanguage.googleapis.com/v1beta/interactions` with
+  `store: false`, voice `Kore` and model `gemini-3.8-flash-tts` by default. Its speech guide offers
+  no MP3 output, so `tts/gemini.rs` asks for 24 kHz 16-bit mono PCM (`audio/l16`) and encodes a
+  64 kbps MP3 with `rusty_mp3`, keeping the rule that every stored clip is an MP3. That crate is pure
+  Rust and Apache-2.0, where LAME is LGPL C that would need cross-compiling for iOS. Encoded speech
+  keeps its exact length and its pauses when decoded by WebKit. Requests get a 120-second timeout,
+  because nothing arrives until the whole clip exists. The Interactions API is used because Google's
+  speech guide documents it end to end for these models; it was checked on 2 November 2026.
 - **Speed**: the player's speed (0.6×–2×) is the only speed control; it changes local playback
   and never calls the provider.
-- Both providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). Lesson generation
-  runs one item at a time to stay within free-tier rate limits.
+- All providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). A provider can read
+  more from an error's body (`ErrorReading`): Gemini names its wait in `RetryInfo.retryDelay` rather
+  than `Retry-After`, and a used-up daily quota (a `quotaId` containing `PerDay`) is not retried, since
+  that would stall every remaining passage. Lesson generation runs one item at a time to stay within
+  free-tier rate limits.
 - **Answer comparison** is implemented in Rust (`practice/comparison.rs`): case and surrounding punctuation are
   ignored, curly apostrophes are normalized, and every word counts. The diff is an LCS over words;
   missing and extra words between two matches are paired as "changed". Accuracy is
   `correct words / max(source words, answer words)`.
-- **Settings** (TTS provider, each provider's voice, ElevenLabs model, player speed/loop, optional
+- **Settings** (TTS provider, each provider's voice and model, player speed/loop, optional
   credentials) are stored as JSON in the SQLite `settings` table. The Azure voice used to be stored as
   `voice`; that name is still read. A speaking rate or pitch saved by an older version is ignored on
   load; clips made with it are kept until regenerated.
@@ -127,12 +138,13 @@ Decisions made while implementing V1, where the specification left room:
 - **Resuming**: opening practice without choosing an item continues with the item answered last, or the
   next one if that answer is already checked (`practice::resume_item_id`).
 - **Schema upgrades** run at startup, in order, recorded in `PRAGMA user_version` (`database.rs`).
-- **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` / `ELEVENLABS_API_KEY` are read once
+- **Credentials** from `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` / `ELEVENLABS_API_KEY` / `GEMINI_API_KEY` are read once
   at startup and passed to the settings service; no business code reads environment variables.
 - **Moving lessons between devices** (`transfer/`): **Export all lessons** writes one `.zip` holding
   `manifest.json` (format, version, the exporting device's voice settings, every lesson with its text
   and items) and `audio/<lesson-id>/NNN.mp3` for each item that has audio, with the cache key it was
-  made with. Entries are stored uncompressed. Import recognizes lessons by id and only adds: a lesson
+  made with. Entries are stored uncompressed. The voice settings record Gemini as Azure, because older
+  versions refuse a provider they do not know and imports ignore the field. Import recognizes lessons by id and only adds: a lesson
   already present keeps everything and only gets audio for items that have none, matched by position
   *and* text. Importing a file twice therefore adds nothing, and importing it again completes an import
   that failed halfway. Imported lessons keep their creation time and have no `source_path`. Imported
@@ -215,7 +227,8 @@ src-tauri/src/
 └── tts/              TtsProvider trait, TtsRequest, provider choice (TtsProviderKind, TtsClient)
     ├── azure.rs        Azure REST client, SSML
     ├── elevenlabs.rs   ElevenLabs REST client
-    └── http.rs         request retries with backoff, shared by both
+    ├── gemini.rs       Gemini REST client, PCM to MP3
+    └── http.rs         request retries with backoff, shared by all three
 ```
 
 The frontend keeps a screen's helpers next to the screen; only code shared by several screens
@@ -231,7 +244,7 @@ src/
 ├── format.ts         time/speed/percent formatting
 └── screens/
     ├── library/      LibraryScreen, LessonTransfer (export and import between devices)
-    ├── SettingsScreen.tsx
+    ├── settings/     SettingsScreen, ProviderFields (each provider's form)
     ├── lesson/       LessonScreen, item row, audio generation hook and status
     ├── shadowing/
     │   ├── ShadowingScreen.tsx       loads the lesson

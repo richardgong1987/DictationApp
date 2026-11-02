@@ -3,6 +3,7 @@ import type { TtsProvider } from "./api/types";
 const TTS_PROVIDER_NAMES: Record<TtsProvider, string> = {
   azure: "Microsoft Azure Speech",
   elevenlabs: "ElevenLabs",
+  gemini: "Google Gemini",
 };
 
 /** "elevenlabs" -> "ElevenLabs" */

@@ -2,7 +2,7 @@
 
 use reqwest::StatusCode;
 
-use crate::tts::http::fetch_audio;
+use crate::tts::http::{fetch_body, ErrorReading};
 use crate::tts::{TtsError, TtsProvider, TtsProviderKind, TtsRequest};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,7 +49,8 @@ impl TtsProvider for AzureTts {
                 .header("User-Agent", "DictationApp")
                 .body(ssml.clone())
         };
-        fetch_audio(TtsProviderKind::Azure, build, describe_error).await
+        let read_error = |status, body: &str| ErrorReading::worded(describe_error(status, body));
+        fetch_body(TtsProviderKind::Azure, build, read_error).await
     }
 }
 

@@ -3,7 +3,7 @@
 use reqwest::StatusCode;
 use serde_json::{json, Value};
 
-use crate::tts::http::fetch_audio;
+use crate::tts::http::{fetch_body, ErrorReading};
 use crate::tts::{TtsError, TtsProvider, TtsProviderKind, TtsRequest};
 
 const ENDPOINT: &str = "https://api.elevenlabs.io/v1/text-to-speech";
@@ -39,7 +39,8 @@ impl TtsProvider for ElevenLabsTts {
                 .header("User-Agent", "DictationApp")
                 .body(body.clone())
         };
-        fetch_audio(TtsProviderKind::ElevenLabs, build, describe_error).await
+        let read_error = |status, body: &str| ErrorReading::worded(describe_error(status, body));
+        fetch_body(TtsProviderKind::ElevenLabs, build, read_error).await
     }
 }
 

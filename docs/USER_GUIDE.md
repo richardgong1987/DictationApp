@@ -10,7 +10,7 @@ and **Shadowing** for listening and speaking. Both use the same per-passage MP3s
 **You can practice without spending a penny by using the providers' free plans within their limits.**
 Azure Speech **F0 Neural TTS** offers **500,000 characters per month**. ElevenLabs **Free** offers
 **10,000 credits per month**, equivalent to **10,000 characters with Multilingual v2** if all are
-used for that model. DictationApp has no app fee. Generate your material once, then replay the
+used for that model. **Google Gemini's** free tier is free of charge within rate limits. DictationApp has no app fee. Generate your material once, then replay the
 cached audio as often as needed without another synthesis request.
 
 See the [free-plan setup and allowance details](TTS_SETUP.md#you-can-start-without-paying).
@@ -80,8 +80,8 @@ English. French, Spanish, Japanese, German and many other provider-supported lan
 same basic method: listen to a sentence and repeat it until you can keep up.
 
 Paste or import UTF-8 text in your target language, with blank lines between passages. In Settings,
-choose an Azure voice for that language or an ElevenLabs multilingual model and suitable voice.
-Save, then generate the audio. See the [voice examples and setup steps](TTS_SETUP.md#practice-in-other-languages).
+choose an Azure voice for that language or an ElevenLabs multilingual model and suitable voice;
+Gemini detects the language from the text. Save, then generate the audio. See the [voice examples and setup steps](TTS_SETUP.md#practice-in-other-languages).
 There is no lesson-language dropdown and changing the voice does not translate text or localize the
 English interface. Voice settings apply to all audio generated afterwards; other lessons keep the
 audio they already have.
@@ -120,7 +120,7 @@ import does not update the stored lesson. The app supports renaming, but has no 
 ## Configure and prepare audio
 
 For account creation, getting keys/Voice IDs, a first audio test, and provider troubleshooting,
-follow the [Azure Speech and ElevenLabs setup guide](TTS_SETUP.md).
+follow the [speech provider setup guide](TTS_SETUP.md).
 
 If you imported a ZIP with audio, you can replay that audio without API keys.
 For new audio, open **Settings → Text-to-speech → Provider** and configure one provider:
@@ -129,6 +129,7 @@ For new audio, open **Settings → Text-to-speech → Provider** and configure o
 |---|---|
 | **Microsoft Azure Speech** | Speech resource **Key**, matching **Region**, **Voice name** (default `en-US-JennyNeural`) |
 | **ElevenLabs** | **API key**, **Voice ID** (default George: `JBFqnCBsd6RMkjVDRZzb`), **Model** (default `eleven_multilingual_v2`) |
+| **Google Gemini** | **API key**, **Voice** (default `Kore`), **Model** (default `gemini-3.8-flash-tts`) |
 
 Voice/model suggestions are editable inputs, not an exhaustive list or a guarantee of availability
 in your provider account. Enter a voice/model supported by that account. Click **Save** before
@@ -161,7 +162,7 @@ deleted one's number. A lesson keeps at least one passage. Lessons exported afte
 other devices without the deleted passages; a copy already on another device keeps them.
 
 **Player Speed** changes local playback without provider requests; it is the only speed control.
-Provider, voice and ElevenLabs model apply only to audio generated from then on; changing them
+Provider, voice and model apply only to audio generated from then on; changing them
 never replaces existing clips. Clips made by an older app version with a different speaking rate or
 pitch also stay as they are until regenerated. Different lessons, or even passages, can carry audio
 from different providers, and switching back and forth costs nothing for audio you already have.
@@ -354,7 +355,7 @@ devices.
 |---|---|
 | Lesson IDs, titles, original creation dates and source text | Saved answers, attempts, replay history and practice statistics |
 | Passage positions/text and existing MP3s with cache keys | API keys, Azure region, environment variables and original file paths |
-| Source device's provider, both providers' voice choices and ElevenLabs model | Dictation playback speed and loop preference |
+| Source device's Azure and ElevenLabs voice settings | Dictation playback speed and loop preference |
 
 The export includes every existing clip, whichever voice made it; passages with no audio remain
 text-only. The destination device plays imported clips as they are. Generating missing audio or

@@ -1,4 +1,4 @@
-# Set Up Text-to-Speech: Azure Speech and ElevenLabs
+# Set Up Text-to-Speech: Azure Speech, ElevenLabs and Google Gemini
 
 [README](../README.md) · [User guide](USER_GUIDE.md) · [Development](DEVELOPMENT.md)
 
@@ -15,6 +15,8 @@ provider key, whatever voice made them. Follow this guide when you need to gener
 **No paid learning subscription is required.** Azure Speech's **Free (F0) Neural TTS** allowance
 is **500,000 characters per month**. ElevenLabs' **Free** plan supplies **10,000 credits per month**,
 equivalent to **10,000 characters with Multilingual v2** when spent entirely on that model.
+**Google Gemini's** text-to-speech models are free of charge on the Gemini API free tier, within
+rate limits rather than a monthly character allowance.
 Use those free plans within their allowances and practice without spending a penny. Generate once,
 then replay the cached clips as many times as you need without using more synthesis allowance.
 
@@ -24,14 +26,14 @@ selected passages. Follow the free-plan setup below and read the
 
 ## Choose a setup path
 
-| | Microsoft Azure Speech | ElevenLabs |
-|---|---|---|
-| Account preparation | Azure account/subscription and a Speech resource | ElevenLabs account and API access |
-| Fields in DictationApp | Region, Key, Voice name | API key, Voice ID, Model |
-| App's default voice | `en-US-JennyNeural` | George: `JBFqnCBsd6RMkjVDRZzb` |
-| App's default model | No model field | `eleven_multilingual_v2` |
+| | Microsoft Azure Speech | ElevenLabs | Google Gemini |
+|---|---|---|---|
+| Account preparation | Azure account/subscription and a Speech resource | ElevenLabs account and API access | Google account and a Gemini API key |
+| Fields in DictationApp | Region, Key, Voice name | API key, Voice ID, Model | API key, Voice, Model |
+| App's default voice | `en-US-JennyNeural` | George: `JBFqnCBsd6RMkjVDRZzb` | `Kore` |
+| App's default model | No model field | `eleven_multilingual_v2` | `gemini-3.8-flash-tts` |
 
-Neither provider has a speaking rate or pitch setting in the app: new audio is synthesized at the
+No provider has a speaking rate or pitch setting in the app: new audio is synthesized at the
 voice's normal speed and pitch. The player's **Speed** control slows down or speeds up playback
 locally, without a provider request.
 
@@ -149,6 +151,56 @@ Start with the default before changing models. Check ElevenLabs'
 A model change applies to audio generated afterwards; existing clips keep the model that made them
 until you regenerate them.
 
+## Google Gemini
+
+### 1. Get an API key
+
+1. Sign in to [Google AI Studio](https://aistudio.google.com/apikey) with a Google account.
+2. Create an API key, or copy the one AI Studio made for your default project.
+
+Your API key is different from your Google password. New keys work as they are. An older key must
+have API restrictions applied, because the Gemini API refuses unrestricted standard keys; see
+Google's [API key guide](https://ai.google.dev/gemini-api/docs/api-key).
+
+### 2. Fill in DictationApp Settings
+
+Open **Lessons → Settings → Text-to-speech → Provider → Google Gemini**.
+
+| App field | What to enter | First-test value |
+|---|---|---|
+| **API key** | Your private key from Google AI Studio | Your own key |
+| **Voice** | A voice name, exactly as Google writes it | `Kore` |
+| **Model** | An exact Gemini text-to-speech model ID | `gemini-3.8-flash-tts` |
+
+Click **Save**, wait for **Saved.**, then **Back**. Gemini needs no region.
+
+### 3. Choose a voice and model
+
+The app suggests eight of Gemini's voices, such as `Kore`, `Iapetus` and `Achird`. The field is
+editable, so you can type any name from Google's
+[voice list](https://ai.google.dev/gemini-api/docs/speech-generation#voices) or the `voice_...` ID
+of a voice you made with Voice design. Listen to the voices in
+[AI Studio](https://aistudio.google.com/generate-speech) first.
+
+| Model | Good for |
+|---|---|
+| `gemini-3.8-flash-tts` | The app's default: Google's best quality, for difficult pronunciation and regional accents |
+| `gemini-3.8-flash-lite-tts` | Faster and cheaper, with fewer languages |
+
+See Google's [speech generation guide](https://ai.google.dev/gemini-api/docs/speech-generation) for
+current models.
+
+### What is different about Gemini
+
+- **Requests, not characters, are what you usually run out of.** Each passage is one request, and
+  a free-tier project may allow only a few a minute. When Google asks the app to wait it does, then
+  tries again, so a lesson can take several minutes. Once the daily limit is reached, the remaining
+  passages fail straight away; they can be generated after the reset with **Generate missing audio**.
+- **Text in angle brackets can be performed rather than read.** Gemini treats tags such as `<laugh>`
+  and `<short pause>` as sounds to make, so remove them from dictation text.
+- **Google returns uncompressed audio.** The app converts it to a 24 kHz, 64 kbps mono MP3 on your
+  device, so Gemini clips play, loop and export like any other clip.
+
 ## Practice in other languages
 
 English is only the default. French, Spanish, Japanese, German and many other languages can use
@@ -173,6 +225,11 @@ For **ElevenLabs**, the app's default `eleven_multilingual_v2` supports French, 
 and German. Choose a suitable voice and supply text in the target language; the app passes the text
 to the model without an explicit language code. Check the current
 [model language list](https://elevenlabs.io/docs/overview/models) for other languages and models.
+
+For **Google Gemini**, supply text in the target language: the model detects the language itself.
+`gemini-3.8-flash-tts` supports about 130 languages and `gemini-3.8-flash-lite-tts` about 100. Check
+the [supported languages](https://ai.google.dev/gemini-api/docs/speech-generation#languages), since
+some are available with the first model only.
 
 The method stays simple in every language: hear a sentence, say it back, and keep repeating the
 parts you cannot yet follow. Changing the voice or model affects only audio generated afterwards;
@@ -216,9 +273,17 @@ As checked on **4 October 2026**:
 | **Azure Speech Free (F0), Neural TTS** | **500,000 characters free per month** | A generous starting allowance for generating personal practice material, then replaying it locally. This is characters, not words or API calls; check that your resource uses F0. |
 | **ElevenLabs Free** | **10,000 credits per month** | With `eleven_multilingual_v2`, one character uses one credit: 10,000 characters if the allowance is spent entirely on this TTS model. Other products share the credits, and other model rates can differ. |
 
-Sources: [Azure Speech pricing](https://azure.microsoft.com/en-us/pricing/details/speech/) and
-[ElevenLabs pricing and credit FAQ](https://elevenlabs.io/pricing). These figures describe the listed
-free plans, not every paid tier or voice/model. Check your account's current terms and usage.
+As checked on **2 November 2026**:
+
+| Provider/plan | Allowance | Meaning for this app |
+|---|---|---|
+| **Gemini API free tier** | **No fixed figure published** | `gemini-3.8-flash-tts` and `gemini-3.8-flash-lite-tts` are listed as free of charge. Limits are set per project, not per key, and are shown on the [rate limit page in AI Studio](https://aistudio.google.com/rate-limit). Daily limits reset at midnight Pacific time. |
+
+Sources: [Azure Speech pricing](https://azure.microsoft.com/en-us/pricing/details/speech/),
+[ElevenLabs pricing and credit FAQ](https://elevenlabs.io/pricing),
+[Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) and
+[Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits). These figures describe the
+listed free plans, not every paid tier or voice/model. Check your account's current terms and usage.
 
 The author's approach is to use Azure for most everyday material and reserve ElevenLabs for
 selected passages where its voice matters more. In his personal judgment, ElevenLabs offers the
@@ -226,7 +291,7 @@ best-sounding speech for his needs. With cached replay, he expects the two free 
 to cover much of his own practice; your needs may differ. Repeating one clip many times does not
 consume its text allowance again.
 
-You can configure both providers and choose which generates the next lesson. There is no automatic
+You can configure several providers and choose which generates the next lesson. There is no automatic
 quota routing or fallback between providers. The selected provider and voice settings apply only
 to audio generated from then on; existing clips are never replaced automatically. One lesson can
 keep its ElevenLabs audio while another uses Azure, and switching back and forth costs nothing for
@@ -246,8 +311,9 @@ MP3—including loops and slower/faster player playback—does not request synth
 
 Check your provider dashboard for remaining usage and renewal details. Free allowances, prices,
 model credit rates and plan conditions can change; use the current
-[Azure Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/)
-and [ElevenLabs API pricing](https://elevenlabs.io/pricing/api) pages rather than assuming unlimited
+[Azure Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/),
+[ElevenLabs API pricing](https://elevenlabs.io/pricing/api) and
+[Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) pages rather than assuming unlimited
 free generation. Reusing audio across devices is covered in the
 [lesson transfer guide](USER_GUIDE.md#transfer-lessons-and-audio).
 
@@ -255,12 +321,15 @@ free generation. Reusing audio across devices is covered in the
 
 | Problem | What to do |
 |---|---|
-| **Text-to-speech is not configured** | Check the currently selected provider, fill in its credentials and click **Save**. Azure needs both Key and Region; ElevenLabs needs its API key. |
+| **Text-to-speech is not configured** | Check the currently selected provider, fill in its credentials and click **Save**. Azure needs both Key and Region; ElevenLabs and Gemini need an API key. |
 | Azure unauthorized / HTTP 401 | Recopy a Speech resource key and its matching region. Check whether the key was rotated. |
 | Azure invalid region | Use the lowercase region identifier, not a friendly label or URL. |
 | Voice/model error | Check the exact identifier, account access, regional availability for Azure, and model compatibility for ElevenLabs. Try the app defaults. |
 | ElevenLabs quota exceeded | Read the provider's error message and check account/key allowance. A quota error can appear as 401, so a new key alone may not solve it. |
 | ElevenLabs access denied / HTTP 403 | Check Text to Speech scope, account/voice access and any IP allowlist on the key. |
+| Gemini "API key not valid" / HTTP 400 | Recopy the key from Google AI Studio. An older key may need API restrictions; see [step 1](#google-gemini). |
+| Daily Gemini quota used up | Wait for the reset at midnight Pacific time, then click **Generate missing audio**. Check your limits in AI Studio. |
+| Gemini says "no audio", or the voice is rejected | Check the exact voice name and model ID. Try `Kore` with `gemini-3.8-flash-tts`, then **Regenerate** the passage. |
 | Too many requests / HTTP 429 | Let the provider's rate limit recover, then retry. The app retries transient failures with backoff and generates lesson clips sequentially. |
 | Network or provider server failure | Check connectivity and retry. Cached ready clips remain usable locally. |
 | Old voice still plays after editing Settings | Expected: new settings apply only to audio generated afterwards. Use **Regenerate** or **Regenerate all** to replace existing clips. |
@@ -276,6 +345,7 @@ Most users should use the Settings screen. Developers can configure credentials 
 AZURE_SPEECH_KEY=replace-with-your-speech-resource-key
 AZURE_SPEECH_REGION=replace-with-your-resource-region
 ELEVENLABS_API_KEY=replace-with-your-elevenlabs-api-key
+GEMINI_API_KEY=replace-with-your-gemini-api-key
 ```
 
 Fill only the provider you use; remove/comment unused placeholder lines. A nonempty placeholder
@@ -294,8 +364,16 @@ of Git, screenshots and shared support messages. If a key is exposed, revoke/rot
 provider dashboard and update your configuration. A lesson export ZIP excludes API credentials.
 
 When synthesizing, the app sends passage text to the selected provider. Ready cached audio plays
-locally. You can prepare a lesson on one device, export it with its audio, and import it on another
+locally.
+
+**Google Gemini's free tier uses your text.** Under the
+[Gemini API terms](https://ai.google.dev/gemini-api/terms), Google may use what you send to the free
+tier to improve its products, human reviewers may read it, and you should not send sensitive or
+personal information. Google's paid tier does not use your text this way, and the terms apply
+different rules in the EEA, Switzerland and the UK. The app asks Gemini not to store each
+request for later use (`store: false`), which does not change those terms.
+ You can prepare a lesson on one device, export it with its audio, and import it on another
 without sharing your API key.
 
-Provider setup links were checked on 4 October 2026. If a dashboard label changes, follow its linked
+Azure and ElevenLabs setup links were checked on 4 October 2026, and Gemini's on 2 November 2026. If a dashboard label changes, follow its linked
 official instructions; the DictationApp field names above come from this repository's implementation.

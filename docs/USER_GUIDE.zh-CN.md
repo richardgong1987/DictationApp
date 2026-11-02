@@ -24,14 +24,15 @@
 
 ## 2. 首次使用：配置语音
 
-打开 **Settings（设置）→ Text-to-speech → Provider**，选择一种语音服务即可，不需要同时配置两种。
+打开 **Settings（设置）→ Text-to-speech → Provider**，选择一种语音服务即可，不需要同时配置多种。
 
 | 服务 | 要填写的内容 |
 |---|---|
 | Microsoft Azure Speech | 自己的 Speech 资源 **Key**、对应的 **Region**、**Voice name**。美音可用 `en-US-JennyNeural`，英音可用 `en-GB-SoniaNeural` |
 | ElevenLabs | 自己的 **API key**、语音库中的 **Voice ID** 和支持的 **Model**。默认模型为 `eleven_multilingual_v2` |
+| Google Gemini | 自己的 **API key**（在 Google AI Studio 创建）、**Voice**（如 `Kore`）和 **Model**。默认模型为 `gemini-3.8-flash-tts` |
 
-从 [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) 或 [ElevenLabs](https://elevenlabs.io) 获取自己的凭据。填好后点击 **Save**，看到 **Saved.** 再点击 **Back** 返回。
+从 [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech)、[ElevenLabs](https://elevenlabs.io) 或 [Google AI Studio](https://aistudio.google.com/apikey) 获取自己的凭据。填好后点击 **Save**，看到 **Saved.** 再点击 **Back** 返回。
 
 生成新音频需要联网，并使用你自己的服务额度或积分。已生成的音频保存在本机，反复播放不需要再次合成。
 

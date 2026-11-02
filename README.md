@@ -9,7 +9,7 @@ practice modes, shared audio.
 
 [Download](https://github.com/richardgong1987/DictationApp/releases/latest) ·
 [Quick start](#quick-start) · [User guide](docs/USER_GUIDE.md) ·
-[Azure / ElevenLabs setup](docs/TTS_SETUP.md) ·
+[Speech provider setup](docs/TTS_SETUP.md) ·
 [Transfer lessons and audio](#transfer-lessons-and-audio-between-devices) ·
 [Build from source](docs/DEVELOPMENT.md) ·
 [Search discovery and Pages setup](docs/SEARCH_DISCOVERY.md)
@@ -23,6 +23,7 @@ can generate your lessons with the providers' monthly free allowances:**
 |---|---|
 | **Microsoft Azure Speech — Free (F0), Neural TTS** | **500,000 characters per month** |
 | **ElevenLabs — Free, using Multilingual v2** | **10,000 characters per month** from 10,000 credits, if used entirely for this model |
+| **Google Gemini — free tier** | **Free of charge within rate limits**, shown per project in Google AI Studio; no monthly figure is published |
 
 **Use the free plans, stay within their allowances, and you can practice without spending a penny.**
 Generate a passage once and replay its cached audio as often as you like. Listening again, looping,
@@ -141,7 +142,7 @@ in the language you want to learn and select a suitable voice/model in Settings.
 separate lesson-language selector; the app's interface remains in English.
 
 Azure users enter a voice name for the target language; ElevenLabs users choose a model that
-supports that language and a suitable voice. See the [multilingual setup examples](docs/TTS_SETUP.md#practice-in-other-languages).
+supports that language and a suitable voice; Gemini detects the language from the text. See the [multilingual setup examples](docs/TTS_SETUP.md#practice-in-other-languages).
 Shadowing, replay, speed controls and lesson/audio transfer use the same workflow.
 
 Dictation's current word counts and comparison split on whitespace. For languages normally written
@@ -207,7 +208,7 @@ Keys are needed only when generating missing audio or replacing existing clips.
 
 ### 1. Set up a voice
 
-New to either provider? Follow the [Azure Speech and ElevenLabs setup guide](docs/TTS_SETUP.md)
+New to these providers? Follow the [speech provider setup guide](docs/TTS_SETUP.md)
 to create credentials, find a voice, and test one sentence.
 
 Open **Settings → Text-to-speech → Provider** and choose one provider:
@@ -216,10 +217,11 @@ Open **Settings → Text-to-speech → Provider** and choose one provider:
 |---|---|
 | Microsoft Azure Speech | Your Speech resource **Key**, its matching **Region**, and a **Voice name** such as `en-US-JennyNeural` or `en-GB-SoniaNeural` |
 | ElevenLabs | Your **API key**, a **Voice ID** from your voice library, and a supported **Model**; the default is `eleven_multilingual_v2` |
+| Google Gemini | Your **API key** from Google AI Studio, a **Voice** such as `Kore`, and a **Model**; the default is `gemini-3.8-flash-tts` |
 
 Click **Save**, then **Back**. Get your own credentials from
-[Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech) or
-[ElevenLabs](https://elevenlabs.io). Generating audio requires internet access and uses your provider's
+[Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech),
+[ElevenLabs](https://elevenlabs.io) or [Google AI Studio](https://aistudio.google.com/apikey). Generating audio requires internet access and uses your provider's
 quota or credits; replaying a cached clip does not send another synthesis request.
 
 ### 2. Add your text
@@ -356,7 +358,7 @@ and its existing per-passage MP3s in one `.zip`, then send it to another device 
 |---|---|
 | Lesson IDs, titles, creation dates, source text and passage text/order | Typed answers, checked answers, attempt history and practice statistics |
 | Existing MP3s and their audio cache keys | API keys, Azure region and environment variables |
-| Exporting device's provider, voices and ElevenLabs model | Dictation player speed and loop preference |
+| Exporting device's Azure and ElevenLabs voice settings | Dictation player speed and loop preference |
 
 **Imported clips are used as they are**, whatever provider or voice made them, so they play without
 another synthesis request or an API key. Import does not change this device's Settings.
