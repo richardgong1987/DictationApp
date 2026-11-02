@@ -29,7 +29,7 @@ selected passages. Follow the free-plan setup below and read the
 | | Microsoft Azure Speech | ElevenLabs | Google Gemini |
 |---|---|---|---|
 | Account preparation | Azure account/subscription and a Speech resource | ElevenLabs account and API access | Google account and a Gemini API key |
-| Fields in DictationApp | Region, Key, Voice | API key, Voice ID, Model | API key, Voice, Model |
+| Fields in DictationApp | Region, Key, Voice | API key, Voice, Model | API key, Voice, Model |
 | App's default voice | `en-US-JennyNeural` | George: `JBFqnCBsd6RMkjVDRZzb` | `Kore` |
 | App's default model | No model field | `eleven_multilingual_v2` | `gemini-3.8-flash-tts` |
 
@@ -109,22 +109,23 @@ to generate an MP3 manually in the Azure portal and import it: DictationApp synt
    the app. If you restrict the key, allow **Text to Speech** requests. Check any key-specific
    credit limit and IP restrictions as well as your account's allowance.
 
-Your API key is different from your account password and your Voice ID. Official instructions:
+Your API key is different from your account password and your voice ID. If you restrict the key's
+permissions, also let it read voices, or Settings cannot list them; speech still works without
+that. Official instructions:
 [API quickstart](https://elevenlabs.io/docs/eleven-api/quickstart) and
 [API authentication](https://elevenlabs.io/docs/api-reference/authentication).
 
-### 2. Get a Voice ID
+### 2. Add voices to your account (optional)
 
-For a first test, you can use the app's default George voice ID: `JBFqnCBsd6RMkjVDRZzb`.
-To choose your own voice:
+Settings lists the voices in your ElevenLabs account: ElevenLabs' default voices, plus any you add.
+For more choice, browse the [Voice Library](https://elevenlabs.io/app/voice-library) and add the
+voices you like to **My Voices**; the API can use a library voice only once it is added, and
+ElevenLabs does not offer library voices through the API on its free plan
+([Voice Library](https://elevenlabs.io/docs/eleven-creative/voices/voice-library)).
 
-1. Browse the [Voice Library](https://elevenlabs.io/app/voice-library) and choose a voice available
-   to your account. Add it to your voices if the service requires that step.
-2. In **My Voices**, open the voice's **More actions** menu (three dots).
-3. Choose **Copy voice ID** and paste that identifier into DictationApp.
-
-Use the ID, not a display name such as `George`, and not the voice's webpage URL. The app accepts
-letters and digits for this field. See ElevenLabs' official
+Without the list, you can paste a voice's ID through **Other…**: in **My Voices**, open the voice's
+**More actions** menu (three dots) and choose **Copy voice ID**. Use the ID, not a display name
+such as `George`, and not the voice's webpage URL. See ElevenLabs' official
 [Voice ID instructions](https://help.elevenlabs.io/hc/en-us/articles/14599760033937-How-do-I-find-the-voice-ID-of-my-voices-via-the-website-and-API).
 
 ### 3. Fill in DictationApp Settings
@@ -134,8 +135,14 @@ Open **Lessons → Settings → Text-to-speech → Provider → ElevenLabs**.
 | App field | What to enter | First-test value |
 |---|---|---|
 | **API key** | Your private key from the API Keys page | Your own key |
-| **Voice ID** | The identifier copied from your voices | `JBFqnCBsd6RMkjVDRZzb` for George |
+| **Voice** | Chosen from your account's voices once the API key is saved | `JBFqnCBsd6RMkjVDRZzb` for George |
 | **Model** | An exact text-to-speech model ID supported by your account | `eleven_multilingual_v2` |
+
+Once the API key is saved, Settings loads your account's voices. Narrow them with **Language**,
+**Accent** and **Gender**, pick a **Voice**, and click **Save**, which keeps the filters too. The
+accents and genders are the labels ElevenLabs and voice owners give their voices, such as
+**British** or **American**; for a British woman's voice, choose Accent **British** and Gender
+**female**. Each voice's line shows its owner's description, or its age, tone and intended use.
 
 Click **Save**, wait for **Saved.**, then **Back**. ElevenLabs needs no Azure region or key.
 The app has no voice-cloning workflow; select a voice already available in your ElevenLabs account.

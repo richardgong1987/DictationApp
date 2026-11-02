@@ -12,6 +12,12 @@ const CATALOGS = {
     isReady: (detail: SettingsDetail) => detail.azureConfigured,
     setupHint: "Save your key and region to choose from Azure's full voice list, by language and accent.",
   },
+  elevenlabs: {
+    name: "ElevenLabs",
+    load: api.listElevenLabsVoices,
+    isReady: (detail: SettingsDetail) => detail.elevenlabsConfigured,
+    setupHint: "Save your API key to choose from the voices in your ElevenLabs account, by accent and gender.",
+  },
   gemini: {
     name: "Gemini",
     load: api.listGeminiVoices,
@@ -68,9 +74,9 @@ export default function VoiceCatalogField({
       <SuggestionField label="Voice" value={field.value} suggestions={suggestions} onChange={field.onChange} />
       <p className="muted small">
         {error
-          ? `Could not load ${source.name}'s full voice list: ${error}`
+          ? `Could not load the full ${source.name} voice list: ${error}`
           : isReady
-            ? `Loading ${source.name}'s full voice list…`
+            ? `Loading the full ${source.name} voice list…`
             : source.setupHint}
       </p>
     </>

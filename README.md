@@ -216,7 +216,7 @@ Open **Settings → Text-to-speech → Provider** and choose one provider:
 | Provider | What to enter |
 |---|---|
 | Microsoft Azure Speech | Your Speech resource **Key**, its matching **Region**, and a **Voice**, chosen from Azure's list by language and gender once the key is saved, such as `en-GB-SoniaNeural` |
-| ElevenLabs | Your **API key**, a **Voice ID** from your voice library, and a supported **Model**; the default is `eleven_multilingual_v2` |
+| ElevenLabs | Your **API key**, a **Voice** chosen from your account's voices by accent and gender once the key is saved, and a supported **Model**; the default is `eleven_multilingual_v2` |
 | Google Gemini | Your **API key** from Google AI Studio, a **Voice** such as `Kore`, and a **Model**; the default is `gemini-3.8-flash-tts` |
 
 Click **Save**, then **Back**. Get your own credentials from

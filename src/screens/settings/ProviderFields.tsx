@@ -17,7 +17,7 @@ const AZURE_VOICES = [
   "en-AU-WilliamNeural",
 ].map((id) => ({ id, label: id }));
 
-/** Suggestions only; any voice ID from the ElevenLabs voice library can be pasted in. */
+/** Offered until the account's voices load; any ElevenLabs voice ID can be pasted in. */
 const ELEVENLABS_VOICES = [
   { id: "JBFqnCBsd6RMkjVDRZzb", label: "George (British)" },
   { id: "EXAVITQu4vr4xnSDxMaL", label: "Sarah (American)" },
@@ -123,14 +123,18 @@ function ElevenLabsFields({ form, detail, update }: ProviderFieldsProps) {
         value={form.elevenlabsKey}
         onChange={(key) => update("elevenlabsKey", key)}
       />
-      <SuggestionField
-        label="Voice ID"
-        value={form.elevenlabsVoiceId}
+      <VoiceCatalogField
+        provider="elevenlabs"
+        detail={detail}
         suggestions={ELEVENLABS_VOICES}
+        value={form.elevenlabsVoiceId}
         onChange={(voice) => update("elevenlabsVoiceId", voice)}
+        filter={form.elevenlabsVoiceFilter}
+        onFilterChange={(filter) => update("elevenlabsVoiceFilter", filter)}
       />
       <p className="muted small">
-        Copy the ID of any voice from your voice library on elevenlabs.io.
+        These are your account's voices: ElevenLabs' default ones and any you add from its Voice
+        Library on elevenlabs.io, which the API can use only once added.
       </p>
       <SuggestionField
         label="Model"

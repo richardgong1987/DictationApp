@@ -1,6 +1,7 @@
 // Narrowing a provider's voice list. Filter values come from the list itself:
-// Google's accents are specific ("Liverpool English", "Fukuoka Japanese"), and
-// Azure's are its locales ("en-GB"), so a fixed set of filters would miss most.
+// Google's accents are specific ("Liverpool English", "Fukuoka Japanese"),
+// Azure's are its locales ("en-GB"), and ElevenLabs' are labels its voice
+// owners choose ("British"), so a fixed set of filters would miss most.
 
 import type { CatalogVoice, VoiceFilter } from "../../api/types";
 

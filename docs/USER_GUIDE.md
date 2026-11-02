@@ -119,7 +119,7 @@ import does not update the stored lesson. The app supports renaming, but has no 
 
 ## Configure and prepare audio
 
-For account creation, getting keys/Voice IDs, a first audio test, and provider troubleshooting,
+For account creation, getting keys and voices, a first audio test, and provider troubleshooting,
 follow the [speech provider setup guide](TTS_SETUP.md).
 
 If you imported a ZIP with audio, you can replay that audio without API keys.
@@ -128,7 +128,7 @@ For new audio, open **Settings → Text-to-speech → Provider** and configure o
 | Provider | Required settings |
 |---|---|
 | **Microsoft Azure Speech** | Speech resource **Key**, matching **Region**, **Voice** (default `en-US-JennyNeural`; once the key and region are saved, choose from Azure's list by **Language** and **Gender**) |
-| **ElevenLabs** | **API key**, **Voice ID** (default George: `JBFqnCBsd6RMkjVDRZzb`), **Model** (default `eleven_multilingual_v2`) |
+| **ElevenLabs** | **API key**, **Voice** (default George: `JBFqnCBsd6RMkjVDRZzb`; once the key is saved, choose from your account's voices by **Language**, **Accent** and **Gender**), **Model** (default `eleven_multilingual_v2`) |
 | **Google Gemini** | **API key**, **Voice** (default `Kore`), **Model** (default `gemini-3.8-flash-tts`) |
 
 Voice/model suggestions are editable inputs, not an exhaustive list or a guarantee of availability

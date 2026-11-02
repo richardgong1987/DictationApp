@@ -46,6 +46,8 @@ export const api = {
     invoke<ItemDetail>("generate_item_audio", { itemId, force }),
   /** Uses the saved Azure key and region, so it fails until both are saved. */
   listAzureVoices: () => invoke<CatalogVoice[]>("list_azure_voices"),
+  /** Uses the saved ElevenLabs API key, so it fails until one is saved. */
+  listElevenLabsVoices: () => invoke<CatalogVoice[]>("list_elevenlabs_voices"),
   /** Uses the saved Gemini API key, so it fails until one is saved. */
   listGeminiVoices: () => invoke<CatalogVoice[]>("list_gemini_voices"),
   /** Raw MP3 bytes for one item. */

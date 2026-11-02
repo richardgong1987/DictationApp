@@ -99,7 +99,7 @@ export type TtsProvider = "azure" | "elevenlabs" | "gemini";
 
 /** `tts::CatalogVoice`: one voice of a provider's list. */
 export interface CatalogVoice {
-  /** What Settings stores: "Puck", "voice_..." or "en-GB-SoniaNeural". */
+  /** What Settings stores: "Puck", "voice_...", "en-GB-SoniaNeural" or an ElevenLabs voice ID. */
   id: string;
   displayName: string | null;
   /** Such as "en-GB"; for Azure, this is also the accent. */
@@ -131,6 +131,7 @@ export interface Settings {
   geminiKey: string;
   geminiVoiceFilter: VoiceFilter;
   azureVoiceFilter: VoiceFilter;
+  elevenlabsVoiceFilter: VoiceFilter;
   playbackSpeed: number;
   loopEnabled: boolean;
 }
