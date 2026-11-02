@@ -7,7 +7,7 @@ usage() {
   cat <<'EOF'
 Usage: ./package.sh [--native | --ios | --ios-simulator]
 
-  (no option)      Universal DMG for Apple Silicon and Intel Macs, like the release workflow.
+  (no option)      Build a universal macOS DMG, then a signed iOS IPA.
   --native         DMG for this Mac's architecture only; builds about twice as fast.
   --ios            Signed IPA for iPhone and iPad, signed for the team of your Apple Development
                    certificate. If you have certificates from several teams, set
