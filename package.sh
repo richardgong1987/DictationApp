@@ -118,6 +118,7 @@ build_ios() {
     echo
     echo "IPA ready:"
     find "$PWD/$output_dir" -name "*.ipa"
+    cp "$PWD/$output_dir"/arm64/DictationApp.ipa "$HOME/Library/Mobile Documents/com~apple~CloudDocs"
   else
     pnpm tauri ios build --ci --target "$tauri_target" --no-sign
     echo
