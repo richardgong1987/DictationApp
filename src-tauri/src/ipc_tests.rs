@@ -588,6 +588,9 @@ fn gemini_settings_reach_the_frontend_and_survive_a_restart() {
         "accent": "Winchester English",
         "gender": "female",
     });
+    settings["azureVoiceFilter"] = json!({ "language": "en-GB", "accent": "", "gender": "Female" });
+    settings["elevenlabsVoiceFilter"] =
+        json!({ "language": "en", "accent": "British", "gender": "" });
     let saved = h
         .call("save_settings", json!({ "settings": settings }))
         .unwrap();
@@ -612,6 +615,25 @@ fn gemini_settings_reach_the_frontend_and_survive_a_restart() {
         reloaded["settings"]["geminiVoiceFilter"]["gender"],
         "female"
     );
+    assert_eq!(
+        reloaded["settings"]["azureVoiceFilter"]["language"],
+        "en-GB"
+    );
+    assert_eq!(reloaded["settings"]["azureVoiceFilter"]["gender"], "Female");
+    assert_eq!(
+        reloaded["settings"]["elevenlabsVoiceFilter"]["accent"],
+        "British"
+    );
+}
+
+#[test]
+fn listing_azure_voices_needs_a_saved_key_and_region() {
+    let h = Harness::new();
+    let error = h.call("list_azure_voices", json!({})).unwrap_err();
+    assert!(error
+        .as_str()
+        .unwrap()
+        .contains("Azure Speech credentials are not configured"));
 }
 
 #[test]
@@ -659,6 +681,16 @@ fn a_used_up_gemini_quota_stops_the_lesson_and_leaves_the_rest_for_later() {
         .unwrap()
         .contains("daily Gemini quota"));
     assert_eq!(requests.lock().unwrap().len(), 1);
+}
+
+#[test]
+fn listing_elevenlabs_voices_needs_a_saved_key() {
+    let h = Harness::new();
+    let error = h.call("list_elevenlabs_voices", json!({})).unwrap_err();
+    assert!(error
+        .as_str()
+        .unwrap()
+        .contains("ElevenLabs API key is not configured"));
 }
 
 #[test]

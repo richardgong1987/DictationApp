@@ -3,10 +3,15 @@ import type { ChangeEvent } from "react";
 /** The "type your own" choice. An empty value cannot be a real ID. */
 const OTHER = "";
 
+export interface Suggestion {
+  id: string;
+  label: string;
+}
+
 interface SuggestionFieldProps {
   label: string;
   value: string;
-  suggestions: { id: string; label: string }[];
+  suggestions: Suggestion[];
   onChange: (value: string) => void;
 }
 

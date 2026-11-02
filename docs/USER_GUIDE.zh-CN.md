@@ -28,7 +28,7 @@
 
 | 服务 | 要填写的内容 |
 |---|---|
-| Microsoft Azure Speech | 自己的 Speech 资源 **Key**、对应的 **Region**、**Voice name**。美音可用 `en-US-JennyNeural`，英音可用 `en-GB-SoniaNeural` |
+| Microsoft Azure Speech | 自己的 Speech 资源 **Key**、对应的 **Region**、**Voice**。保存 Key 和 Region 后，可以从 Azure 的完整语音列表中按 **Language** 和 **Gender** 筛选：英音选 Language **English (UK)**，美音选 **English (US)** |
 | ElevenLabs | 自己的 **API key**、语音库中的 **Voice ID** 和支持的 **Model**。默认模型为 `eleven_multilingual_v2` |
 | Google Gemini | 自己的 **API key**（在 Google AI Studio 创建）、**Voice**（如 `Kore`）和 **Model**。默认模型为 `gemini-3.8-flash-tts` |
 

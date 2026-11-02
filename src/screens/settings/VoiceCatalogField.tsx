@@ -1,73 +1,77 @@
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../../api/client";
-import type { GeminiVoice, GeminiVoiceFilter, SettingsDetail } from "../../api/types";
-import { ANY, narrowVoices, voiceLabel, type FilterOption } from "./geminiVoices";
-import SuggestionField from "./SuggestionField";
+import type { CatalogVoice, SettingsDetail, VoiceFilter } from "../../api/types";
+import SuggestionField, { type Suggestion } from "./SuggestionField";
+import { ANY, narrowVoices, voiceLabel, type FilterOption } from "./voiceCatalog";
 
-/** Offered until the full list loads, which takes a saved API key. */
-const GEMINI_VOICES = [
-  { id: "Kore", label: "Kore: firm" },
-  { id: "Charon", label: "Charon: informative" },
-  { id: "Iapetus", label: "Iapetus: clear" },
-  { id: "Erinome", label: "Erinome: clear" },
-  { id: "Schedar", label: "Schedar: even" },
-  { id: "Achird", label: "Achird: friendly" },
-  { id: "Sulafat", label: "Sulafat: warm" },
-  { id: "Puck", label: "Puck: upbeat" },
-];
+/** What differs between the providers whose voice list the app can load. */
+const CATALOGS = {
+  azure: {
+    name: "Azure",
+    load: api.listAzureVoices,
+    isReady: (detail: SettingsDetail) => detail.azureConfigured,
+    setupHint: "Save your key and region to choose from Azure's full voice list, by language and accent.",
+  },
+  gemini: {
+    name: "Gemini",
+    load: api.listGeminiVoices,
+    isReady: (detail: SettingsDetail) => detail.geminiConfigured,
+    setupHint: "Save your API key to choose from Gemini's full voice list, by language and regional accent.",
+  },
+};
+
+export type CatalogProvider = keyof typeof CATALOGS;
 
 interface VoiceFieldProps {
   value: string;
   onChange: (voice: string) => void;
-  filter: GeminiVoiceFilter;
-  onFilterChange: (filter: GeminiVoiceFilter) => void;
+  filter: VoiceFilter;
+  onFilterChange: (filter: VoiceFilter) => void;
 }
 
-/** Gemini's whole voice list once the saved key can fetch it, otherwise a few suggestions. */
-export default function GeminiVoiceField({
+interface VoiceCatalogFieldProps extends VoiceFieldProps {
+  provider: CatalogProvider;
+  detail: SettingsDetail;
+  /** Offered until the full list loads. */
+  suggestions: Suggestion[];
+}
+
+/** The provider's whole voice list once the saved credentials can fetch it, otherwise a few suggestions. */
+export default function VoiceCatalogField({
+  provider,
   detail,
-  value,
-  onChange,
-  filter,
-  onFilterChange,
-}: VoiceFieldProps & { detail: SettingsDetail }) {
-  const [catalog, setCatalog] = useState<GeminiVoice[]>([]);
+  suggestions,
+  ...field
+}: VoiceCatalogFieldProps) {
+  const source = CATALOGS[provider];
+  const isReady = source.isReady(detail);
+  const [catalog, setCatalog] = useState<CatalogVoice[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // `detail` changes on every save, so fixing a wrong key loads the list.
+  // `detail` changes on every save, so fixing a wrong key or region loads the list.
   useEffect(() => {
-    if (!detail.geminiConfigured) return;
+    if (!isReady) return;
     let isCancelled = false;
     setError(null);
-    api
-      .listGeminiVoices()
+    source
+      .load()
       .then((voices) => !isCancelled && setCatalog(voices))
       .catch((e) => !isCancelled && setError(errorMessage(e)));
     return () => {
       isCancelled = true;
     };
-  }, [detail]);
+  }, [detail, source, isReady]);
 
-  if (catalog.length > 0) {
-    return (
-      <VoiceCatalog
-        voices={catalog}
-        value={value}
-        onChange={onChange}
-        filter={filter}
-        onFilterChange={onFilterChange}
-      />
-    );
-  }
+  if (catalog.length > 0) return <VoiceCatalog voices={catalog} {...field} />;
   return (
     <>
-      <SuggestionField label="Voice" value={value} suggestions={GEMINI_VOICES} onChange={onChange} />
+      <SuggestionField label="Voice" value={field.value} suggestions={suggestions} onChange={field.onChange} />
       <p className="muted small">
         {error
-          ? `Could not load Gemini's full voice list: ${error}`
-          : detail.geminiConfigured
-            ? "Loading Gemini's full voice list…"
-            : "Save your API key to choose from Gemini's full voice list, by language and regional accent."}
+          ? `Could not load ${source.name}'s full voice list: ${error}`
+          : isReady
+            ? `Loading ${source.name}'s full voice list…`
+            : source.setupHint}
       </p>
     </>
   );
@@ -79,7 +83,7 @@ function VoiceCatalog({
   onChange,
   filter: wanted,
   onFilterChange,
-}: VoiceFieldProps & { voices: GeminiVoice[] }) {
+}: VoiceFieldProps & { voices: CatalogVoice[] }) {
   const { filter, languages, accents, genders, matching } = narrowVoices(voices, wanted);
   const selected = voices.find((voice) => voice.id === value);
   // The saved voice stays visible even when the filters leave it out.
@@ -133,7 +137,9 @@ interface FilterFieldProps {
   onChange: (value: string) => void;
 }
 
+/** Hidden when it has a single choice, which narrows nothing: Azure has no accent finer than the language. */
 function FilterField({ label, value, options, onChange }: FilterFieldProps) {
+  if (options.length < 2) return null;
   return (
     <label>
       {label}

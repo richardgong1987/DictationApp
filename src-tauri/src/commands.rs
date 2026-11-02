@@ -13,7 +13,7 @@ use crate::lesson::{ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::{CheckResult, PracticeProgress, ShadowingPosition};
 use crate::settings::{Settings, SettingsDetail};
 use crate::transfer::{ExportSummary, ImportSummary};
-use crate::tts::gemini::GeminiVoice;
+use crate::tts::CatalogVoice;
 
 // ---------------------------------------------------------------------------
 // Lessons
@@ -129,7 +129,17 @@ pub async fn generate_item_audio(
 }
 
 #[tauri::command]
-pub async fn list_gemini_voices(state: State<'_, AppState>) -> AppResult<Vec<GeminiVoice>> {
+pub async fn list_azure_voices(state: State<'_, AppState>) -> AppResult<Vec<CatalogVoice>> {
+    state.audio.azure_voices().await
+}
+
+#[tauri::command]
+pub async fn list_elevenlabs_voices(state: State<'_, AppState>) -> AppResult<Vec<CatalogVoice>> {
+    state.audio.elevenlabs_voices().await
+}
+
+#[tauri::command]
+pub async fn list_gemini_voices(state: State<'_, AppState>) -> AppResult<Vec<CatalogVoice>> {
     state.audio.gemini_voices().await
 }
 

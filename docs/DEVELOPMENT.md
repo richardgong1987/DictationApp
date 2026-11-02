@@ -115,6 +115,12 @@ Decisions made while implementing V1, where the specification left room:
   saved key and filters it client-side. Filter values come from the response, not a fixed list:
   real `accent` values are places ("Liverpool English"), not the "British" of Google's reference, so
   British voices are found through `language_code` (`en-GB`).
+- **Voice lists**: Azure's `GET https://<region>.tts.speech.microsoft.com/cognitiveservices/voices/list`
+  (`list_azure_voices`) and Gemini's list are both mapped to `tts::CatalogVoice`, so one Settings
+  picker (`VoiceCatalogField`, rules in `voiceCatalog.ts`) serves both. Azure's locale is its
+  accent, so its voices have no `accent` and that filter hides itself; a voice's line names its
+  locale's country instead. Only the response fields Microsoft documents are read. Each provider's
+  filter is saved in Settings (`azureVoiceFilter`, `geminiVoiceFilter`).
 - **Speed**: the player's speed (0.6×–2×) is the only speed control; it changes local playback
   and never calls the provider.
 - All providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). A provider can read
@@ -250,7 +256,7 @@ src/
 ├── format.ts         time/speed/percent formatting
 └── screens/
     ├── library/      LibraryScreen, LessonTransfer (export and import between devices)
-    ├── settings/     SettingsScreen, ProviderFields (each provider's form), GeminiVoiceField (voice list)
+    ├── settings/     SettingsScreen, ProviderFields (each provider's form), VoiceCatalogField (Azure's and Gemini's voice lists)
     ├── lesson/       LessonScreen, item row, audio generation hook and status
     ├── shadowing/
     │   ├── ShadowingScreen.tsx       loads the lesson

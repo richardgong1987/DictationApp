@@ -5,7 +5,7 @@ import type {
   AudioGenerationSummary,
   CheckResult,
   ExportSummary,
-  GeminiVoice,
+  CatalogVoice,
   ImportSummary,
   ItemDetail,
   Lesson,
@@ -44,8 +44,10 @@ export const api = {
     invoke<AudioGenerationSummary>("generate_lesson_audio", { lessonId, force }),
   generateItemAudio: (itemId: number, force = false) =>
     invoke<ItemDetail>("generate_item_audio", { itemId, force }),
+  /** Uses the saved Azure key and region, so it fails until both are saved. */
+  listAzureVoices: () => invoke<CatalogVoice[]>("list_azure_voices"),
   /** Uses the saved Gemini API key, so it fails until one is saved. */
-  listGeminiVoices: () => invoke<GeminiVoice[]>("list_gemini_voices"),
+  listGeminiVoices: () => invoke<CatalogVoice[]>("list_gemini_voices"),
   /** Raw MP3 bytes for one item. */
   getItemAudio: (itemId: number) => invoke<ArrayBuffer>("get_item_audio", { itemId }),
 

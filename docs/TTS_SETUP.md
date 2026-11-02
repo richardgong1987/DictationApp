@@ -29,7 +29,7 @@ selected passages. Follow the free-plan setup below and read the
 | | Microsoft Azure Speech | ElevenLabs | Google Gemini |
 |---|---|---|---|
 | Account preparation | Azure account/subscription and a Speech resource | ElevenLabs account and API access | Google account and a Gemini API key |
-| Fields in DictationApp | Region, Key, Voice name | API key, Voice ID, Model | API key, Voice, Model |
+| Fields in DictationApp | Region, Key, Voice | API key, Voice ID, Model | API key, Voice, Model |
 | App's default voice | `en-US-JennyNeural` | George: `JBFqnCBsd6RMkjVDRZzb` | `Kore` |
 | App's default model | No model field | `eleven_multilingual_v2` | `gemini-3.8-flash-tts` |
 
@@ -68,7 +68,7 @@ Open **Lessons → Settings → Text-to-speech → Provider → Microsoft Azure 
 |---|---|---|
 | **Region** | Your Speech resource's region identifier, with no spaces or URL | `eastus` if the resource is in East US; `japaneast` if it is in Japan East |
 | **Key** | One of the resource keys you copied | Your private resource key |
-| **Voice name** | A supported voice's exact name | `en-US-JennyNeural` |
+| **Voice** | Chosen from Azure's list once the key and region are saved | `en-US-JennyNeural` |
 
 Do not copy the example region unless it matches your resource. Enter `japaneast`, for example,
 rather than `Japan East` or an endpoint URL. DictationApp builds the regional endpoint itself;
@@ -77,17 +77,19 @@ there is no endpoint input. Its current Azure client uses the public Azure cloud
 
 Click **Save** and wait for **Saved.** Then click **Back**.
 
-### 3. Pick an English voice
+### 3. Choose a voice
 
-These are examples already suggested by the app:
+Once the key and region are saved, Settings loads every voice your region offers from Azure's
+[voice list](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech#get-a-list-of-voices).
+Narrow it with **Language** and **Gender**, pick a **Voice**, and click **Save**, which keeps the
+filters too. In Azure the language carries the accent: for a British woman's voice, choose
+Language **English (UK)** and Gender **Female**; **English (US)**, **English (Australia)**,
+**English (Ireland)** and **English (India)** are other accents. Azure has no finer regional accent
+than that, so there is no **Accent** filter. Each voice's line shows how many words a minute it
+speaks, and whether it is multilingual or a preview.
 
-| Accent | Voice names |
-|---|---|
-| American English | `en-US-JennyNeural`, `en-US-GuyNeural`, `en-US-AriaNeural`, `en-US-DavisNeural` |
-| British English | `en-GB-SoniaNeural`, `en-GB-RyanNeural` |
-| Australian English | `en-AU-NatashaNeural`, `en-AU-WilliamNeural` |
-
-The voice input is editable. For another voice, copy its exact identifier from Microsoft's
+Without a saved key and region, or if the list cannot load, the app offers a few suggestions such
+as `en-GB-SoniaNeural` instead, and **Other…** lets you type any name from Microsoft's
 [language and voice support list](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts).
 Use the [Voice Gallery](https://speech.microsoft.com/portal/voicegallery) to listen to samples.
 Check regional availability before trying a different voice type.
@@ -218,9 +220,9 @@ English is only the default. French, Spanish, Japanese, German and many other la
 the same listen-and-repeat workflow, provided your selected provider/model supports the language.
 The app has no separate language field: supply text in that language and configure its voice/model.
 
-For **Azure Speech**, replace **Voice name** with a voice for the language you want:
+For **Azure Speech**, choose a **Voice** in the language you want, for example:
 
-| Language | Example voice name |
+| Language | Example voice |
 |---|---|
 | French (France) | `fr-FR-DeniseNeural` |
 | Spanish (Spain) | `es-ES-ElviraNeural` |

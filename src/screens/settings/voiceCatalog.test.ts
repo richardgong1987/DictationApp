@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { GeminiVoice } from "../../api/types";
+import type { CatalogVoice } from "../../api/types";
 import {
   accentOf,
   ANY,
@@ -11,9 +11,9 @@ import {
   languageOf,
   narrowVoices,
   voiceLabel,
-} from "./geminiVoices.ts";
+} from "./voiceCatalog.ts";
 
-function voice(overrides: Partial<GeminiVoice>): GeminiVoice {
+function voice(overrides: Partial<CatalogVoice>): CatalogVoice {
   return {
     id: "voice",
     displayName: null,
@@ -141,6 +141,14 @@ describe("voiceLabel", () => {
       voice({ displayName: "Rosalind", accent: "Bristol English", gender: "female", pitch: "medium" }),
     );
     assert.equal(label, "Rosalind (Bristol English, female, medium pitch)");
+  });
+
+  it("says where a voice without a finer accent is from", () => {
+    // Azure's voices: the locale is the accent.
+    const sonia = voice({ displayName: "Sonia", languageCode: "en-GB", gender: "Female" });
+    assert.equal(voiceLabel(sonia), "Sonia (United Kingdom, Female)");
+    assert.equal(voiceLabel(voice({ displayName: "Ana", languageCode: "es-419" })), "Ana (Latin America)");
+    assert.equal(voiceLabel(voice({ displayName: "Zed", languageCode: "fr" })), "Zed (French)");
   });
 
   it("falls back to the id and leaves out unknown traits", () => {

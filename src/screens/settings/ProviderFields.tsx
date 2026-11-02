@@ -2,10 +2,10 @@
 
 import type { ReactElement } from "react";
 import type { Settings, SettingsDetail, TtsProvider } from "../../api/types";
-import GeminiVoiceField from "./GeminiVoiceField";
 import SuggestionField from "./SuggestionField";
+import VoiceCatalogField from "./VoiceCatalogField";
 
-/** Suggestions only; any Azure neural voice name can be typed in. */
+/** Offered until Azure's full list loads; any Azure voice name can be typed in. */
 const AZURE_VOICES = [
   "en-US-JennyNeural",
   "en-US-GuyNeural",
@@ -28,6 +28,18 @@ const ELEVENLABS_MODELS = [
   { id: "eleven_multilingual_v2", label: "Multilingual v2: lifelike and stable" },
   { id: "eleven_flash_v2_5", label: "Flash v2.5: faster, half the credits" },
   { id: "eleven_v4", label: "v4: most expressive" },
+];
+
+/** Offered until Gemini's full list loads, which takes a saved API key. */
+const GEMINI_VOICES = [
+  { id: "Kore", label: "Kore: firm" },
+  { id: "Charon", label: "Charon: informative" },
+  { id: "Iapetus", label: "Iapetus: clear" },
+  { id: "Erinome", label: "Erinome: clear" },
+  { id: "Schedar", label: "Schedar: even" },
+  { id: "Achird", label: "Achird: friendly" },
+  { id: "Sulafat", label: "Sulafat: warm" },
+  { id: "Puck", label: "Puck: upbeat" },
 ];
 
 /** Suggestions only; any Gemini text-to-speech model ID can be typed in. */
@@ -86,11 +98,14 @@ function AzureFields({ form, detail, update }: ProviderFieldsProps) {
         precedence. A key entered here is stored unencrypted in the app's local data folder on this
         computer.
       </p>
-      <SuggestionField
-        label="Voice name"
-        value={form.azureVoice}
+      <VoiceCatalogField
+        provider="azure"
+        detail={detail}
         suggestions={AZURE_VOICES}
+        value={form.azureVoice}
         onChange={(voice) => update("azureVoice", voice)}
+        filter={form.azureVoiceFilter}
+        onFilterChange={(filter) => update("azureVoiceFilter", filter)}
       />
     </fieldset>
   );
@@ -143,8 +158,10 @@ function GeminiFields({ form, detail, update }: ProviderFieldsProps) {
         Create a key in Google AI Studio. On the free tier, Google may use the text you send to
         improve its products, so avoid private material.
       </p>
-      <GeminiVoiceField
+      <VoiceCatalogField
+        provider="gemini"
         detail={detail}
+        suggestions={GEMINI_VOICES}
         value={form.geminiVoice}
         onChange={(voice) => update("geminiVoice", voice)}
         filter={form.geminiVoiceFilter}

@@ -37,6 +37,23 @@ impl fmt::Display for TtsProviderKind {
     }
 }
 
+/// One voice of a provider's list, as the Settings screen shows it. Each
+/// provider maps its own list onto this, so one picker serves them all.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogVoice {
+    /// What Settings stores and a request names.
+    pub id: String,
+    pub display_name: Option<String>,
+    /// Such as `en-GB`; for Azure, this is also the accent.
+    pub language_code: Option<String>,
+    /// A finer accent than the language, such as "Liverpool English".
+    pub accent: Option<String>,
+    pub gender: Option<String>,
+    pub pitch: Option<String>,
+    pub description: Option<String>,
+}
+
 /// Everything that determines the synthesized audio. Every field is part of
 /// the audio cache key. Speech is always at the provider's normal speed and
 /// pitch; the player slows it down instead.

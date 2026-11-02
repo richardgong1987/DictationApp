@@ -127,7 +127,7 @@ For new audio, open **Settings → Text-to-speech → Provider** and configure o
 
 | Provider | Required settings |
 |---|---|
-| **Microsoft Azure Speech** | Speech resource **Key**, matching **Region**, **Voice name** (default `en-US-JennyNeural`) |
+| **Microsoft Azure Speech** | Speech resource **Key**, matching **Region**, **Voice** (default `en-US-JennyNeural`; once the key and region are saved, choose from Azure's list by **Language** and **Gender**) |
 | **ElevenLabs** | **API key**, **Voice ID** (default George: `JBFqnCBsd6RMkjVDRZzb`), **Model** (default `eleven_multilingual_v2`) |
 | **Google Gemini** | **API key**, **Voice** (default `Kore`), **Model** (default `gemini-3.8-flash-tts`) |
 

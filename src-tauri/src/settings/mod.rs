@@ -49,8 +49,12 @@ pub struct Settings {
     pub gemini_model: String,
     /// Gemini API key stored in-app; `GEMINI_API_KEY` takes precedence.
     pub gemini_key: String,
-    /// What Settings' voice list is narrowed to.
-    pub gemini_voice_filter: GeminiVoiceFilter,
+    /// What Settings' Gemini voice list is narrowed to.
+    pub gemini_voice_filter: VoiceFilter,
+    /// What Settings' Azure voice list is narrowed to.
+    pub azure_voice_filter: VoiceFilter,
+    /// What Settings' ElevenLabs voice list is narrowed to.
+    pub elevenlabs_voice_filter: VoiceFilter,
     /// Last used player speed, one of [`PLAYBACK_SPEEDS`].
     pub playback_speed: f64,
     /// Last used loop state.
@@ -70,7 +74,9 @@ impl Default for Settings {
             gemini_voice: DEFAULT_GEMINI_VOICE.to_string(),
             gemini_model: DEFAULT_GEMINI_MODEL.to_string(),
             gemini_key: String::new(),
-            gemini_voice_filter: GeminiVoiceFilter::default(),
+            gemini_voice_filter: VoiceFilter::default(),
+            azure_voice_filter: VoiceFilter::default(),
+            elevenlabs_voice_filter: VoiceFilter::default(),
             playback_speed: 1.0,
             loop_enabled: false,
         }
@@ -168,11 +174,11 @@ impl Settings {
     }
 }
 
-/// Values from Google's voice list, or blank for any. The Settings screen
-/// works out what they match, since only it holds the list.
+/// Values from a provider's voice list, or blank for any. The Settings
+/// screen works out what they match, since only it holds the list.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct GeminiVoiceFilter {
+pub struct VoiceFilter {
     pub language: String,
     pub accent: String,
     pub gender: String,
@@ -437,7 +443,7 @@ mod tests {
         assert_eq!(settings.azure_voice, "en-GB-SoniaNeural");
         assert_eq!(settings.elevenlabs_model, DEFAULT_ELEVENLABS_MODEL);
         assert_eq!(settings.gemini_voice, DEFAULT_GEMINI_VOICE);
-        assert_eq!(settings.gemini_voice_filter, GeminiVoiceFilter::default());
+        assert_eq!(settings.gemini_voice_filter, VoiceFilter::default());
         assert_eq!(settings.playback_speed, 1.0);
     }
 
@@ -449,6 +455,6 @@ mod tests {
         .unwrap();
         assert_eq!(settings.gemini_voice, "en-gb-concierge-2");
         assert_eq!(settings.gemini_key, "key");
-        assert_eq!(settings.gemini_voice_filter, GeminiVoiceFilter::default());
+        assert_eq!(settings.gemini_voice_filter, VoiceFilter::default());
     }
 }

@@ -14,8 +14,8 @@ use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 use crate::tts::azure::AzureTts;
 use crate::tts::elevenlabs::ElevenLabsTts;
-use crate::tts::gemini::{self, GeminiTts, GeminiVoice};
-use crate::tts::{TtsClient, TtsError, TtsProviderKind};
+use crate::tts::gemini::{self, GeminiTts};
+use crate::tts::{CatalogVoice, TtsClient, TtsError, TtsProviderKind};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -116,8 +116,34 @@ impl AudioService {
         self.write_metadata(&item.lesson_id)
     }
 
+    /// The voices the saved Azure key and region offer, for the Settings screen.
+    pub async fn azure_voices(&self) -> AppResult<Vec<CatalogVoice>> {
+        let settings = self.settings.load()?;
+        let credentials = self
+            .settings
+            .azure_credentials(&settings)
+            .ok_or(AppError::MissingSpeechCredentials(TtsProviderKind::Azure))?;
+        Ok(AzureTts::new(self.http.clone(), credentials)?
+            .list_voices()
+            .await?)
+    }
+
+    /// The voices of the saved ElevenLabs key's account, for the Settings screen.
+    pub async fn elevenlabs_voices(&self) -> AppResult<Vec<CatalogVoice>> {
+        let settings = self.settings.load()?;
+        let key =
+            self.settings
+                .elevenlabs_key(&settings)
+                .ok_or(AppError::MissingSpeechCredentials(
+                    TtsProviderKind::ElevenLabs,
+                ))?;
+        Ok(ElevenLabsTts::new(self.http.clone(), key)
+            .list_voices()
+            .await?)
+    }
+
     /// The voices the saved Gemini key can use, for the Settings screen.
-    pub async fn gemini_voices(&self) -> AppResult<Vec<GeminiVoice>> {
+    pub async fn gemini_voices(&self) -> AppResult<Vec<CatalogVoice>> {
         let settings = self.settings.load()?;
         let key = self
             .settings

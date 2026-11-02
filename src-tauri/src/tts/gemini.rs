@@ -10,11 +10,11 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use reqwest::StatusCode;
 use rusty_mp3::{Mp3Encoder, Mp3EncoderConfig};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::tts::http::{fetch_body, ErrorReading, RetryAdvice};
-use crate::tts::{TtsError, TtsProvider, TtsProviderKind, TtsRequest};
+use crate::tts::{CatalogVoice, TtsError, TtsProvider, TtsProviderKind, TtsRequest};
 
 pub const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
 /// The most the voice list returns per page.
@@ -49,7 +49,7 @@ impl GeminiTts {
 
     /// Every voice this key can use: its custom voices, then Google's catalog.
     /// Accents live here, as separate voices, rather than in the request.
-    pub async fn list_voices(&self) -> Result<Vec<GeminiVoice>, TtsError> {
+    pub async fn list_voices(&self) -> Result<Vec<CatalogVoice>, TtsError> {
         let url = format!("{}/voices", self.api_base);
         let mut voices = Vec::new();
         let mut page_token: Option<String> = None;
@@ -68,7 +68,12 @@ impl GeminiTts {
             let body = fetch_body(TtsProviderKind::Gemini, build, read_error).await?;
             let page: VoicePage = serde_json::from_slice(&body)
                 .map_err(|_| TtsError::UnreadableResponse(TtsProviderKind::Gemini))?;
-            voices.extend(page.voices.into_iter().filter(|voice| !voice.id.is_empty()));
+            voices.extend(
+                page.voices
+                    .into_iter()
+                    .filter(|voice| !voice.id.is_empty())
+                    .map(CatalogVoice::from),
+            );
             match page.next_page_token.filter(|token| !token.is_empty()) {
                 Some(token) => page_token = Some(token),
                 None => return Ok(voices),
@@ -77,27 +82,39 @@ impl GeminiTts {
     }
 }
 
-/// One voice in the list, as the Settings screen receives it. The documentation
-/// spells these fields in snake_case, but Google's REST APIs also answer in
-/// camelCase, so both are read.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "camelCase"))]
-pub struct GeminiVoice {
+/// One voice of Google's list. The documentation spells these fields in
+/// snake_case, but Google's REST APIs also answer in camelCase, so both are read.
+#[derive(Deserialize)]
+struct GeminiVoice {
     /// What a request names: a speaker such as `Puck`, or `voice_...`.
     #[serde(default)]
-    pub id: String,
+    id: String,
     #[serde(default, alias = "displayName")]
-    pub display_name: Option<String>,
+    display_name: Option<String>,
     #[serde(default, alias = "languageCode")]
-    pub language_code: Option<String>,
+    language_code: Option<String>,
     #[serde(default)]
-    pub accent: Option<String>,
+    accent: Option<String>,
     #[serde(default)]
-    pub gender: Option<String>,
+    gender: Option<String>,
     #[serde(default)]
-    pub pitch: Option<String>,
+    pitch: Option<String>,
     #[serde(default)]
-    pub description: Option<String>,
+    description: Option<String>,
+}
+
+impl From<GeminiVoice> for CatalogVoice {
+    fn from(voice: GeminiVoice) -> Self {
+        Self {
+            id: voice.id,
+            display_name: voice.display_name,
+            language_code: voice.language_code,
+            accent: voice.accent,
+            gender: voice.gender,
+            pitch: voice.pitch,
+            description: voice.description,
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -467,7 +484,7 @@ mod tests {
     fn voices_reach_the_frontend_in_camel_case() {
         let voice: GeminiVoice =
             serde_json::from_value(json!({ "id": "Puck", "display_name": "Puck" })).unwrap();
-        let sent = serde_json::to_value(voice).unwrap();
+        let sent = serde_json::to_value(CatalogVoice::from(voice)).unwrap();
         assert_eq!(sent["displayName"], "Puck");
         assert_eq!(sent["languageCode"], Value::Null);
     }

@@ -97,20 +97,22 @@ export interface PracticeProgress {
 /** `tts::TtsProviderKind` */
 export type TtsProvider = "azure" | "elevenlabs" | "gemini";
 
-/** `tts::gemini::GeminiVoice` */
-export interface GeminiVoice {
-  /** What Settings stores: a speaker such as "Puck", or "voice_...". */
+/** `tts::CatalogVoice`: one voice of a provider's list. */
+export interface CatalogVoice {
+  /** What Settings stores: "Puck", "voice_..." or "en-GB-SoniaNeural". */
   id: string;
   displayName: string | null;
+  /** Such as "en-GB"; for Azure, this is also the accent. */
   languageCode: string | null;
+  /** A finer accent than the language, such as "Liverpool English". */
   accent: string | null;
   gender: string | null;
   pitch: string | null;
   description: string | null;
 }
 
-/** `settings::GeminiVoiceFilter`: values from the voice list, or "" for any. */
-export interface GeminiVoiceFilter {
+/** `settings::VoiceFilter`: values from a voice list, or "" for any. */
+export interface VoiceFilter {
   language: string;
   accent: string;
   gender: string;
@@ -127,7 +129,8 @@ export interface Settings {
   geminiVoice: string;
   geminiModel: string;
   geminiKey: string;
-  geminiVoiceFilter: GeminiVoiceFilter;
+  geminiVoiceFilter: VoiceFilter;
+  azureVoiceFilter: VoiceFilter;
   playbackSpeed: number;
   loopEnabled: boolean;
 }
