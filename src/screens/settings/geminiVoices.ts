@@ -2,7 +2,7 @@
 // Google's accents are specific ("Liverpool English", "Fukuoka Japanese"), so a
 // fixed set of filters would miss most of them.
 
-import type { GeminiVoice } from "../../api/types";
+import type { GeminiVoice, GeminiVoiceFilter } from "../../api/types";
 
 /** The filter value that matches every voice. */
 export const ANY = "";
@@ -14,15 +14,19 @@ const LANGUAGE_NAMES = new Intl.DisplayNames(["en"], {
   languageDisplay: "standard",
 });
 
-export interface VoiceFilter {
-  language: string;
-  accent: string;
-  gender: string;
-}
-
 export interface FilterOption {
   value: string;
   label: string;
+}
+
+/** The voice list as a filter leaves it. */
+export interface NarrowedVoices {
+  /** The filter in force: what the list still offers of the one asked for. */
+  filter: GeminiVoiceFilter;
+  languages: FilterOption[];
+  accents: FilterOption[];
+  genders: FilterOption[];
+  matching: GeminiVoice[];
 }
 
 export function languageOf(voice: GeminiVoice): string {
@@ -57,7 +61,7 @@ export function filterOptions(
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 
-export function filterVoices(voices: GeminiVoice[], filter: VoiceFilter): GeminiVoice[] {
+export function filterVoices(voices: GeminiVoice[], filter: GeminiVoiceFilter): GeminiVoice[] {
   const matches = (wanted: string, value: string) => wanted === ANY || wanted === value;
   return voices.filter(
     (voice) =>
@@ -65,6 +69,29 @@ export function filterVoices(voices: GeminiVoice[], filter: VoiceFilter): Gemini
       matches(filter.accent, accentOf(voice)) &&
       matches(filter.gender, genderOf(voice)),
   );
+}
+
+/**
+ * Applies a filter, which may have been saved long ago. A value the list does
+ * not offer counts as Any, because Google's list changes and accents depend on
+ * the language; matching nothing under a menu that reads Any would look broken.
+ */
+export function narrowVoices(voices: GeminiVoice[], wanted: GeminiVoiceFilter): NarrowedVoices {
+  const languages = filterOptions(voices, languageOf, languageName);
+  const language = offeredOrAny(wanted.language, languages);
+  const inLanguage = filterVoices(voices, { language, accent: ANY, gender: ANY });
+  const accents = filterOptions(inLanguage, accentOf);
+  const genders = filterOptions(inLanguage, genderOf);
+  const filter = {
+    language,
+    accent: offeredOrAny(wanted.accent, accents),
+    gender: offeredOrAny(wanted.gender, genders),
+  };
+  return { filter, languages, accents, genders, matching: filterVoices(voices, filter) };
+}
+
+function offeredOrAny(value: string, options: FilterOption[]): string {
+  return options.some((option) => option.value === value) ? value : ANY;
 }
 
 /** "Rosalind (Liverpool English, female, medium pitch)" */

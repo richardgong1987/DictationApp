@@ -9,6 +9,7 @@ import {
   genderOf,
   languageName,
   languageOf,
+  narrowVoices,
   voiceLabel,
 } from "./geminiVoices.ts";
 
@@ -86,6 +87,45 @@ describe("filterOptions", () => {
       filterOptions(voices, genderOf).map((option) => option.value),
       ["female", "male", "Unspecified"],
     );
+  });
+});
+
+describe("narrowVoices", () => {
+  const values = (options: { value: string }[]) => options.map((option) => option.value);
+
+  it("restores a saved filter and offers what fits its language", () => {
+    const saved = { language: "en-GB", accent: "Liverpool English", gender: "female" };
+    const narrowed = narrowVoices(voices, saved);
+    assert.deepEqual(narrowed.filter, saved);
+    assert.deepEqual(narrowed.matching, [liverpool]);
+    assert.deepEqual(values(narrowed.accents), ["Liverpool English", "Manchester English"]);
+    assert.deepEqual(values(narrowed.genders), ["female", "male"]);
+  });
+
+  it("offers every voice when nothing was saved", () => {
+    const narrowed = narrowVoices(voices, { language: ANY, accent: ANY, gender: ANY });
+    assert.deepEqual(narrowed.matching, voices);
+  });
+
+  it("counts an accent Google has removed as Any rather than matching nothing", () => {
+    const saved = { language: "en-GB", accent: "Winchester English", gender: ANY };
+    const narrowed = narrowVoices(voices, saved);
+    assert.equal(narrowed.filter.accent, ANY);
+    assert.deepEqual(narrowed.matching, [liverpool, manchester]);
+  });
+
+  it("counts a removed language as Any, along with the accent that depended on it", () => {
+    const saved = { language: "cy-GB", accent: "Cardiff Welsh", gender: "female" };
+    const narrowed = narrowVoices(voices, saved);
+    assert.deepEqual(narrowed.filter, { language: ANY, accent: ANY, gender: "female" });
+    assert.deepEqual(narrowed.matching, [liverpool, dublin]);
+  });
+
+  it("counts a gender the language does not have as Any", () => {
+    const saved = { language: "en-IE", accent: ANY, gender: "male" };
+    const narrowed = narrowVoices(voices, saved);
+    assert.equal(narrowed.filter.gender, ANY);
+    assert.deepEqual(narrowed.matching, [dublin]);
   });
 });
 

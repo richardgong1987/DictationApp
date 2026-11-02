@@ -49,6 +49,8 @@ pub struct Settings {
     pub gemini_model: String,
     /// Gemini API key stored in-app; `GEMINI_API_KEY` takes precedence.
     pub gemini_key: String,
+    /// What Settings' voice list is narrowed to.
+    pub gemini_voice_filter: GeminiVoiceFilter,
     /// Last used player speed, one of [`PLAYBACK_SPEEDS`].
     pub playback_speed: f64,
     /// Last used loop state.
@@ -68,6 +70,7 @@ impl Default for Settings {
             gemini_voice: DEFAULT_GEMINI_VOICE.to_string(),
             gemini_model: DEFAULT_GEMINI_MODEL.to_string(),
             gemini_key: String::new(),
+            gemini_voice_filter: GeminiVoiceFilter::default(),
             playback_speed: 1.0,
             loop_enabled: false,
         }
@@ -163,6 +166,16 @@ impl Settings {
             .clone()
             .or_else(|| non_empty(&self.gemini_key))
     }
+}
+
+/// Values from Google's voice list, or blank for any. The Settings screen
+/// works out what they match, since only it holds the list.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct GeminiVoiceFilter {
+    pub language: String,
+    pub accent: String,
+    pub gender: String,
 }
 
 /// The voice settings an export carries, for older versions of the app.
@@ -424,6 +437,18 @@ mod tests {
         assert_eq!(settings.azure_voice, "en-GB-SoniaNeural");
         assert_eq!(settings.elevenlabs_model, DEFAULT_ELEVENLABS_MODEL);
         assert_eq!(settings.gemini_voice, DEFAULT_GEMINI_VOICE);
+        assert_eq!(settings.gemini_voice_filter, GeminiVoiceFilter::default());
         assert_eq!(settings.playback_speed, 1.0);
+    }
+
+    #[test]
+    fn settings_saved_before_the_voice_filter_keep_everything_else() {
+        let settings: Settings = serde_json::from_str(
+            r#"{"ttsProvider":"gemini","geminiVoice":"en-gb-concierge-2","geminiKey":"key"}"#,
+        )
+        .unwrap();
+        assert_eq!(settings.gemini_voice, "en-gb-concierge-2");
+        assert_eq!(settings.gemini_key, "key");
+        assert_eq!(settings.gemini_voice_filter, GeminiVoiceFilter::default());
     }
 }

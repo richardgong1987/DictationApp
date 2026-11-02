@@ -177,8 +177,9 @@ Click **Save** and wait for **Saved.** Gemini needs no region.
 
 Once your API key is saved, Settings loads Gemini's full voice list from Google, including any
 voices you made with Voice design. Narrow it with **Language**, **Accent** and **Gender**, pick a
-**Voice**, and click **Save**. For a British woman's voice, for example, choose Language
-**English (UK)** and Gender **female**.
+**Voice**, and click **Save**. **Save** keeps your choices of Language, Accent and Gender along with
+the voice and model, and they survive updating or reinstalling the app. For a British woman's
+voice, for example, choose Language **English (UK)** and Gender **female**.
 
 Google's accents are specific, so there is no plain "British" accent: they are named after places,
 such as **Bristol English**, **Manchester English** or **Liverpool English**, and many are strong

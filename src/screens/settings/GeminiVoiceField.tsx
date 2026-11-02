@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "../../api/client";
-import type { GeminiVoice, SettingsDetail } from "../../api/types";
-import {
-  accentOf,
-  ANY,
-  filterOptions,
-  filterVoices,
-  genderOf,
-  languageName,
-  languageOf,
-  voiceLabel,
-  type FilterOption,
-} from "./geminiVoices";
+import type { GeminiVoice, GeminiVoiceFilter, SettingsDetail } from "../../api/types";
+import { ANY, narrowVoices, voiceLabel, type FilterOption } from "./geminiVoices";
 import SuggestionField from "./SuggestionField";
 
 /** Offered until the full list loads, which takes a saved API key. */
@@ -29,6 +19,8 @@ const GEMINI_VOICES = [
 interface VoiceFieldProps {
   value: string;
   onChange: (voice: string) => void;
+  filter: GeminiVoiceFilter;
+  onFilterChange: (filter: GeminiVoiceFilter) => void;
 }
 
 /** Gemini's whole voice list once the saved key can fetch it, otherwise a few suggestions. */
@@ -36,6 +28,8 @@ export default function GeminiVoiceField({
   detail,
   value,
   onChange,
+  filter,
+  onFilterChange,
 }: VoiceFieldProps & { detail: SettingsDetail }) {
   const [catalog, setCatalog] = useState<GeminiVoice[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +49,15 @@ export default function GeminiVoiceField({
   }, [detail]);
 
   if (catalog.length > 0) {
-    return <VoiceCatalog voices={catalog} value={value} onChange={onChange} />;
+    return (
+      <VoiceCatalog
+        voices={catalog}
+        value={value}
+        onChange={onChange}
+        filter={filter}
+        onFilterChange={onFilterChange}
+      />
+    );
   }
   return (
     <>
@@ -71,41 +73,38 @@ export default function GeminiVoiceField({
   );
 }
 
-function VoiceCatalog({ voices, value, onChange }: VoiceFieldProps & { voices: GeminiVoice[] }) {
-  const [language, setLanguage] = useState(ANY);
-  const [accent, setAccent] = useState(ANY);
-  const [gender, setGender] = useState(ANY);
-  const inLanguage = filterVoices(voices, { language, accent: ANY, gender: ANY });
-  const matching = filterVoices(voices, { language, accent, gender });
+function VoiceCatalog({
+  voices,
+  value,
+  onChange,
+  filter: wanted,
+  onFilterChange,
+}: VoiceFieldProps & { voices: GeminiVoice[] }) {
+  const { filter, languages, accents, genders, matching } = narrowVoices(voices, wanted);
   const selected = voices.find((voice) => voice.id === value);
   // The saved voice stays visible even when the filters leave it out.
   const isSelectedFilteredOut = !matching.some((voice) => voice.id === value);
-
-  function chooseLanguage(nextLanguage: string) {
-    setLanguage(nextLanguage);
-    // Accents belong to a language, so the old one may not exist in the new one.
-    setAccent(ANY);
-  }
 
   return (
     <>
       <FilterField
         label="Language"
-        value={language}
-        options={filterOptions(voices, languageOf, languageName)}
-        onChange={chooseLanguage}
+        value={filter.language}
+        options={languages}
+        // Accents belong to a language, so the old one may not exist in the new one.
+        onChange={(language) => onFilterChange({ ...filter, language, accent: ANY })}
       />
       <FilterField
         label="Accent"
-        value={accent}
-        options={filterOptions(inLanguage, accentOf)}
-        onChange={setAccent}
+        value={filter.accent}
+        options={accents}
+        onChange={(accent) => onFilterChange({ ...filter, accent })}
       />
       <FilterField
         label="Gender"
-        value={gender}
-        options={filterOptions(inLanguage, genderOf)}
-        onChange={setGender}
+        value={filter.gender}
+        options={genders}
+        onChange={(gender) => onFilterChange({ ...filter, gender })}
       />
       <label>
         Voice

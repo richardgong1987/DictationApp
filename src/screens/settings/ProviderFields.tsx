@@ -147,6 +147,8 @@ function GeminiFields({ form, detail, update }: ProviderFieldsProps) {
         detail={detail}
         value={form.geminiVoice}
         onChange={(voice) => update("geminiVoice", voice)}
+        filter={form.geminiVoiceFilter}
+        onFilterChange={(filter) => update("geminiVoiceFilter", filter)}
       />
       <SuggestionField
         label="Model"

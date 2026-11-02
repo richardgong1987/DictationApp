@@ -583,6 +583,11 @@ fn gemini_settings_reach_the_frontend_and_survive_a_restart() {
     settings["ttsProvider"] = json!("gemini");
     settings["geminiVoice"] = json!("Puck");
     settings["geminiKey"] = json!("  key  ");
+    settings["geminiVoiceFilter"] = json!({
+        "language": "en-GB",
+        "accent": "Winchester English",
+        "gender": "female",
+    });
     let saved = h
         .call("save_settings", json!({ "settings": settings }))
         .unwrap();
@@ -595,6 +600,18 @@ fn gemini_settings_reach_the_frontend_and_survive_a_restart() {
     let reloaded = h.call("get_settings", json!({})).unwrap();
     assert_eq!(reloaded["settings"]["ttsProvider"], "gemini");
     assert_eq!(reloaded["settings"]["geminiVoice"], "Puck");
+    assert_eq!(
+        reloaded["settings"]["geminiVoiceFilter"]["language"],
+        "en-GB"
+    );
+    assert_eq!(
+        reloaded["settings"]["geminiVoiceFilter"]["accent"],
+        "Winchester English"
+    );
+    assert_eq!(
+        reloaded["settings"]["geminiVoiceFilter"]["gender"],
+        "female"
+    );
 }
 
 #[test]

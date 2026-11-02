@@ -109,6 +109,13 @@ export interface GeminiVoice {
   description: string | null;
 }
 
+/** `settings::GeminiVoiceFilter`: values from the voice list, or "" for any. */
+export interface GeminiVoiceFilter {
+  language: string;
+  accent: string;
+  gender: string;
+}
+
 export interface Settings {
   ttsProvider: TtsProvider;
   azureVoice: string;
@@ -120,6 +127,7 @@ export interface Settings {
   geminiVoice: string;
   geminiModel: string;
   geminiKey: string;
+  geminiVoiceFilter: GeminiVoiceFilter;
   playbackSpeed: number;
   loopEnabled: boolean;
 }
