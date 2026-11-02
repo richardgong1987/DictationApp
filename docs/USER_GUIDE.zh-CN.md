@@ -123,10 +123,11 @@ If I had known about the problem, I would have called you.
 
 | 选项 | 含义 |
 |---|---|
-| No pause | 不留时间，连续播放，适合与音频同时跟读。只有 **Listen first** 下才有；在 **Read first** 下按 **Match the audio's length** 计时 |
+| No pause | 不留时间，连续播放，适合与音频同时跟读。**Read first** 和 **Listen first** 下都可以选；打开 **Loop sentence** 时，同一句会不间断地重复播放 |
 | 1 second | 每次留 1 秒自己朗读 |
 | 2 seconds | 每次留 2 秒自己朗读 |
 | 3 seconds | 每次留 3 秒自己朗读 |
+| 4 seconds | 每次留 4 秒自己朗读 |
 | 5 seconds | 每次留 5 秒自己朗读 |
 | 6 seconds | 每次留 6 秒自己朗读 |
 | 7 seconds | 每次留 7 秒自己朗读 |

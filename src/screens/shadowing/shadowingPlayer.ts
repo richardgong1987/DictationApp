@@ -161,11 +161,6 @@ export function repeatPauseMs(pause: RepeatPause, clipSeconds: number, speed: nu
   return (pause === "clipLength" ? clipSeconds / speed : pause) * 1000;
 }
 
-/** The pause in force: "no pause" is for reading along, and going first needs time to read. */
-export function turnPause({ repeatPause, isLearnerFirst }: ShadowingState): RepeatPause {
-  return isLearnerFirst && repeatPause === 0 ? "clipLength" : repeatPause;
-}
-
 export class ShadowingPlayer {
   private readonly audio: AudioOutput;
   private readonly timers: Timers;
@@ -608,7 +603,8 @@ export class ShadowingPlayer {
     const s = this.current;
     const clip = this.clips()[s.segment];
     const clipEnd = Math.min(clip.end, s.duration);
-    const turnMs = repeatPauseMs(turnPause(s), clipEnd - clip.start, s.speed);
+    // With no pause, the parts play back to back, whoever goes first.
+    const turnMs = repeatPauseMs(s.repeatPause, clipEnd - clip.start, s.speed);
     if (turnMs <= 0) {
       this.endTurn();
       return;

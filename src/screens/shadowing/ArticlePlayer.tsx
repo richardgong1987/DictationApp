@@ -3,7 +3,6 @@ import {
   hasSavedPlace,
   isRunning,
   isUnderway,
-  turnPause,
   type RepeatPause,
   type RepeatUnit,
   type ShadowingPlayer,
@@ -19,7 +18,7 @@ const REPEAT_UNITS: { value: RepeatUnit; label: string }[] = [
 const REPEAT_PAUSES: { value: RepeatPause; label: string }[] = [
   { value: 0, label: "No pause" },
   { value: 1, label: "1 second" },
-  ...[2, 3, 5, 6, 7, 8].map((seconds) => ({ value: seconds, label: `${seconds} seconds` })),
+  ...[2, 3, 4, 5, 6, 7, 8].map((seconds) => ({ value: seconds, label: `${seconds} seconds` })),
   { value: "clipLength", label: "Match the audio's length" },
 ];
 
@@ -152,7 +151,6 @@ function PracticeChoices({
   passageCount,
 }: Pick<Props, "state" | "player" | "passageCount">) {
   const { unit, isLearnerFirst } = state;
-  const pauses = isLearnerFirst ? REPEAT_PAUSES.filter(({ value }) => value !== 0) : REPEAT_PAUSES;
   return (
     <div className="player-options">
       <span className="article-status muted small wide-only" role="status">
@@ -183,12 +181,12 @@ function PracticeChoices({
           {isLearnerFirst ? "Time to read aloud" : "Time to repeat aloud"}
         </span>
         <select
-          value={turnPause(state)}
+          value={state.repeatPause}
           onChange={({ target: { value } }) =>
             player.setRepeatPause(value === "clipLength" ? value : Number(value))
           }
         >
-          {pauses.map(({ value, label }) => (
+          {REPEAT_PAUSES.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -297,10 +295,11 @@ function articleStatus(state: ShadowingState, passageCount: number): string {
   switch (state.phase) {
     case "idle":
       if (hasSavedPlace(state)) return `Last time you stopped in passage ${state.index + 1}.`;
+      if (state.repeatPause === 0) {
+        return "Play every passage in order and read along, or click the text to start there.";
+      }
       if (state.isLearnerFirst) return `Read each ${state.unit} aloud, then hear it.`;
-      return state.repeatPause === 0
-        ? "Play every passage in order and read along, or click the text to start there."
-        : `Play every passage in order, repeating each ${state.unit} aloud after it.`;
+      return `Play every passage in order, repeating each ${state.unit} aloud after it.`;
     case "ended":
       return "Finished the article.";
     case "failed":

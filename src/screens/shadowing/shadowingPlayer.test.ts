@@ -5,7 +5,6 @@ import {
   hasSavedPlace,
   repeatPauseMs,
   ShadowingPlayer,
-  turnPause,
   type ArticlePlace,
   type AudioOutput,
   type RepeatPause,
@@ -543,8 +542,8 @@ describe("reading first", () => {
     assert.equal(timers.pendingCount, 0);
   });
 
-  it("waits for the audio's length, and takes no pause to mean as long as the audio", async () => {
-    const player = createPlayer({ isLearnerFirst: true });
+  it("waits for the audio's length before giving the learner as long as the audio", async () => {
+    const player = createPlayer({ isLearnerFirst: true, repeatPause: "clipLength" });
     player.toggleArticle();
     await settle();
     assert.equal(player.getState().phase, "loading");
@@ -557,7 +556,7 @@ describe("reading first", () => {
   });
 
   it("stays paused when paused while the audio's length is awaited", async () => {
-    const player = createPlayer({ isLearnerFirst: true });
+    const player = createPlayer({ isLearnerFirst: true, repeatPause: "clipLength" });
     player.toggleArticle();
     await settle();
 
@@ -611,6 +610,33 @@ describe("reading first", () => {
       assert.deepEqual(position(player), at(1, 1, "yourTurn"));
       timers.advance(3000);
       assert.deepEqual(position(player), at(1, 1, "audio"));
+      timers.advance(1500);
+    }
+  });
+
+  it("plays the sentences back to back when there is no time to read", async () => {
+    const player = createPlayer({ ...readingFirst, repeatPause: 0 });
+    player.playSegment(1, 0);
+    await loadPassage(1);
+    assert.deepEqual(position(player), at(1, 0, "audio"));
+    assert.equal(audio.isPlaying, true);
+
+    timers.advance(1250);
+    assert.deepEqual(position(player), at(1, 1, "audio"));
+    assert.equal(audio.currentTime, 1);
+    assert.equal(audio.isPlaying, true);
+  });
+
+  it("loops one sentence with no gap when there is no time to read", async () => {
+    const player = createPlayer({ ...readingFirst, repeatPause: 0 });
+    player.playSegment(1, 1);
+    player.toggleLoop();
+    await loadPassage(1);
+
+    for (let round = 0; round < 3; round++) {
+      assert.deepEqual(position(player), at(1, 1, "audio"));
+      assert.equal(audio.currentTime, 1, "back at the start of the sentence");
+      assert.equal(audio.isPlaying, true);
       timers.advance(1500);
     }
   });
@@ -1153,23 +1179,6 @@ describe("leaving the screen", () => {
     assert.equal(audio.isPlaying, false);
     assert.equal(audio.src, "", "the load of passage 2 never lands");
     assert.equal(player.getState().phase, "idle");
-  });
-});
-
-describe("turnPause", () => {
-  const stateWith = (repeatPause: RepeatPause, isLearnerFirst: boolean) => ({
-    ...newPlayer().getState(),
-    repeatPause,
-    isLearnerFirst,
-  });
-
-  it("leaves time to read when the learner goes first, even with no pause chosen", () => {
-    assert.equal(turnPause(stateWith(0, true)), "clipLength");
-  });
-
-  it("keeps the chosen pause otherwise", () => {
-    assert.equal(turnPause(stateWith(0, false)), 0);
-    assert.equal(turnPause(stateWith(5, true)), 5);
   });
 });
 

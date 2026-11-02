@@ -305,9 +305,9 @@ use the visible player controls in **Shadowing**.
 4. **Read first** is the default: **Your turn** counts down while you read the highlighted part aloud,
    then the audio plays it so you can hear what to fix. **Hear it** skips the rest of the countdown.
    Click the button to switch to **Listen first**: the audio plays each part and you repeat after it.
-5. Set your time for each part: **1**, **2**, **3**, **5**, **6**, **7** or **8 seconds**, or
-   **Match the audio's length** (the default), which gives you as long as the part takes at the selected
-   speed. **Listen first** also offers **No pause**.
+5. Set your time for each part: **No pause**, **1** to **8 seconds**, or **Match the audio's
+   length** (the default), which gives you as long as the part takes at the selected speed. **No
+   pause** plays the parts back to back, and with a loop on, repeats one part with no gap.
 6. Adjust **Speed** if needed. Both practice modes offer 0.60× to 2.00×: 0.60×, 0.75×, 0.90×, 1.00×,
    1.10×, 1.25×, 1.50×, 1.75× and 2.00×.
 

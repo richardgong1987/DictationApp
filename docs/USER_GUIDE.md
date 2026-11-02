@@ -270,10 +270,11 @@ Keep the text shown for **Read first**, since it is what you read from.
 
 | Option | Your time for each part |
 |---|---|
-| **No pause** | None; the audio goes on immediately. Only in **Listen first**. In **Read first** it counts as **Match the audio's length**. |
+| **No pause** | None; the audio goes on immediately, in either mode. With **Loop sentence** on, the sentence repeats with no gap. |
 | **1 second** | One second to speak. |
 | **2 seconds** | Two seconds to speak. |
 | **3 seconds** | Three seconds to speak. |
+| **4 seconds** | Four seconds to speak. |
 | **5 seconds** | Five seconds to speak. |
 | **6 seconds** | Six seconds to speak. |
 | **7 seconds** | Seven seconds to speak. |
