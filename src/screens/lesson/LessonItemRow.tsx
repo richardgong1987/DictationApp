@@ -1,4 +1,3 @@
-import { MAX_RECOMMENDED_WORDS } from "../../api/constants";
 import type { ItemDetail } from "../../api/types";
 import { formatPercent } from "../../format";
 import AudioBadge from "./AudioBadge";

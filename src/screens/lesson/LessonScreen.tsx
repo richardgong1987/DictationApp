@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../../api/client";
-import { MAX_RECOMMENDED_WORDS } from "../../api/constants";
 import type { AudioStatus, ItemDetail, LessonDetail, TtsProvider } from "../../api/types";
 import type { Navigate, Route } from "../../navigation";
 import ErrorBanner from "../../components/ErrorBanner";
@@ -138,7 +137,6 @@ export default function LessonScreen({ lessonId, autoGenerate, navigate }: Props
 
   const { lesson, items } = detail;
   const readyCount = items.filter((i) => i.audioStatus === "ready").length;
-  const longCount = items.filter((i) => i.tooLong).length;
   const thisRoute: Route = { name: "lesson", lessonId };
   const practiceFrom = (startIndex: number) =>
     navigate({ name: "practice", lessonId, startIndex });
