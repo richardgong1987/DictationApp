@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds DictationApp on a Mac: the macOS installer (.dmg) or the iOS app.
+# Builds and installs DictationApp on macOS, or builds the iOS app.
 # Run ./package.sh --help for options.
 set -euo pipefail
 
@@ -7,8 +7,8 @@ usage() {
   cat <<'EOF'
 Usage: ./package.sh [--native | --ios | --ios-simulator]
 
-  (no option)      Build a universal macOS DMG, then a signed iOS IPA.
-  --native         DMG for this Mac's architecture only; builds about twice as fast.
+  (no option)      Build a universal macOS DMG, install the app, then build a signed iOS IPA.
+  --native         Build a DMG for this Mac's architecture and install the app in /Applications.
   --ios            Signed IPA for iPhone and iPad, signed for the team of your Apple Development
                    certificate. If you have certificates from several teams, set
                    APPLE_DEVELOPMENT_TEAM to one (Xcode > Settings > Accounts). APPLE_EXPORT_METHOD
@@ -27,8 +27,7 @@ require() {
   fi
 }
 
-# Prints the team ID of the Apple Development certificates in the keychain, or nothing
-# unless they all belong to one team.
+# Prints a team ID only if the Apple Development certificates identify a single team.
 signing_team() {
   local teams
   teams=$(security find-certificate -a -c "Apple Development:" -p 2>/dev/null \
@@ -55,29 +54,39 @@ build_dmg() {
     build_args+=(--target universal-apple-darwin)
     bundle_dir="src-tauri/target/universal-apple-darwin/release/bundle/dmg"
     require rustup "Install Rust from https://rustup.rs"
-    # A universal app is stitched together from one build per architecture.
     rustup target add aarch64-apple-darwin x86_64-apple-darwin
   fi
   install_frontend_dependencies
 
-  # DMGs from earlier versions stay in the bundle folder; clear them so the one listed below is new.
   rm -f "$bundle_dir"/*.dmg
   pnpm tauri build "${build_args[@]}"
 
   echo
   echo "DMG ready:"
   ls -1 "$PWD/$bundle_dir"/*.dmg
-  
+
+  local built_app="$PWD/${bundle_dir%/dmg}/macos/DictationApp.app"
+  if [[ ! -d "$built_app" ]]; then
+    printf 'error: app bundle not found: %s\n' "$built_app" >&2
+    return 1
+  fi
+
+  /usr/bin/osascript \
+    -e 'on run argv' \
+    -e '  set appBundle to (POSIX file (item 1 of argv)) as alias' \
+    -e '  set installDir to (POSIX file "/Applications") as alias' \
+    -e '  tell application "Finder" to duplicate appBundle to installDir with replacing' \
+    -e 'end run' \
+    "$built_app"
+  echo "Installed: /Applications/DictationApp.app"
 }
 
 # $1: "device" or "simulator"
 build_ios() {
-  # Checked here because the Tauri CLI would otherwise install missing tools itself.
   require xcodebuild "Install Xcode from the App Store."
   require pod "Install CocoaPods: brew install cocoapods"
   require xcodegen "Install XcodeGen: brew install xcodegen"
   require rustup "Install Rust from https://rustup.rs"
-  # Xcode installs without it; the Tauri CLI needs it even for device builds.
   if ! xcrun simctl list runtimes 2>/dev/null | grep -q "^iOS "; then
     echo "error: the iOS platform is not installed. Install it with: xcodebuild -downloadPlatform iOS" >&2
     exit 1
@@ -101,12 +110,9 @@ build_ios() {
     rust_target=x86_64-apple-ios
   fi
   rustup target add "$rust_target"
-  # Xcode 27's Swift hides the functions Tauri's Swift code exports to Rust;
-  # swift-rs needs llvm-objcopy from llvm-tools to make them linkable again.
   rustup component add llvm-tools
   install_frontend_dependencies
 
-  # The Xcode project in src-tauri/gen/apple is not committed; generate it when missing.
   if [[ ! -d src-tauri/gen/apple ]]; then
     pnpm tauri ios init --ci
   fi
@@ -124,7 +130,7 @@ build_ios() {
     pnpm tauri ios build --ci --target "$tauri_target" --no-sign
     echo
     echo "Simulator app ready (open the Simulator, then: xcrun simctl install booted <app>):"
-    find "$PWD/$output_dir" -name "*.app" -maxdepth 4
+    find "$PWD/$output_dir" -maxdepth 4 -name "*.app"
   fi
 }
 
@@ -140,9 +146,9 @@ require cargo "Install Rust from https://rustup.rs"
 
 case "${1:-}" in
   "")
-  build_dmg universal
-  build_ios device
-  ;;
+    build_dmg universal
+    build_ios device
+    ;;
   --native) build_dmg native ;;
   --ios) build_ios device ;;
   --ios-simulator) build_ios simulator ;;
