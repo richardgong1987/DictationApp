@@ -3,9 +3,9 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type {
   AudioGenerationProgress,
   AudioGenerationSummary,
+  CatalogVoice,
   CheckResult,
   ExportSummary,
-  CatalogVoice,
   ImportSummary,
   ItemDetail,
   Lesson,
@@ -15,6 +15,7 @@ import type {
   Settings,
   SettingsDetail,
   ShadowingPosition,
+  TtsProvider,
 } from "./types";
 
 /** Typed wrappers for the Tauri commands in src-tauri/src/commands.rs. */
@@ -48,6 +49,9 @@ export const api = {
   listAzureVoices: () => invoke<CatalogVoice[]>("list_azure_voices"),
   /** Uses the saved ElevenLabs API key, so it fails until one is saved. */
   listElevenLabsVoices: () => invoke<CatalogVoice[]>("list_elevenlabs_voices"),
+  /** MP3 bytes of a voice: the provider's own sample, or the voice saying a sentence. */
+  previewVoice: (provider: TtsProvider, voice: string, previewUrl: string | null) =>
+    invoke<ArrayBuffer>("preview_voice", { provider, voice, previewUrl }),
   /** Uses the saved Gemini API key, so it fails until one is saved. */
   listGeminiVoices: () => invoke<CatalogVoice[]>("list_gemini_voices"),
   /** Raw MP3 bytes for one item. */

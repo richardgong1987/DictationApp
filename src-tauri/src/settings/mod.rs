@@ -122,6 +122,22 @@ impl Settings {
         }
     }
 
+    /// These settings speaking through `provider` with `voice` instead, as
+    /// when Settings plays a voice before it is saved.
+    pub fn with_voice(&self, provider: TtsProviderKind, voice: &str) -> Settings {
+        let mut settings = Settings {
+            tts_provider: provider,
+            ..self.clone()
+        };
+        let field = match provider {
+            TtsProviderKind::Azure => &mut settings.azure_voice,
+            TtsProviderKind::ElevenLabs => &mut settings.elevenlabs_voice_id,
+            TtsProviderKind::Gemini => &mut settings.gemini_voice,
+        };
+        *field = voice.to_string();
+        settings
+    }
+
     /// The TTS request for one item under the current provider and voice settings.
     pub fn tts_request(&self, text: &str) -> TtsRequest {
         let (voice, model, output_format) = match self.tts_provider {
@@ -398,6 +414,34 @@ mod tests {
         assert_eq!(request.voice, "Puck");
         assert_eq!(request.model, "gemini-3.8-flash-lite-tts");
         assert_eq!(request.output_format, gemini::OUTPUT_FORMAT);
+    }
+
+    #[test]
+    fn another_voice_changes_only_that_provider_and_voice() {
+        let settings = Settings {
+            gemini_model: "gemini-3.8-flash-lite-tts".into(),
+            ..Settings::default()
+        };
+        let trial = settings.with_voice(TtsProviderKind::Gemini, "Puck");
+        let request = trial.tts_request("Hello.");
+        assert_eq!(request.provider, TtsProviderKind::Gemini);
+        assert_eq!(request.voice, "Puck");
+        assert_eq!(request.model, "gemini-3.8-flash-lite-tts");
+        assert_eq!(trial.azure_voice, settings.azure_voice);
+        assert_eq!(
+            settings
+                .with_voice(TtsProviderKind::Azure, "en-GB-RyanNeural")
+                .tts_request("Hi.")
+                .voice,
+            "en-GB-RyanNeural"
+        );
+        assert_eq!(
+            settings
+                .with_voice(TtsProviderKind::ElevenLabs, "abc123")
+                .tts_request("Hi.")
+                .voice,
+            "abc123"
+        );
     }
 
     #[test]

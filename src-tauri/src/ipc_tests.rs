@@ -694,6 +694,54 @@ fn listing_elevenlabs_voices_needs_a_saved_key() {
 }
 
 #[test]
+fn a_gemini_voice_is_heard_saying_the_sample_sentence_in_that_voice() {
+    use base64::Engine;
+    // A short tone stands in for the speech Gemini would return as PCM.
+    let pcm: Vec<u8> = (0..2400)
+        .map(|i| (8000.0 * (f64::from(i) / 24000.0 * 440.0 * std::f64::consts::TAU).sin()) as i16)
+        .flat_map(i16::to_le_bytes)
+        .collect();
+    let spoken = json!({ "status": "completed", "steps": [{ "type": "model_output", "content": [
+        { "type": "audio", "data": base64::engine::general_purpose::STANDARD.encode(&pcm) },
+    ] }] })
+    .to_string();
+    let (url, requests) = serve(vec![http_response("200 OK", &spoken)]);
+    let h = Harness::with_gemini_at(&url);
+
+    let preview = match h
+        .call_raw(
+            "preview_voice",
+            json!({ "provider": "gemini", "voice": "en-gb-concierge-2", "previewUrl": null }),
+        )
+        .unwrap()
+    {
+        InvokeResponseBody::Raw(bytes) => bytes,
+        other => panic!("expected raw bytes, got {other:?}"),
+    };
+
+    // An MP3 frame starts with eleven set bits.
+    assert!(preview.len() > 100 && preview[0] == 0xFF && preview[1] & 0xE0 == 0xE0);
+    let request = &requests.lock().unwrap()[0];
+    assert!(request.contains(r#""voice":"en-gb-concierge-2""#));
+    assert!(request.contains("This is how I sound"));
+}
+
+#[test]
+fn hearing_a_voice_needs_the_provider_credentials() {
+    let h = Harness::new();
+    let error = h
+        .call(
+            "preview_voice",
+            json!({ "provider": "azure", "voice": "en-GB-SoniaNeural", "previewUrl": null }),
+        )
+        .unwrap_err();
+    assert!(error
+        .as_str()
+        .unwrap()
+        .contains("Azure Speech credentials are not configured"));
+}
+
+#[test]
 fn listing_gemini_voices_needs_a_saved_key() {
     let h = Harness::new();
     let error = h.call("list_gemini_voices", json!({})).unwrap_err();

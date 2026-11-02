@@ -32,6 +32,8 @@
 | ElevenLabs | 自己的 **API key**、**Voice** 和支持的 **Model**。保存 API key 后，可以从账户里的语音中按 **Language**、**Accent** 和 **Gender** 筛选，例如英音选 Accent **British**。默认模型为 `eleven_multilingual_v2` |
 | Google Gemini | 自己的 **API key**（在 Google AI Studio 创建）、**Voice**（如 `Kore`）和 **Model**。默认模型为 `gemini-3.8-flash-tts` |
 
+语音列表加载后，下方的 **▶ Listen** 可以试听所选语音。ElevenLabs 播放它自带的试听样本，不收费；Azure 和 Gemini 没有样本，会让该语音读一句短句，和普通请求一样计费：Azure 约 60 个字符，Gemini 计一次请求（计入每日限额）。同一次打开 Settings 时重复试听不再收费。
+
 从 [Azure Speech](https://azure.microsoft.com/products/ai-services/text-to-speech)、[ElevenLabs](https://elevenlabs.io) 或 [Google AI Studio](https://aistudio.google.com/apikey) 获取自己的凭据。填好后点击 **Save**，看到 **Saved.** 再点击 **Back** 返回。
 
 生成新音频需要联网，并使用你自己的服务额度或积分。已生成的音频保存在本机，反复播放不需要再次合成。

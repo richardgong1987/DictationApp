@@ -74,6 +74,7 @@ fn with_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
         commands::list_azure_voices,
         commands::list_elevenlabs_voices,
         commands::list_gemini_voices,
+        commands::preview_voice,
         commands::get_item_audio,
         commands::check_answer,
         commands::save_answer,

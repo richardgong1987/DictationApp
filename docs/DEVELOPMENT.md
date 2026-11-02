@@ -124,6 +124,11 @@ Decisions made while implementing V1, where the specification left room:
   added; its accent and gender come from labels voice owners type, so they are normalised to one
   spelling ("British", "female"). Only documented response fields are read. Each provider's filter
   is saved in Settings (`azureVoiceFilter`, `elevenlabsVoiceFilter`, `geminiVoiceFilter`).
+- **Voice previews** (`preview_voice`, `VoicePreview.tsx`): ElevenLabs' `preview_url` is downloaded
+  by Rust without the API key (only `https`), because the CSP lets media come only from the app or
+  Blob URLs. Azure's list has no recordings and Gemini keeps them only for designed voices, so
+  those voices say `PREVIEW_SENTENCE` through the normal synthesis path (`Settings::with_voice`),
+  as a billed request. The WebView keeps each voice's sample as a Blob URL for the visit.
 - **Speed**: the player's speed (0.6×–2×) is the only speed control; it changes local playback
   and never calls the provider.
 - All providers retry with backoff on network errors, 429 and 5xx (`tts/http.rs`). A provider can read

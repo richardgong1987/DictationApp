@@ -131,6 +131,11 @@ For new audio, open **Settings → Text-to-speech → Provider** and configure o
 | **ElevenLabs** | **API key**, **Voice** (default George: `JBFqnCBsd6RMkjVDRZzb`; once the key is saved, choose from your account's voices by **Language**, **Accent** and **Gender**), **Model** (default `eleven_multilingual_v2`) |
 | **Google Gemini** | **API key**, **Voice** (default `Kore`), **Model** (default `gemini-3.8-flash-tts`) |
 
+Once a provider's voice list has loaded, **▶ Listen** under it plays the chosen voice. ElevenLabs
+voices play the sample ElevenLabs keeps, at no cost. Azure and Gemini keep none, so the voice says one
+short sentence, which counts like any other request: about 60 Azure characters, or one Gemini
+request toward your daily limit. Replaying a voice during the same visit to Settings is free.
+
 Voice/model suggestions are editable inputs, not an exhaustive list or a guarantee of availability
 in your provider account. Enter a voice/model supported by that account. Click **Save** before
 leaving Settings. There are no speaking rate or pitch settings: new audio is always synthesized at

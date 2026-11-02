@@ -70,6 +70,26 @@ impl ElevenLabsTts {
     }
 }
 
+/// Downloads a voice's sample from the address its listing gave. The API key
+/// is not sent: the sample is public, and the address need not be ElevenLabs'.
+pub async fn download_preview(client: &reqwest::Client, url: &str) -> Result<Vec<u8>, TtsError> {
+    if !is_preview_url(url) {
+        return Err(TtsError::UnreadableResponse(TtsProviderKind::ElevenLabs));
+    }
+    fetch_preview(client, url).await
+}
+
+async fn fetch_preview(client: &reqwest::Client, url: &str) -> Result<Vec<u8>, TtsError> {
+    let build = || client.get(url).header("User-Agent", "DictationApp");
+    fetch_body(TtsProviderKind::ElevenLabs, build, read_error).await
+}
+
+/// Only an encrypted web address; nothing local, and no other scheme.
+fn is_preview_url(url: &str) -> bool {
+    url.strip_prefix("https://")
+        .is_some_and(|rest| !rest.is_empty() && !rest.starts_with('/'))
+}
+
 #[derive(Deserialize)]
 struct VoicePage {
     #[serde(default)]
@@ -90,6 +110,9 @@ struct ElevenLabsVoice {
     /// Its owner's own words, when there are any.
     #[serde(default)]
     description: Option<String>,
+    /// A recording of the voice that ElevenLabs keeps for listening to it.
+    #[serde(default)]
+    preview_url: Option<String>,
     /// Such as `accent`, `gender`, `age`, `description` and `use_case`.
     #[serde(default)]
     labels: HashMap<String, String>,
@@ -138,6 +161,7 @@ impl From<ElevenLabsVoice> for CatalogVoice {
             gender: label("gender").map(str::to_lowercase),
             pitch: None,
             description,
+            preview_url: voice.preview_url.filter(|url| is_preview_url(url)),
         }
     }
 }
@@ -324,6 +348,29 @@ mod tests {
             .to_lowercase()
             .contains("xi-api-key: secret-key"));
         assert!(requests[1].contains("next_page_token=page-2"));
+    }
+
+    #[tokio::test]
+    async fn a_sample_is_downloaded_without_the_api_key() {
+        let (url, requests) = serve(vec![http_response("200 OK", "mp3 bytes")]);
+        let sample = fetch_preview(&reqwest::Client::new(), &format!("{url}sample.mp3"))
+            .await
+            .unwrap();
+        assert_eq!(sample, b"mp3 bytes");
+        let request = requests.lock().unwrap()[0].to_lowercase();
+        assert!(request.starts_with("get /sample.mp3 "));
+        assert!(!request.contains("xi-api-key"));
+    }
+
+    #[test]
+    fn only_https_addresses_count_as_samples() {
+        assert!(is_preview_url(
+            "https://storage.googleapis.com/voice/sample.mp3"
+        ));
+        assert!(!is_preview_url("http://example.com/sample.mp3"));
+        assert!(!is_preview_url("file:///etc/passwd"));
+        assert!(!is_preview_url("https://"));
+        assert!(!is_preview_url("https:///local"));
     }
 
     #[test]

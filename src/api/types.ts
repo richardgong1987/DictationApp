@@ -109,6 +109,8 @@ export interface CatalogVoice {
   gender: string | null;
   pitch: string | null;
   description: string | null;
+  /** A recording the provider offers of this voice, if any. */
+  previewUrl: string | null;
 }
 
 /** `settings::VoiceFilter`: values from a voice list, or "" for any. */

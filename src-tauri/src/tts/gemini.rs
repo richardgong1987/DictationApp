@@ -113,6 +113,8 @@ impl From<GeminiVoice> for CatalogVoice {
             gender: voice.gender,
             pitch: voice.pitch,
             description: voice.description,
+            // Google keeps samples only for voices made with Voice design, and leaves them out of the list.
+            preview_url: None,
         }
     }
 }

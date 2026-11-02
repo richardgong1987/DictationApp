@@ -106,6 +106,8 @@ impl From<AzureVoice> for CatalogVoice {
             gender: voice.gender,
             pitch: None,
             description,
+            // Azure's list carries no samples; Settings has the voice say a sentence instead.
+            preview_url: None,
         }
     }
 }

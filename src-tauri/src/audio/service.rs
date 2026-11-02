@@ -13,11 +13,14 @@ use crate::lesson::DictationItem;
 use crate::settings::service::SettingsService;
 use crate::settings::Settings;
 use crate::tts::azure::AzureTts;
-use crate::tts::elevenlabs::ElevenLabsTts;
+use crate::tts::elevenlabs::{self, ElevenLabsTts};
 use crate::tts::gemini::{self, GeminiTts};
-use crate::tts::{CatalogVoice, TtsClient, TtsError, TtsProviderKind};
+use crate::tts::{CatalogVoice, TtsClient, TtsError, TtsProvider, TtsProviderKind};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// What a voice says when Settings plays it, for providers that keep no recording of their own.
+const PREVIEW_SENTENCE: &str = "Hello! This is how I sound when I read your lessons aloud.";
 
 pub struct AudioService {
     lessons: LessonRepository,
@@ -150,6 +153,27 @@ impl AudioService {
             .gemini_key(&settings)
             .ok_or(AppError::MissingSpeechCredentials(TtsProviderKind::Gemini))?;
         Ok(self.gemini(key).list_voices().await?)
+    }
+
+    /// A short MP3 of a voice, for Settings to play: the provider's own
+    /// recording when its list gave one, which costs nothing, otherwise the
+    /// voice speaking a sentence, which counts like any other request.
+    pub async fn voice_preview(
+        &self,
+        provider: TtsProviderKind,
+        voice: &str,
+        preview_url: Option<&str>,
+    ) -> AppResult<Vec<u8>> {
+        if let (TtsProviderKind::ElevenLabs, Some(url)) = (provider, preview_url) {
+            return Ok(elevenlabs::download_preview(&self.http, url).await?);
+        }
+        let settings = self.settings.load()?.with_voice(provider, voice);
+        let client = self
+            .tts_client(&settings)?
+            .ok_or(AppError::MissingSpeechCredentials(provider))?;
+        Ok(client
+            .synthesize(&settings.tts_request(PREVIEW_SENTENCE))
+            .await?)
     }
 
     /// Raw MP3 bytes; playback itself happens in the WebView.

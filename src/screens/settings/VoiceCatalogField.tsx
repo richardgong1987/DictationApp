@@ -3,6 +3,7 @@ import { api, errorMessage } from "../../api/client";
 import type { CatalogVoice, SettingsDetail, VoiceFilter } from "../../api/types";
 import SuggestionField, { type Suggestion } from "./SuggestionField";
 import { ANY, narrowVoices, voiceLabel, type FilterOption } from "./voiceCatalog";
+import VoicePreview from "./VoicePreview";
 
 /** What differs between the providers whose voice list the app can load. */
 const CATALOGS = {
@@ -11,18 +12,21 @@ const CATALOGS = {
     load: api.listAzureVoices,
     isReady: (detail: SettingsDetail) => detail.azureConfigured,
     setupHint: "Save your key and region to choose from Azure's full voice list, by language and accent.",
+    spokenSampleCost: "Listening has the voice say one sentence: about 60 characters of your Azure allowance.",
   },
   elevenlabs: {
     name: "ElevenLabs",
     load: api.listElevenLabsVoices,
     isReady: (detail: SettingsDetail) => detail.elevenlabsConfigured,
     setupHint: "Save your API key to choose from the voices in your ElevenLabs account, by accent and gender.",
+    spokenSampleCost: "This voice has no ElevenLabs sample, so listening has it say one sentence: about 60 credits.",
   },
   gemini: {
     name: "Gemini",
     load: api.listGeminiVoices,
     isReady: (detail: SettingsDetail) => detail.geminiConfigured,
     setupHint: "Save your API key to choose from Gemini's full voice list, by language and regional accent.",
+    spokenSampleCost: "Listening has the voice say one sentence: one Gemini request, which counts toward your daily limit.",
   },
 };
 
@@ -68,7 +72,7 @@ export default function VoiceCatalogField({
     };
   }, [detail, source, isReady]);
 
-  if (catalog.length > 0) return <VoiceCatalog voices={catalog} {...field} />;
+  if (catalog.length > 0) return <VoiceCatalog provider={provider} voices={catalog} {...field} />;
   return (
     <>
       <SuggestionField label="Voice" value={field.value} suggestions={suggestions} onChange={field.onChange} />
@@ -84,12 +88,13 @@ export default function VoiceCatalogField({
 }
 
 function VoiceCatalog({
+  provider,
   voices,
   value,
   onChange,
   filter: wanted,
   onFilterChange,
-}: VoiceFieldProps & { voices: CatalogVoice[] }) {
+}: VoiceFieldProps & { provider: CatalogProvider; voices: CatalogVoice[] }) {
   const { filter, languages, accents, genders, matching } = narrowVoices(voices, wanted);
   const selected = voices.find((voice) => voice.id === value);
   // The saved voice stays visible even when the filters leave it out.
@@ -132,6 +137,12 @@ function VoiceCatalog({
       <p className="muted small">
         {matching.length} of {voices.length} voices match. {selected?.description}
       </p>
+      <VoicePreview
+        provider={provider}
+        voiceId={value}
+        previewUrl={selected?.previewUrl ?? null}
+        spokenSampleCost={CATALOGS[provider].spokenSampleCost}
+      />
     </>
   );
 }

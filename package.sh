@@ -127,7 +127,8 @@ build_ios() {
     echo
     echo "IPA ready:"
     find "$PWD/$output_dir" -name "*.ipa"
-    rm "$HOME/Library/Mobile Documents/com~apple~CloudDocs/DictationApp.ipa"
+
+    rm -f "$HOME/Library/Mobile Documents/com~apple~CloudDocs/DictationApp.ipa"
 
     cp "$PWD/$output_dir"/arm64/DictationApp.ipa "$HOME/Library/Mobile Documents/com~apple~CloudDocs"
   else

@@ -13,7 +13,7 @@ use crate::lesson::{ItemDetail, Lesson, LessonDetail, LessonSummary};
 use crate::practice::{CheckResult, PracticeProgress, ShadowingPosition};
 use crate::settings::{Settings, SettingsDetail};
 use crate::transfer::{ExportSummary, ImportSummary};
-use crate::tts::CatalogVoice;
+use crate::tts::{CatalogVoice, TtsProviderKind};
 
 // ---------------------------------------------------------------------------
 // Lessons
@@ -141,6 +141,21 @@ pub async fn list_elevenlabs_voices(state: State<'_, AppState>) -> AppResult<Vec
 #[tauri::command]
 pub async fn list_gemini_voices(state: State<'_, AppState>) -> AppResult<Vec<CatalogVoice>> {
     state.audio.gemini_voices().await
+}
+
+/// Responds with raw MP3 bytes rather than JSON.
+#[tauri::command]
+pub async fn preview_voice(
+    state: State<'_, AppState>,
+    provider: TtsProviderKind,
+    voice: String,
+    preview_url: Option<String>,
+) -> AppResult<Response> {
+    let preview = state
+        .audio
+        .voice_preview(provider, &voice, preview_url.as_deref())
+        .await?;
+    Ok(Response::new(preview))
 }
 
 /// Responds with raw MP3 bytes rather than JSON.

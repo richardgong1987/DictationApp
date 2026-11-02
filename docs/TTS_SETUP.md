@@ -86,7 +86,8 @@ filters too. In Azure the language carries the accent: for a British woman's voi
 Language **English (UK)** and Gender **Female**; **English (US)**, **English (Australia)**,
 **English (Ireland)** and **English (India)** are other accents. Azure has no finer regional accent
 than that, so there is no **Accent** filter. Each voice's line shows how many words a minute it
-speaks, and whether it is multilingual or a preview.
+speaks, and whether it is multilingual or a preview. **▶ Listen** has the chosen voice say one short
+sentence, about 60 characters of your Azure allowance; Azure's list carries no recordings.
 
 Without a saved key and region, or if the list cannot load, the app offers a few suggestions such
 as `en-GB-SoniaNeural` instead, and **Other…** lets you type any name from Microsoft's
@@ -143,6 +144,8 @@ Once the API key is saved, Settings loads your account's voices. Narrow them wit
 accents and genders are the labels ElevenLabs and voice owners give their voices, such as
 **British** or **American**; for a British woman's voice, choose Accent **British** and Gender
 **female**. Each voice's line shows its owner's description, or its age, tone and intended use.
+**▶ Listen** plays the sample ElevenLabs keeps of the voice, at no cost; a voice without one says a
+short sentence instead, about 60 credits.
 
 Click **Save**, wait for **Saved.**, then **Back**. ElevenLabs needs no Azure region or key.
 The app has no voice-cloning workflow; select a voice already available in your ElevenLabs account.
@@ -188,7 +191,10 @@ Once your API key is saved, Settings loads Gemini's full voice list from Google,
 voices you made with Voice design. Narrow it with **Language**, **Accent** and **Gender**, pick a
 **Voice**, and click **Save**. **Save** keeps your choices of Language, Accent and Gender along with
 the voice and model, and they survive updating or reinstalling the app. For a British woman's
-voice, for example, choose Language **English (UK)** and Gender **female**.
+voice, for example, choose Language **English (UK)** and Gender **female**. **▶ Listen** has the
+chosen voice say one short sentence. Google keeps no recordings of its voices, so each voice you
+listen to is one Gemini request and counts toward your daily limit; replaying it during the same
+visit to Settings is free.
 
 Google's accents are specific, so there is no plain "British" accent: they are named after places,
 such as **Bristol English**, **Manchester English** or **Liverpool English**, and many are strong

@@ -52,6 +52,8 @@ pub struct CatalogVoice {
     pub gender: Option<String>,
     pub pitch: Option<String>,
     pub description: Option<String>,
+    /// A recording the provider offers of this voice, if any.
+    pub preview_url: Option<String>,
 }
 
 /// Everything that determines the synthesized audio. Every field is part of

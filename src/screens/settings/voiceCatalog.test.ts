@@ -22,6 +22,7 @@ function voice(overrides: Partial<CatalogVoice>): CatalogVoice {
     gender: null,
     pitch: null,
     description: null,
+    previewUrl: null,
     ...overrides,
   };
 }
