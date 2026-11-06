@@ -301,7 +301,7 @@ use the visible player controls in **Shadowing**.
 1. Open **Shadowing**. The whole article is on screen, with one player that stays at the top of the window.
 2. Click **Play article**, or click anywhere in the text to start there. It plays through to the end
    and keeps the current part in view.
-3. Choose **Practice by**: **Whole passage**, **Sentence** (the default) or **Phrase**.
+3. Choose **Practice by**: **Whole passage** (the default), **Sentence** or **Phrase**.
 4. **Read first** is the default: **Your turn** counts down while you read the highlighted part aloud,
    then the audio plays it so you can hear what to fix. **Hear it** skips the rest of the countdown.
    Click the button to switch to **Listen first**: the audio plays each part and you repeat after it.
@@ -313,7 +313,7 @@ use the visible player controls in **Shadowing**.
 
 Three combinations cover most practice:
 
-- **Read, then get corrected:** the default. **Sentence** and **Read first** go through the whole
+- **Read, then get corrected:** **Sentence** with the default **Read first** goes through the whole
   article with you reading each sentence before the audio does.
 - **Repeat after the audio:** **Listen first** and **Sentence** go through it the way a class repeats
   after its teacher.

@@ -108,8 +108,8 @@ If I had known about the problem, I would have called you.
 
 | 选项 | 每次播放 |
 |---|---|
-| **Whole passage** | 一整段。 |
-| **Sentence** | 一句。这是默认选项。 |
+| **Whole passage** | 一整段。这是默认选项。 |
+| **Sentence** | 一句。 |
 | **Phrase** | 句子内部的一个短语，在逗号、分号、冒号和破折号处切开。像 “Three, Four, and Five” 这样过短的列举项会并入相邻部分，不会被切得太碎。 |
 
 菜单旁边的按钮显示谁先读，点击即可切换，当前部分会从头开始：
@@ -134,7 +134,7 @@ If I had known about the problem, I would have called you.
 | 8 seconds | 每次留 8 秒自己朗读 |
 | Match the audio's length | 默认选项。按当前播放速度下这部分音频的时长留出朗读时间 |
 
-- **学生先读，老师再纠正：**默认就是这种方式。选择 **Sentence**，整篇文章一句一句进行，每句都是你先读、音频后读。请保持原文显示，因为你要看着原文读。打开 **Loop sentence** 时，你和音频会在同一句上轮流朗读，直到关闭循环。
+- **学生先读，老师再纠正：**保持默认的 **Read first**，选择 **Sentence**，整篇文章一句一句进行，每句都是你先读、音频后读。请保持原文显示，因为你要看着原文读。打开 **Loop sentence** 时，你和音频会在同一句上轮流朗读，直到关闭循环。
 - **老师读一句，学生跟一句：**切换到 **Listen first**，选择 **Sentence**，每句之后都有 **Your turn** 倒计时。
 - **连贯朗读：**切换到 **Listen first**，选择 **Whole passage** 和 **No pause**，从头到尾连续播放，跟着音频一起读。
 

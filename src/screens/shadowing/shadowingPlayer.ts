@@ -128,7 +128,7 @@ const INITIAL_STATE: ShadowingState = {
   isLearnerFirst: true,
   speed: 1,
   repeatPause: "clipLength",
-  unit: "sentence",
+  unit: "passage",
 };
 
 /** A whole passage is one clip, which ends where its audio does. */

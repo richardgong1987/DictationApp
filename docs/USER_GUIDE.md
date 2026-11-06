@@ -250,8 +250,8 @@ to the top, and **Loop article** starts over after the last passage.
 
 | Option | Parts |
 |---|---|
-| **Whole passage** | Each paragraph. |
-| **Sentence** | Each sentence. This is the default. |
+| **Whole passage** | Each paragraph. This is the default. |
+| **Sentence** | Each sentence. |
 | **Phrase** | Also the pieces inside sentences, at commas, semicolons, colons and dashes. Very short pieces such as list items ("Three, Four, and Five") stay with their neighbors. |
 
 ### Read first or listen first

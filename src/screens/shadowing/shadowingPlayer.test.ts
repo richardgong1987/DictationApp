@@ -242,35 +242,35 @@ beforeEach(() => {
 describe("a new player", () => {
   it("has the learner read first, for as long as the audio takes", async () => {
     const player = newPlayer();
-    player.playSegment(1, 1);
+    player.playSegment(1, 0);
     await loadPassage(1);
 
-    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
-    assert.equal(player.getState().turnTotalMs, 1500);
+    assert.deepEqual(position(player), at(1, 0, "yourTurn"));
+    assert.equal(player.getState().turnTotalMs, 4000);
     assert.equal(audio.isPlaying, false);
   });
 
   it("leaves time to repeat after the audio once switched to it", async () => {
     const player = newPlayer();
     player.toggleLearnerFirst();
-    player.playSegment(1, 1);
+    player.playSegment(1, 0);
     await loadPassage(1);
-    assert.deepEqual(position(player), at(1, 1, "audio"));
+    assert.deepEqual(position(player), at(1, 0, "audio"));
 
-    timers.advance(1500);
+    audio.finish();
 
-    assert.deepEqual(position(player), at(1, 1, "yourTurn"));
-    assert.equal(player.getState().turnTotalMs, 1500);
+    assert.deepEqual(position(player), at(1, 0, "yourTurn"));
+    assert.equal(player.getState().turnTotalMs, 4000);
   });
 
-  it("goes by sentence until another unit is chosen", async () => {
+  it("goes by whole passage until another unit is chosen", async () => {
     const player = newPlayer();
-    assert.equal(player.getState().unit, "sentence");
+    assert.equal(player.getState().unit, "passage");
 
     player.toggleArticle();
 
     await loadPassage(0);
-    assert.deepEqual(clipRequests, [[0, "sentence"]]);
+    assert.deepEqual(clipRequests, []);
   });
 });
 
@@ -1012,8 +1012,28 @@ describe("slow loads", () => {
 describe("coming back after an earlier visit", () => {
   const secondSentence = { index: 1, seconds: 1 };
 
-  it("shows the saved sentence without playing anything", async () => {
+  /** Comes back to the second sentence of passage 2, practising by sentence. */
+  function returnBySentence() {
     const player = newPlayer(secondSentence);
+    player.setUnit("sentence");
+    return player;
+  }
+
+  it("comes back to the start of the saved passage by default", async () => {
+    const player = newPlayer(secondSentence);
+    await settle();
+    assert.deepEqual(position(player), at(1, 0, "idle"));
+    assert.deepEqual(clipRequests, []);
+
+    player.toggleArticle();
+
+    await loadPassage(1);
+    assert.deepEqual(position(player), at(1, 0, "yourTurn"));
+    assert.equal(audio.currentTime, 0);
+  });
+
+  it("shows the saved sentence without playing anything", async () => {
+    const player = returnBySentence();
     await settle();
 
     assert.deepEqual(position(player), at(1, 1, "idle"));
@@ -1023,7 +1043,7 @@ describe("coming back after an earlier visit", () => {
   });
 
   it("continues from the saved sentence, with the learner reading it first", async () => {
-    const player = newPlayer(secondSentence);
+    const player = returnBySentence();
     await settle();
 
     player.toggleArticle();
@@ -1036,7 +1056,7 @@ describe("coming back after an earlier visit", () => {
   });
 
   it("continues at once, even before the saved sentence has been found", async () => {
-    const player = newPlayer(secondSentence);
+    const player = returnBySentence();
 
     player.toggleArticle();
 
@@ -1045,7 +1065,7 @@ describe("coming back after an earlier visit", () => {
   });
 
   it("stays at the same point when the unit changes first", async () => {
-    const player = newPlayer(secondSentence);
+    const player = returnBySentence();
     await settle();
 
     player.setUnit("passage");
@@ -1088,7 +1108,7 @@ describe("coming back after an earlier visit", () => {
   });
 
   it("keeps the place through the stop of React's development mode", async () => {
-    const player = newPlayer(secondSentence);
+    const player = returnBySentence();
     await settle();
 
     player.stop();
@@ -1101,6 +1121,7 @@ describe("coming back after an earlier visit", () => {
 describe("keeping the learner's place", () => {
   it("reports each sentence once, as the learner reaches it", async () => {
     const player = newPlayer();
+    player.setUnit("sentence");
     player.playSegment(1, 0);
     await loadPassage(1);
     assert.deepEqual(reportedPlaces, [{ index: 1, seconds: 0 }]);
