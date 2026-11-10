@@ -92,7 +92,7 @@ If I had known about the problem, I would have called you.
 | 输入换行 | — | Shift + Enter |
 | 离开输入框 | — | Esc |
 
-快捷键控制当前激活的卡片。焦点在按钮上时，Enter/Space 会执行该按钮的动作。这些快捷键属于听写模式，跟读模式请使用界面上的播放按钮。
+快捷键控制当前激活的卡片。焦点在按钮上时，Enter/Space 会执行该按钮的动作。这些快捷键属于听写模式。跟读模式中，按 **Space** 暂停或开始播放，作用与播放按钮相同，再按一次继续播放。
 
 ## 5. 跟读：Shadowing
 

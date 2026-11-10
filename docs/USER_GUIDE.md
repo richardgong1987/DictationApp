@@ -237,7 +237,8 @@ answers in that lesson and returns to the first item, while retaining attempt hi
 | Leave the answer box | — | Esc |
 
 Shortcuts control the active item. A focused button keeps its own Enter/Space behavior. These are
-Dictation shortcuts; Shadowing uses its visible player controls.
+Dictation shortcuts. In Shadowing, **Space** plays and pauses the article, like the play button;
+press it again to resume.
 
 ## Practice shadowing
 

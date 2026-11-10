@@ -56,7 +56,7 @@ export default function ArticlePlayer({
             type="button"
             className="primary play"
             onClick={() => player.toggleArticle()}
-            title="Play / Pause"
+            title="Play / Pause (Space)"
           >
             {playLabel(state)}
           </button>

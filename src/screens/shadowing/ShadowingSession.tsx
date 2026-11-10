@@ -12,6 +12,7 @@ import { segmentPassage, type Segment } from "./passageSegments";
 import { hasSavedPlace, isUnderway } from "./shadowingPlayer";
 import { usePassageTimings } from "./usePassageTimings";
 import { useShadowingPlayer } from "./useShadowingPlayer";
+import { useSpaceToPlay } from "./useSpaceToPlay";
 
 interface Props {
   lesson: Lesson;
@@ -41,6 +42,7 @@ export default function ShadowingSession({ lesson, initialItems, savedPosition, 
     timingFor,
     savedPosition,
   });
+  useSpaceToPlay(player);
 
   const { unit } = state;
   // Kept between renders: the player re-renders the screen on every frame while audio plays.

@@ -293,8 +293,8 @@ Dictation speed and loop choices are saved and shared across its cards.
 | — | Shift + Enter | Line break |
 | — | Esc | Leave the answer box |
 
-A focused button handles its own Enter/Space action. These shortcuts belong to **Dictation**;
-use the visible player controls in **Shadowing**.
+A focused button handles its own Enter/Space action. These shortcuts belong to **Dictation**.
+In **Shadowing**, Space plays and pauses the article, like the play button.
 
 ## Shadowing: read the whole article → loop what holds you up
 
