@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
 import { api, errorMessage } from "../../api/client";
 import { MAX_RECOMMENDED_WORDS } from "../../api/constants";
@@ -7,8 +7,10 @@ import type { Navigate, Route } from "../../navigation";
 import ErrorBanner from "../../components/ErrorBanner";
 import PageHeader from "../../components/PageHeader";
 import TitleInput from "../../components/TitleInput";
-import { formatTtsProvider } from "../../format";
+import { formatCount, formatTtsProvider } from "../../format";
+import LessonSelectionBar from "./LessonSelectionBar";
 import LessonTransfer from "./LessonTransfer";
+import PasteLessonForm from "./PasteLessonForm";
 
 const SETTINGS_ROUTE: Route = { name: "settings", back: { name: "library" } };
 
@@ -20,11 +22,15 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   const [isImporting, setIsImporting] = useState(false);
   const [isPasting, setIsPasting] = useState(false);
   const [renamingLessonId, setRenamingLessonId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
       const [list, settings] = await Promise.all([api.listLessons(), api.getSettings()]);
       setLessons(list);
+      // Deleted lessons leave the selection.
+      setSelectedIds((ids) => new Set(list.filter((l) => ids.has(l.id)).map((l) => l.id)));
       setCredentialsConfigured(settings.credentialsConfigured);
       setTtsProvider(settings.settings.ttsProvider);
     } catch (e) {
@@ -36,6 +42,8 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const selectedLessons = lessons?.filter((l) => selectedIds.has(l.id)) ?? [];
 
   /** Opens the new lesson, generating its audio straight away when possible. */
   async function createLesson(create: () => Promise<LessonDetail>) {
@@ -86,18 +94,34 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
     }
   }
 
-  async function deleteLesson(lesson: LessonSummary) {
-    const fileNote = lesson.sourcePath ? " Your original text file is not touched." : "";
-    const confirmed = await ask(
-      `Delete "${lesson.title}" and its audio from this device?${fileNote}`,
-      { title: "Delete lesson", kind: "warning", okLabel: "Delete", cancelLabel: "Cancel" },
-    );
+  function toggleSelected(lessonId: string) {
+    setSelectedIds((ids) => {
+      const next = new Set(ids);
+      if (!next.delete(lessonId)) next.add(lessonId);
+      return next;
+    });
+  }
+
+  /** Deletes one lesson or the selected ones, after confirmation. */
+  async function deleteLessons(doomed: LessonSummary[]) {
+    const question = deletionQuestion(doomed, doomed.length === lessons?.length);
+    const confirmed = await ask(question, {
+      title: doomed.length === 1 ? "Delete lesson" : "Delete lessons",
+      kind: "warning",
+      okLabel: "Delete",
+      cancelLabel: "Cancel",
+    });
     if (!confirmed) return;
+    setError(null);
+    setIsDeleting(true);
     try {
-      await api.deleteLesson(lesson.id);
-      await refresh();
+      for (const lesson of doomed) await api.deleteLesson(lesson.id);
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
+      // Also after a failure: the lessons before it are gone, the rest stay selected.
+      await refresh();
+      setIsDeleting(false);
     }
   }
 
@@ -125,6 +149,17 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
             </button>
           </div>
         </div>
+        {lessons && lessons.length > 0 && (
+          <LessonSelectionBar
+            lessonCount={lessons.length}
+            selectedCount={selectedLessons.length}
+            isDeleting={isDeleting}
+            onSelectAll={(isSelected) =>
+              setSelectedIds(new Set(isSelected ? lessons.map((l) => l.id) : []))
+            }
+            onDeleteSelected={() => deleteLessons(selectedLessons)}
+          />
+        )}
       </PageHeader>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
@@ -167,20 +202,29 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                 key={lesson.id}
                 className={isPinned ? "card lesson-card pinned" : "card lesson-card"}
               >
-                {isRenaming ? (
-                  <TitleInput
-                    initialTitle={lesson.title}
-                    onSave={(title) => renameLesson(lesson, title)}
-                    onCancel={() => setRenamingLessonId(null)}
+                <div className="lesson-card-heading">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(lesson.id)}
+                    onChange={() => toggleSelected(lesson.id)}
+                    disabled={isDeleting}
+                    aria-label={`Select ${lesson.title}`}
                   />
-                ) : (
-                  <button
-                    className="lesson-title link"
-                    onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}
-                  >
-                    {lesson.title}
-                  </button>
-                )}
+                  {isRenaming ? (
+                    <TitleInput
+                      initialTitle={lesson.title}
+                      onSave={(title) => renameLesson(lesson, title)}
+                      onCancel={() => setRenamingLessonId(null)}
+                    />
+                  ) : (
+                    <button
+                      className="lesson-title link"
+                      onClick={() => navigate({ name: "lesson", lessonId: lesson.id })}
+                    >
+                      {lesson.title}
+                    </button>
+                  )}
+                </div>
                 <div className="muted small">
                   {isPinned && <span className="badge pinned">Pinned</span>}
                   {lesson.itemCount} items · audio {lesson.audioReadyCount}/{lesson.itemCount}
@@ -210,7 +254,9 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
                   <button onClick={() => setRenamingLessonId(lesson.id)} disabled={isRenaming}>
                     Rename
                   </button>
-                  <button onClick={() => deleteLesson(lesson)}>Delete</button>
+                  <button onClick={() => deleteLessons([lesson])} disabled={isDeleting}>
+                    Delete
+                  </button>
                   <button
                     className="primary"
                     onClick={() => navigate({ name: "practice", lessonId: lesson.id })}
@@ -237,45 +283,13 @@ export default function LibraryScreen({ navigate }: { navigate: Navigate }) {
   );
 }
 
-interface PasteLessonFormProps {
-  isCreating: boolean;
-  onCreate: (title: string, text: string) => void;
-  onCancel: () => void;
-}
-
-/** A lesson from pasted text, the usual way to add one on a phone. */
-function PasteLessonForm({ isCreating, onCreate, onCancel }: PasteLessonFormProps) {
-  const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    onCreate(title, text);
-  }
-
-  return (
-    <form className="card paste-lesson" onSubmit={submit}>
-      <label>
-        Text
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Paste your text here. Separate passages with a blank line; each passage becomes one dictation item."
-          autoFocus
-        />
-      </label>
-      <label>
-        Title <span className="muted small">(optional: taken from the first words if empty)</span>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </label>
-      <div className="actions">
-        <button type="submit" className="primary" disabled={isCreating || !text.trim()}>
-          {isCreating ? "Creating…" : "Create lesson"}
-        </button>
-        <button type="button" onClick={onCancel} disabled={isCreating}>
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
+/** Names what goes, and says that the text files the lessons came from stay. */
+function deletionQuestion(doomed: LessonSummary[], isEveryLesson: boolean): string {
+  const isOne = doomed.length === 1;
+  const fileNote = doomed.some((l) => l.sourcePath)
+    ? ` Your original text ${isOne ? "file is" : "files are"} not touched.`
+    : "";
+  if (isOne) return `Delete "${doomed[0].title}" and its audio from this device?${fileNote}`;
+  const which = isEveryLesson ? `all ${doomed.length} lessons` : formatCount(doomed.length, "lesson");
+  return `Delete ${which} and their audio from this device?${fileNote}`;
 }

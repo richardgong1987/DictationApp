@@ -127,7 +127,7 @@ const INITIAL_STATE: ShadowingState = {
   isArticleLooping: false,
   isLearnerFirst: true,
   speed: 1,
-  repeatPause: "clipLength",
+  repeatPause: 1,
   unit: "passage",
 };
 

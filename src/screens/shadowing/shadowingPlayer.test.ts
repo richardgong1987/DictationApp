@@ -240,17 +240,17 @@ beforeEach(() => {
 });
 
 describe("a new player", () => {
-  it("has the learner read first, for as long as the audio takes", async () => {
+  it("has the learner read first, for one second", async () => {
     const player = newPlayer();
     player.playSegment(1, 0);
     await loadPassage(1);
 
     assert.deepEqual(position(player), at(1, 0, "yourTurn"));
-    assert.equal(player.getState().turnTotalMs, 4000);
+    assert.equal(player.getState().turnTotalMs, 1000);
     assert.equal(audio.isPlaying, false);
   });
 
-  it("leaves time to repeat after the audio once switched to it", async () => {
+  it("leaves one second to repeat after the audio once switched to it", async () => {
     const player = newPlayer();
     player.toggleLearnerFirst();
     player.playSegment(1, 0);
@@ -260,7 +260,7 @@ describe("a new player", () => {
     audio.finish();
 
     assert.deepEqual(position(player), at(1, 0, "yourTurn"));
-    assert.equal(player.getState().turnTotalMs, 4000);
+    assert.equal(player.getState().turnTotalMs, 1000);
   });
 
   it("goes by whole passage until another unit is chosen", async () => {

@@ -124,7 +124,7 @@ If I had known about the problem, I would have called you.
 | 选项 | 含义 |
 |---|---|
 | No pause | 不留时间，连续播放，适合与音频同时跟读。**Read first** 和 **Listen first** 下都可以选；打开 **Loop sentence** 时，同一句会不间断地重复播放 |
-| 1 second | 每次留 1 秒自己朗读 |
+| 1 second | 默认选项。每次留 1 秒自己朗读 |
 | 2 seconds | 每次留 2 秒自己朗读 |
 | 3 seconds | 每次留 3 秒自己朗读 |
 | 4 seconds | 每次留 4 秒自己朗读 |
@@ -132,7 +132,7 @@ If I had known about the problem, I would have called you.
 | 6 seconds | 每次留 6 秒自己朗读 |
 | 7 seconds | 每次留 7 秒自己朗读 |
 | 8 seconds | 每次留 8 秒自己朗读 |
-| Match the audio's length | 默认选项。按当前播放速度下这部分音频的时长留出朗读时间 |
+| Match the audio's length | 按当前播放速度下这部分音频的时长留出朗读时间 |
 
 - **学生先读，老师再纠正：**保持默认的 **Read first**，选择 **Sentence**，整篇文章一句一句进行，每句都是你先读、音频后读。请保持原文显示，因为你要看着原文读。打开 **Loop sentence** 时，你和音频会在同一句上轮流朗读，直到关闭循环。
 - **老师读一句，学生跟一句：**切换到 **Listen first**，选择 **Sentence**，每句之后都有 **Your turn** 倒计时。
@@ -207,7 +207,7 @@ If I had known about the problem, I would have called you.
 
 **如何修改课程名称或删除课程？**
 
-在课程列表使用 **Rename** 或 **Delete**。删除会移除应用中的该课程及音频，不会修改原始导入的 `.txt` 文件。
+在课程列表使用 **Rename** 或 **Delete**。删除会移除应用中的该课程及音频，不会修改原始导入的 `.txt` 文件。要一次删除多篇课程，勾选课程标题旁的复选框，或勾选列表顶部的 **Select all** 全选，然后点击 **Delete N lessons** 并确认。
 
 **新课程太多，怎样让某篇课程一直留在最上面？**
 

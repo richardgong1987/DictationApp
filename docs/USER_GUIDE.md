@@ -62,7 +62,7 @@ a major step toward being able to speak it. Use the app to work on that step as 
 
 | Screen | What you can do |
 |---|---|
-| **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, pin/rename/delete lessons, or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
+| **Lessons** | See the selected TTS provider and each lesson's item/audio counts. Paste text, import a `.txt`, pin/rename/delete lessons (several at once with their checkboxes), or enter either practice mode directly. Scroll to **Your other devices** for ZIP transfer. |
 | **Lesson detail** | Click a lesson title in the library. Read passages, inspect word counts and audio badges, generate audio, and see attempt counts/best accuracy. Click the heading to rename; click a passage's **▶** to start dictation at that item. |
 | **Dictation** | Listen, type, reveal/check, and review word differences. All items appear as cards; the active card has an accent border and highlighted number. Untouched inactive cards keep their answer boxes collapsed. |
 | **Shadowing** | The whole article under one player. Read each part aloud first and hear the audio correct you, or switch to repeating after the audio. Play it whole, sentence by sentence or phrase by phrase; click the text to start anywhere, and loop a hard sentence. Show/hide the text, choose playback speed, and set your time to speak. |
@@ -271,7 +271,7 @@ Keep the text shown for **Read first**, since it is what you read from.
 | Option | Your time for each part |
 |---|---|
 | **No pause** | None; the audio goes on immediately, in either mode. With **Loop sentence** on, the sentence repeats with no gap. |
-| **1 second** | One second to speak. |
+| **1 second** | The default: one second to speak. |
 | **2 seconds** | Two seconds to speak. |
 | **3 seconds** | Three seconds to speak. |
 | **4 seconds** | Four seconds to speak. |
@@ -279,7 +279,7 @@ Keep the text shown for **Read first**, since it is what you read from.
 | **6 seconds** | Six seconds to speak. |
 | **7 seconds** | Seven seconds to speak. |
 | **8 seconds** | Eight seconds to speak. |
-| **Match the audio's length** | The default: as long as the part takes at the selected playback speed. |
+| **Match the audio's length** | As long as the part takes at the selected playback speed. |
 
 **Your turn** replaces the timeline with a countdown, and **Pause** also pauses it. For fluent
 continuous reading, use **Listen first**, **Whole passage** and **No pause**. To repeat the whole
@@ -394,3 +394,6 @@ Lessons are listed newest first. **Pin to top** keeps a lesson above newer ones 
 **Rename** changes the app's title only. **Delete**, after confirmation, removes the lesson, its
 local audio, saved answers and practice history. It leaves the original imported `.txt` and any
 previously exported ZIP untouched.
+
+To delete several lessons at once, tick the checkbox beside each title, or **Select all** at the top
+of the list, then click **Delete N lessons** and confirm.

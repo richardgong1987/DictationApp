@@ -229,16 +229,31 @@ button.toggle.on {
   gap: 4px;
 }
 
+.lesson-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .lesson-card .lesson-title {
-  justify-self: start;
   font-size: 1.1rem;
   font-weight: 600;
   text-align: left;
 }
 
 .lesson-card .title-input {
+  flex: 1;
+  min-width: 0;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+/* In the header, so it is in reach wherever the list is scrolled to. */
+.lesson-selection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .lesson-card .actions {
@@ -428,6 +443,27 @@ input:focus,
 select:focus {
   outline: 2px solid var(--selected);
   outline-offset: -1px;
+}
+
+/* Undoes the text box padding above, and is big enough to tap on a phone. */
+input[type="checkbox"] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 }
 
 /* Practice: one card per item, each with its own player row, the hidden
