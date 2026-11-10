@@ -245,9 +245,13 @@ export class ShadowingPlayer {
     this.playSegment(this.current.index, this.current.segment);
   }
 
-  /** Moves to the next part of the article, into the next passage after a passage's last one. */
+  /**
+   * Moves to the next part of the article, into the next passage after a passage's last one.
+   * Like previousSegment, only while the article is underway.
+   */
   nextSegment() {
     const { index, segment } = this.current;
+    if (!isUnderway(this.current)) return;
     if (this.hasNextSegment()) this.playSegment(index, segment + 1);
     else if (index + 1 < this.passageCount) this.playSegment(index + 1, 0);
   }
@@ -255,6 +259,7 @@ export class ShadowingPlayer {
   /** Moves to the previous part of the article, into the previous passage before a passage's first one. */
   previousSegment() {
     const { index, segment } = this.current;
+    if (!isUnderway(this.current)) return;
     if (segment > 0) this.playSegment(index, segment - 1);
     else if (index > 0) this.playSegment(index - 1, LAST_SEGMENT);
   }

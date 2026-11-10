@@ -72,7 +72,7 @@ export default function ArticlePlayer({
           <button
             type="button"
             onClick={() => player.replaySegment()}
-            title={`Replay this ${unit} from its beginning`}
+            title={`Replay this ${unit} from its beginning (R)`}
             aria-label={`Replay this ${unit} from its beginning`}
           >
             ↺
@@ -115,7 +115,7 @@ export default function ArticlePlayer({
           className={state.isSegmentLooping ? "toggle on" : "toggle"}
           onClick={() => player.toggleLoop()}
           aria-pressed={state.isSegmentLooping}
-          title={`Repeat this ${unit}, with time to repeat it aloud in between`}
+          title={`Repeat this ${unit}, with time to repeat it aloud in between (L)`}
         >
           ⟳ Loop {unit}
         </button>
@@ -229,7 +229,7 @@ function SegmentStepper({
         type="button"
         onClick={() => player.previousSegment()}
         disabled={isStopped || isAtStart}
-        title={`Previous ${unit}`}
+        title={`Previous ${unit} (←)`}
         aria-label={`Previous ${unit}`}
       >
         ‹
@@ -241,7 +241,7 @@ function SegmentStepper({
         type="button"
         onClick={() => player.nextSegment()}
         disabled={isStopped || isAtEnd}
-        title={`Next ${unit}`}
+        title={`Next ${unit} (→)`}
         aria-label={`Next ${unit}`}
       >
         ›

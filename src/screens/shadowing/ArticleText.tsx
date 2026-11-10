@@ -84,7 +84,7 @@ function PassageText({
     // Selecting a word, to look it up, ends in a click that should not move the player.
     if (window.getSelection()?.isCollapsed !== false) playPart(part);
   };
-  // Enter only: clicking the text focuses it, and Space must then still pause (useSpaceToPlay).
+  // Enter only: clicking the text focuses it, and Space must then still pause (useShadowingShortcuts).
   const onKeyDown = (event: KeyboardEvent, part: number) => {
     if (event.key !== "Enter") return;
     event.preventDefault();

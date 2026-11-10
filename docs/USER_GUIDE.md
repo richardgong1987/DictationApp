@@ -237,8 +237,7 @@ answers in that lesson and returns to the first item, while retaining attempt hi
 | Leave the answer box | — | Esc |
 
 Shortcuts control the active item. A focused button keeps its own Enter/Space behavior. These are
-Dictation shortcuts. In Shadowing, **Space** plays and pauses the article, like the play button;
-press it again to resume.
+Dictation shortcuts; Shadowing has [its own](#shadowing-keyboard-shortcuts), on the same keys.
 
 ## Practice shadowing
 
@@ -321,6 +320,18 @@ not in lesson exports.
 **Hide text / Show text** applies to the whole article. A failed passage shows **Retry**. Leaving the
 screen stops playback and repeat timers. On a phone the title and status line are hidden, and the two
 menus lose their labels, to leave more of the screen to the article.
+
+### Shadowing keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| Space | Play / pause, like the play button; also pauses **Your turn** |
+| ← / → | Previous / next part, while the article is playing or paused |
+| R | Replay the current part from its beginning |
+| L | Loop the current part on or off |
+
+The keys work wherever you clicked last, including the text, the menus and the timeline. Holding a
+key down acts once. A button reached with Tab still presses with Space.
 
 Shadowing does not record your voice, transcribe speech, score pronunciation, or change dictation
 answers/statistics. Its speed, practice unit, pause, loop and Read first/Listen first choices last for

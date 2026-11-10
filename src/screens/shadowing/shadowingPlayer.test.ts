@@ -913,6 +913,24 @@ describe("moving around the article", () => {
     assert.equal(audio.currentTime, 1);
   });
 
+  it("does not step before the article starts or after it ends", async () => {
+    const player = createPlayer();
+    player.nextSegment();
+    await settle();
+    assert.equal(player.getState().phase, "idle");
+    assert.equal(audio.src, "");
+
+    player.toggleArticle();
+    for (const index of [0, 1, 2]) {
+      await loadPassage(index);
+      audio.finish();
+    }
+    await settle();
+    player.previousSegment();
+    await settle();
+    assert.equal(player.getState().phase, "ended");
+  });
+
   it("moves to the sentence at the point the learner seeks to", async () => {
     const player = createPlayer({ unit: "sentence", repeatPause: 3 });
     player.playSegment(1, 0);
